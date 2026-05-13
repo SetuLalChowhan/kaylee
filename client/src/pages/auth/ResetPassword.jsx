@@ -1,0 +1,56 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import AuthInput from '@/components/ui/AuthInput';
+import CommonButton from '@/components/ui/CommonButton';
+
+const ResetPassword = () => {
+  const navigate = useNavigate();
+  const { register, handleSubmit, formState: { errors } } = useForm();
+
+  const onSubmit = (data) => {
+    console.log("Reset Password Data:", data);
+    navigate('/login');
+  };
+
+  return (
+    <div className="w-full">
+      <div className="mb-10">
+        <h2 className="text-[28px] lg:text-[32px] font-bold text-[#1A1A1A] mb-2">Create new password</h2>
+        <p className="text-[#666] text-sm lg:text-base">Set a strong password to secure your account</p>
+      </div>
+
+      <form className="mb-6" onSubmit={handleSubmit(onSubmit)}>
+        <AuthInput 
+          label="New password"
+          type="password"
+          name="newPassword"
+          placeholder="Enter new password"
+          register={register}
+          error={errors.newPassword}
+          required
+        />
+        <AuthInput 
+          label="Confirm New Password"
+          type="password"
+          name="confirmPassword"
+          placeholder="Re-enter your new password"
+          register={register}
+          error={errors.confirmPassword}
+          required
+        />
+
+        <div className="mt-10">
+          <CommonButton 
+            type="submit"
+            className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20"
+          >
+            Continue
+          </CommonButton>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default ResetPassword;
