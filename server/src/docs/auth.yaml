@@ -1,0 +1,163 @@
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                password: { type: string }
+      responses:
+        201:
+          description: User registered successfully
+
+  /api/auth/verify-email:
+    post:
+      summary: Verify email with OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp]
+              properties:
+                email: { type: string }
+                otp: { type: string }
+      responses:
+        200:
+          description: Email verified successfully
+
+  /api/auth/login:
+    post:
+      summary: Login user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        200:
+          description: Login successful
+
+  /api/auth/google-login:
+    post:
+      summary: Authenticate user via Google OAuth2
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idToken]
+              properties:
+                idToken:
+                  type: string
+                  description: The credential/ID token received from Google Frontend SDK
+      responses:
+        200:
+          description: Google login successful, returns Access Token and sets Refresh Token in cookie
+        400:
+          description: Missing or invalid token
+
+  /api/auth/forgot-password:
+    post:
+      summary: Request password reset OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string }
+      responses:
+        200:
+          description: Reset OTP sent to email
+
+  /api/auth/resend-otp:
+    post:
+      summary: Resend OTP
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, type]
+              properties:
+                email: { type: string }
+                type: { type: string, enum: [FORGOT_PASSWORD, VERIFY_EMAIL] }
+      responses:
+        200:
+          description: New OTP sent
+
+  /api/auth/verify-reset-otp:
+    post:
+      summary: Verify reset OTP and get reset token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp]
+              properties:
+                email: { type: string }
+                otp: { type: string }
+      responses:
+        200:
+          description: OTP verified successfully
+
+  /api/auth/reset-password:
+    post:
+      summary: Reset password using token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resetToken, newPassword]
+              properties:
+                resetToken: { type: string }
+                newPassword: { type: string }
+      responses:
+        200:
+          description: Password reset successful
+
+  /api/auth/refresh-token:
+    post:
+      summary: Refresh access token
+      tags: [Auth]
+      responses:
+        200:
+          description: Access token refreshed
+
+  /api/auth/logout:
+    post:
+      summary: Logout user
+      tags: [Auth]
+      responses:
+        200:
+          description: Logged out successfully

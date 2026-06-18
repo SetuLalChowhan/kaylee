@@ -5,11 +5,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const { Pool } = pg;
-const connectionString = process.env.DATABASE_URL;
+// PostgreSQL Connection Pool setup
+const connectionString: string | undefined = process.env.DATABASE_URL;
 
-const pool = new Pool({ connectionString });
+const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
+
 const prisma = new PrismaClient({ adapter });
 
 export default prisma;
