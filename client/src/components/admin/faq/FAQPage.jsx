@@ -1,96 +1,91 @@
-import React, { useState } from 'react';
-import { Search as SearchIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search as SearchIcon, Plus, X } from 'lucide-react';
 import FAQItem from './components/FAQItem';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/redux/slices/authSlice';
+import { useForm } from 'react-hook-form';
+import { useFaqs, useCreateFaq, useUpdateFaq, useDeleteFaq } from '@/api/apiHooks/useFaq';
+import { motion, AnimatePresence } from 'motion/react';
 
 const FAQPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const user = useSelector(selectCurrentUser);
+  const isAdmin = user?.role === 'admin';
 
-  const faqData = [
-    {
-      category: "GETTING STARTED",
-      items: [
-        {
-          question: "What is STAKD?",
-          answer: "STAKD is a workspace where you manage your brand deals in one place. You can organize campaigns, upload content, share review links with brands, and track approvals without switching between tools."
-        },
-        {
-          question: "How do I get started?",
-          answer: "Sign up for an account, complete your onboarding profile, and you can start creating your first campaign immediately."
-        },
-        {
-          question: "Do brands need an account to view my work?",
-          answer: "No, brands can view your shared review links without needing to create an account, making the approval process seamless."
-        }
-      ]
-    },
-    {
-      category: "CAMPAIGNS & WORKFLOW",
-      items: [
-        {
-          question: "What is a campaign?",
-          answer: "A campaign is a workspace for a single brand deal. It includes your deliverables, files, deadlines, and approvals all in one place."
-        },
-        {
-          question: "Can I manage multiple campaigns at once?",
-          answer: "Yes, STAKD is designed to handle multiple active campaigns simultaneously with a centralized dashboard."
-        },
-        {
-          question: "Can I edit a campaign after creating it?",
-          answer: "Absolutely. You can update deliverables, change dates, and add new media at any stage of the process."
-        },
-        {
-          question: "Does STAKD create deals with brands?",
-          answer: "STAKD is a management tool for your existing deals. We provide the infrastructure to professionalize your workflow once a deal is secured."
-        }
-      ]
-    },
-    {
-      category: "BRAND REVIEW",
-      items: [
-        {
-          question: "What can brands do on the review page?",
-          answer: "Brands can view content, leave comments, request changes, and approve deliverables directly through the shared link."
-        },
-        {
-          question: "Can brands download my content before approval?",
-          answer: "You have control over download permissions. By default, content is view-only until you enable high-res downloads."
-        },
-        {
-          question: "What happens after approval?",
-          answer: "Once a brand approves a deliverable, it is marked as completed, and you can proceed with the final delivery or invoicing."
-        }
-      ]
-    },
-    {
-      category: "BILLING & SUBSCRIPTION",
-      items: [
-        {
-          question: "Do I need a subscription to use STAKD?",
-          answer: "Yes. You can start with the free plan, which includes limited access to core features so you can try the platform."
-        },
-        {
-          question: "What's included in the free plan?",
-          answer: "The free plan typically includes management for a limited number of active campaigns and basic storage."
-        },
-        {
-          question: "When do I need to upgrade?",
-          answer: "You should upgrade when you need unlimited campaigns, more storage, or advanced features like custom branding."
-        },
-        {
-          question: "What happens if I don't upgrade?",
-          answer: "Your account will remain on the free tier, and you may hit limits on active campaigns or storage capacity."
-        },
-        {
-          question: "Can I upgrade anytime?",
-          answer: "Yes, you can upgrade or change your plan at any time through the billing settings."
-        },
-        {
-          question: "Do I lose my data if I upgrade later?",
-          answer: "No, all your data and existing campaigns are preserved when you switch between plans."
-        }
-      ]
+  // React Query Hooks
+  const { data: faqs = [], isLoading } = useFaqs();
+  const createFaqMutation = useCreateFaq();
+  const updateFaqMutation = useUpdateFaq();
+  const deleteFaqMutation = useDeleteFaq();
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingFaq, setEditingFaq] = useState(null);
+
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+
+  // Open modal for Create
+  const handleAddFaq = () => {
+    setEditingFaq(null);
+    reset({ category: '', question: '', answer: '' });
+    setIsModalOpen(true);
+  };
+
+  // Open modal for Edit
+  const handleEditFaq = (faq) => {
+    setEditingFaq(faq);
+    reset({
+      category: faq.category,
+      question: faq.question,
+      answer: faq.answer
+    });
+    setIsModalOpen(true);
+  };
+
+  // Delete handler
+  const handleDeleteFaq = (faqId) => {
+    if (window.confirm("Are you sure you want to delete this FAQ?")) {
+      deleteFaqMutation.mutate(faqId);
     }
-  ];
+  };
+
+  const onSubmit = (data) => {
+    if (editingFaq) {
+      updateFaqMutation.mutate(
+        { id: editingFaq.id, faqData: data },
+        {
+          onSuccess: () => setIsModalOpen(false)
+        }
+      );
+    } else {
+      createFaqMutation.mutate(data, {
+        onSuccess: () => setIsModalOpen(false)
+      });
+    }
+  };
+
+  // Group faqs by category dynamically
+  const groupedFaqs = React.useMemo(() => {
+    const groups = {};
+    const filtered = faqs.filter(faq => 
+      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    filtered.forEach(faq => {
+      const categoryUpper = faq.category.toUpperCase();
+      if (!groups[categoryUpper]) {
+        groups[categoryUpper] = [];
+      }
+      groups[categoryUpper].push(faq);
+    });
+
+    return Object.entries(groups).map(([category, items]) => ({
+      category,
+      items
+    }));
+  }, [faqs, searchQuery]);
 
   return (
     <div className="py-4">
@@ -112,31 +107,133 @@ const FAQPage = () => {
               className="w-full bg-white border border-gray-100 rounded-2xl py-3.5 pl-12 pr-6 focus:border-Primary focus:outline-none transition-all text-sm"
             />
           </div>
-          <button className="bg-Primary text-white px-10 py-3.5 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20">
-            Search
-          </button>
+          {isAdmin && (
+            <button
+              onClick={handleAddFaq}
+              className="bg-Primary text-white px-6 py-3.5 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add FAQ
+            </button>
+          )}
         </div>
       </div>
 
-      {/* FAQ Sections */}
-      <div className="lg:space-y-8 space-y-4">
-        {faqData.map((section, idx) => (
-          <div key={idx} className="space-y-6">
-            <h2 className="text-sm font-bold text-Primary uppercase tracking-tight ml-2">
-              {section.category}
-            </h2>
-            <div className="space-y-0">
-              {section.items.map((item, itemIdx) => (
-                <FAQItem
-                  key={itemIdx}
-                  question={item.question}
-                  answer={item.answer}
-                />
-              ))}
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-Primary"></div>
+        </div>
+      ) : groupedFaqs.length === 0 ? (
+        <div className="text-center py-10 bg-white rounded-3xl border border-gray-50">
+          <p className="text-gray-400 text-sm font-bold">No FAQs found matching your query.</p>
+        </div>
+      ) : (
+        /* FAQ Sections */
+        <div className="lg:space-y-8 space-y-4">
+          {groupedFaqs.map((section, idx) => (
+            <div key={idx} className="space-y-6">
+              <h2 className="text-sm font-bold text-Primary uppercase tracking-tight ml-2">
+                {section.category}
+              </h2>
+              <div className="space-y-0">
+                {section.items.map((item) => (
+                  <FAQItem
+                    key={item.id}
+                    question={item.question}
+                    answer={item.answer}
+                    isAdmin={isAdmin}
+                    onEdit={() => handleEditFaq(item)}
+                    onDelete={() => handleDeleteFaq(item.id)}
+                  />
+                ))}
+              </div>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-3xl md:rounded-[40px] shadow-2xl p-6 md:p-10 z-10"
+            >
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-6 right-6 md:top-8 md:right-8 p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 bg-white"
+              >
+                <X className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+
+              <h2 className="text-xl md:text-2xl font-bold text-[#1A1A1A] mb-6">
+                {editingFaq ? 'Edit FAQ' : 'Add FAQ'}
+              </h2>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2">Category</label>
+                  <input
+                    {...register('category', { required: 'Category is required' })}
+                    type="text"
+                    placeholder="e.g. GETTING STARTED"
+                    className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]"
+                  />
+                  {errors.category && <p className="text-xs text-red-500 mt-1">{errors.category.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2">Question</label>
+                  <input
+                    {...register('question', { required: 'Question is required' })}
+                    type="text"
+                    placeholder="e.g. How do I get started?"
+                    className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]"
+                  />
+                  {errors.question && <p className="text-xs text-red-500 mt-1">{errors.question.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2">Answer</label>
+                  <textarea
+                    {...register('answer', { required: 'Answer is required' })}
+                    rows={4}
+                    placeholder="Enter answer..."
+                    className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] resize-none"
+                  />
+                  {errors.answer && <p className="text-xs text-red-500 mt-1">{errors.answer.message}</p>}
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 bg-gray-50 text-gray-500 py-3 rounded-xl md:rounded-2xl font-bold hover:bg-gray-100 transition-colors text-xs md:text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-Primary text-white py-3 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm"
+                  >
+                    {createFaqMutation.isPending || updateFaqMutation.isPending ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        ))}
-      </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

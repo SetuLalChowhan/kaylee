@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Search, Bell, ChevronDown, Menu, User as UserIcon, Settings, LogOut, CheckCircle, Clock, MessageSquare, DollarSign } from 'lucide-react';
+import { Search, Bell, ChevronDown, Menu, User as UserIcon, Settings, LogOut, CheckCircle, Clock, MessageSquare, DollarSign, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import { useLogout } from '@/api/apiHooks/useAuth';
 import { getImgUrl } from '@/utils/image';
+import { useNotifications, useMarkAsSeen, useMarkAllAsSeen, useDeleteNotification } from '@/api/apiHooks/useNotification';
 
 const CommonNavbar = ({ setOpen }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -14,51 +15,20 @@ const CommonNavbar = ({ setOpen }) => {
   const user = useSelector(selectCurrentUser);
   const logoutMutation = useLogout();
 
+  // Notifications API hooks
+  const { data: notifications = [] } = useNotifications();
+  const markAsSeenMutation = useMarkAsSeen();
+  const markAllAsSeenMutation = useMarkAllAsSeen();
+  const deleteNotifMutation = useDeleteNotification();
+
+  const unseenCount = notifications.filter(n => !n.isSeen).length;
+
   const displayName =
     user?.displayName ||
     `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
     'User';
 
   const avatarUrl = getImgUrl(user?.avatar) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop';
-
-  const dummyNotifications = [
-    {
-      id: 1,
-      title: 'Campaign Approved',
-      description: 'Your Nike UGC Shoot campaign has been approved.',
-      time: '2 mins ago',
-      icon: CheckCircle,
-      color: 'text-green-500',
-      bg: 'bg-green-50'
-    },
-    {
-      id: 2,
-      title: 'New Feedback',
-      description: 'Brand left a comment on your skincare video.',
-      time: '1 hour ago',
-      icon: MessageSquare,
-      color: 'text-blue-500',
-      bg: 'bg-blue-50'
-    },
-    {
-      id: 3,
-      title: 'Payment Received',
-      description: 'Invoice #INV-001 has been paid.',
-      time: '3 hours ago',
-      icon: DollarSign,
-      color: 'text-Primary',
-      bg: 'bg-Primary/10'
-    },
-    {
-      id: 4,
-      title: 'Deadline Approaching',
-      description: 'Coffee Brand Reel is due in 24 hours.',
-      time: '5 hours ago',
-      icon: Clock,
-      color: 'text-orange-500',
-      bg: 'bg-orange-50'
-    }
-  ];
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -69,6 +39,36 @@ const CommonNavbar = ({ setOpen }) => {
   const handleLogout = () => {
     setIsProfileOpen(false);
     logoutMutation.mutate();
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'CAMPAIGN':
+        return { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50' };
+      case 'FEEDBACK':
+        return { icon: MessageSquare, color: 'text-blue-500', bg: 'bg-blue-50' };
+      case 'PAYMENT':
+        return { icon: DollarSign, color: 'text-Primary', bg: 'bg-Primary/10' };
+      case 'DEADLINE':
+        return { icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50' };
+      default:
+        return { icon: Bell, color: 'text-gray-500', bg: 'bg-gray-50' };
+    }
+  };
+
+  const formatTime = (dateStr) => {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    return date.toLocaleDateString();
   };
 
   return (
@@ -94,56 +94,22 @@ const CommonNavbar = ({ setOpen }) => {
 
       {/* Right Side Icons */}
       <div className="flex items-center gap-4 lg:gap-6">
-        {/* Notifications */}
+        {/* Notifications Icon with Unseen Count Badge */}
         <div className="relative">
           <button
             onClick={() => {
-              setIsNotificationsOpen(!isNotificationsOpen);
+              setIsNotificationsOpen(true);
               setIsProfileOpen(false);
             }}
-            className={`relative p-2.5 border rounded-xl transition-all group shadow-sm ${isNotificationsOpen ? 'bg-Primary border-Primary text-white' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+            className="relative p-2.5 border border-gray-100 rounded-xl transition-all group shadow-sm bg-white text-gray-500 hover:bg-gray-50"
           >
-            <Bell className={`w-5 h-5 ${isNotificationsOpen ? 'text-white' : 'group-hover:text-Primary transition-colors'}`} />
-            {!isNotificationsOpen && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full" />}
-          </button>
-
-          <AnimatePresence>
-            {isNotificationsOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setIsNotificationsOpen(false)} />
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-3 w-80 md:w-96 bg-white border border-gray-100 rounded-[32px] shadow-2xl z-20 py-6 overflow-hidden"
-                >
-                  <div className="px-6 pb-4 border-b border-gray-50 flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-[#1A1A1A]">Notifications</h3>
-                    <span className="text-[10px] font-bold text-Primary bg-Primary/10 px-2 py-1 rounded-full uppercase tracking-wider">4 New</span>
-                  </div>
-
-                  <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-                    {dummyNotifications.map((notif) => (
-                      <div
-                        key={notif.id}
-                        className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-50 last:border-0 group"
-                      >
-                        <div>
-                          <h4 className="text-sm font-bold text-[#1A1A1A] mb-0.5">{notif.title}</h4>
-                          <p className="text-xs text-gray-400 font-medium leading-relaxed mb-1">{notif.description}</p>
-                          <span className="text-[10px] font-bold text-gray-300 uppercase">{notif.time}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="px-6 pt-4 text-center">
-                    <button className="text-xs font-bold text-Primary hover:underline underline-offset-4">View All Notifications</button>
-                  </div>
-                </motion.div>
-              </>
+            <Bell className="w-5 h-5 group-hover:text-Primary transition-colors" />
+            {unseenCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-pulse">
+                {unseenCount}
+              </span>
             )}
-          </AnimatePresence>
+          </button>
         </div>
 
         {/* Profile Dropdown */}
@@ -152,7 +118,6 @@ const CommonNavbar = ({ setOpen }) => {
             className="flex items-center gap-3 pl-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => {
               setIsProfileOpen(!isProfileOpen);
-              setIsNotificationsOpen(false);
             }}
           >
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-white">
@@ -210,6 +175,108 @@ const CommonNavbar = ({ setOpen }) => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Notifications Modal overlay */}
+      <AnimatePresence>
+        {isNotificationsOpen && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsNotificationsOpen(false)}
+              className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            />
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-3xl md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[80vh] z-10"
+            >
+              {/* Header */}
+              <div className="p-6 md:p-8 border-b border-gray-50 flex items-center justify-between sticky top-0 bg-white z-20">
+                <div>
+                  <h3 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">Notifications</h3>
+                  {unseenCount > 0 && (
+                    <p className="text-xs text-gray-400 font-medium mt-1">You have {unseenCount} unread notification{unseenCount !== 1 ? 's' : ''}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-4">
+                  {unseenCount > 0 && (
+                    <button
+                      onClick={() => markAllAsSeenMutation.mutate()}
+                      className="text-xs font-bold text-Primary hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setIsNotificationsOpen(false)}
+                    className="p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 bg-white"
+                  >
+                    <X className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Scrollable List */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4 custom-scrollbar">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-12 flex flex-col items-center justify-center">
+                    <Bell className="w-12 h-12 text-gray-200 mb-3" />
+                    <p className="text-gray-400 text-sm font-bold">All caught up! No notifications.</p>
+                  </div>
+                ) : (
+                  notifications.map((notif) => {
+                    const style = getNotificationIcon(notif.type);
+                    const Icon = style.icon;
+                    return (
+                      <div
+                        key={notif.id}
+                        className={`p-4 rounded-2xl border transition-all flex items-start gap-4 ${notif.isSeen ? 'bg-white border-gray-50' : 'bg-Primary/[0.02] border-Primary/10 shadow-sm'}`}
+                      >
+                        <div className={`p-2.5 rounded-xl ${style.bg} ${style.color} flex-shrink-0`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className={`text-sm font-bold text-[#1A1A1A] leading-tight ${notif.isSeen ? 'font-semibold text-gray-700' : 'font-extrabold'}`}>
+                              {notif.title}
+                            </h4>
+                            <span className="text-[10px] font-bold text-gray-300 uppercase whitespace-nowrap">{formatTime(notif.createdAt)}</span>
+                          </div>
+                          <p className="text-xs text-gray-400 font-medium leading-relaxed mt-1 mb-2">
+                            {notif.description}
+                          </p>
+                          <div className="flex items-center gap-3">
+                            {!notif.isSeen && (
+                              <button
+                                onClick={() => markAsSeenMutation.mutate(notif.id)}
+                                className="text-[11px] font-bold text-Primary hover:underline"
+                              >
+                                Mark as read
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteNotifMutation.mutate(notif.id)}
+                              className="text-[11px] font-bold text-red-400 hover:text-red-500 transition-colors ml-auto flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };

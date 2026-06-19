@@ -1,5 +1,8 @@
 import React from 'react';
 import { CheckCircle2, Circle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { useUpdateTask } from '@/api/apiHooks/usePlanner';
 
 const DeadlineItem = ({ day, month, title, sub }) => (
   <div className="flex items-center gap-3 mb-4 last:mb-0 group cursor-pointer">
@@ -14,8 +17,8 @@ const DeadlineItem = ({ day, month, title, sub }) => (
   </div>
 );
 
-const TaskItem = ({ title, sub, date, completed }) => (
-  <div className="flex items-center gap-3 mb-5 last:mb-0 group cursor-pointer">
+const TaskItem = ({ title, sub, date, completed, onToggle }) => (
+  <div onClick={onToggle} className="flex items-center gap-3 mb-5 last:mb-0 group cursor-pointer">
     <div className="mt-0.5">
       {completed ? (
         <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -33,49 +36,70 @@ const TaskItem = ({ title, sub, date, completed }) => (
   </div>
 );
 
-const DeadlinesSidebar = () => {
-  const deadlines = [
-    { day: "20", month: "Apr", title: "Gymshark", sub: "Spring Launch" },
-    { day: "20", month: "Apr", title: "Gymshark", sub: "Spring Launch" },
-    { day: "20", month: "Apr", title: "Nike", sub: "New Collection" },
-  ];
+const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const updateTaskMutation = useUpdateTask();
 
-  const tasks = [
-    { title: "Review campaign brief", sub: "Nike UGC Shoot", date: "Wed, Apr 22", completed: false },
-    { title: "Review campaign brief", sub: "Nike UGC Shoot", date: "Wed, Apr 26", completed: false },
-    { title: "Review campaign brief", sub: "Nike UGC Shoot", date: "Wed, Apr 26", completed: false },
-    { title: "Capture product photos", sub: "Content Creation", date: "Wed, Apr 24", completed: true },
-  ];
+  const handleToggleTask = (taskId, completed) => {
+    if (!taskId) return;
+    updateTaskMutation.mutate({
+      id: taskId,
+      taskData: { completed: !completed }
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      }
+    });
+  };
 
   return (
-    <div className="w-full lg:w-[320px] space-y-10 ">
+    <div className="w-full lg:w-[320px] space-y-10">
       {/* Upcoming Deadlines */}
-      <div className="bg-white p-6 rounded-2xl">
+      <div className="bg-white p-6 rounded-2xl w-full">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-[#1A1A1A]">Upcoming Deadlines</h2>
-          <button className="text-Primary text-sm font-bold hover:underline flex items-center gap-1">
+          <button 
+            onClick={() => navigate('/dashboard/campaigns')}
+            className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
+          >
             See all <span className="text-sm">→</span>
           </button>
         </div>
         <div className="space-y-1">
-          {deadlines.map((item, index) => (
-            <DeadlineItem key={index} {...item} />
-          ))}
+          {deadlines.length > 0 ? (
+            deadlines.map((item, index) => (
+              <DeadlineItem key={item.id || index} {...item} />
+            ))
+          ) : (
+            <p className="text-gray-400 text-xs text-center py-4 font-medium">No upcoming deadlines.</p>
+          )}
         </div>
       </div>
 
       {/* Pending Tasks */}
-      <div className="bg-white p-6 rounded-2xl">
+      <div className="bg-white p-6 rounded-2xl w-full">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-[#1A1A1A]">Pending Tasks</h2>
-          <button className="text-Primary text-sm font-bold hover:underline flex items-center gap-1">
+          <button 
+            onClick={() => navigate('/dashboard/planner')}
+            className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
+          >
             See all <span className="text-sm">→</span>
           </button>
         </div>
         <div className="space-y-1">
-          {tasks.map((task, index) => (
-            <TaskItem key={index} {...task} />
-          ))}
+          {tasks.length > 0 ? (
+            tasks.map((task, index) => (
+              <TaskItem 
+                key={task.id || index} 
+                {...task} 
+                onToggle={() => handleToggleTask(task.id, task.completed)}
+              />
+            ))
+          ) : (
+            <p className="text-gray-400 text-xs text-center py-4 font-medium">No pending tasks.</p>
+          )}
         </div>
       </div>
     </div>

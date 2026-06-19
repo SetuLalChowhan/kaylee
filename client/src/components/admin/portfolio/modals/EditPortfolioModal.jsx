@@ -7,6 +7,7 @@ import { useUpdateProfile, useDeleteBrandLogo } from '@/api/apiHooks/useUser';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import { getImgUrl, getBrandLogos } from '@/utils/image';
+import { handleBackendErrors } from '@/utils/validation';
 
 const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
   const user = useSelector(selectCurrentUser);
@@ -23,7 +24,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
   const [newBrandUploads, setNewBrandUploads] = React.useState([]);
   const [loadingDelete, setLoadingDelete] = React.useState(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, setError, reset, formState: { errors } } = useForm({
     defaultValues: {
       name: profile?.name || user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
       bio: profile?.bio || user?.shortBio || '',
@@ -152,6 +153,16 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
       formPayload.append('socialLinks', JSON.stringify(socialLinks));
     }
 
+    const customMap = {
+      displayName: 'name',
+      shortBio: 'bio',
+      servicesOffered: 'services',
+      'socialLinks.instagram': 'socials.instagram',
+      'socialLinks.website': 'socials.tiktok',
+      'socialLinks.youtube': 'socials.youtube',
+      'socialLinks.other': 'otherLink',
+    };
+
     updateProfileMutation.mutate(formPayload, {
       onSuccess: (res) => {
         const updatedData = res?.data?.data || res?.data;
@@ -165,6 +176,9 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
           });
         }
         onClose();
+      },
+      onError: (error) => {
+        handleBackendErrors(error, setError, customMap);
       },
     });
   };
@@ -234,8 +248,9 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
               <input
                 {...register('name')}
                 type="text"
-                className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]"
+                className={`w-full bg-white border ${errors.name ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]`}
               />
+              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
             {/* Bio */}
@@ -244,8 +259,9 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
               <textarea
                 {...register('bio')}
                 rows={2}
-                className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] resize-none"
+                className={`w-full bg-white border ${errors.bio ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] resize-none`}
               />
+              {errors.bio && <p className="mt-1 text-xs text-red-500">{errors.bio.message}</p>}
             </div>
 
             {/* Services Offered */}
@@ -255,8 +271,9 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                 {...register('services')}
                 rows={2}
                 placeholder="-Product photography\n-Voiceover\n-Unboxing"
-                className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] resize-none"
+                className={`w-full bg-white border ${errors.services ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] resize-none`}
               />
+              {errors.services && <p className="mt-1 text-xs text-red-500">{errors.services.message}</p>}
             </div>
 
             {/* Brands Upload */}
@@ -330,39 +347,48 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
             <div className="space-y-4 md:space-y-6">
               <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2 md:mb-4">Social Links</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Instagram className="w-5 h-5 md:w-6 md:h-6 text-[#1A1A1A]" />
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Instagram className="w-5 h-5 md:w-6 md:h-6 text-[#1A1A1A]" />
+                    </div>
+                    <input
+                      {...register('socials.instagram')}
+                      type="text"
+                      placeholder="@username"
+                      className={`flex-1 bg-white border ${errors.socials?.instagram ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
+                    />
                   </div>
-                  <input
-                    {...register('socials.instagram')}
-                    type="text"
-                    placeholder="@username"
-                    className="flex-1 bg-white border border-gray-100 rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm"
-                  />
+                  {errors.socials?.instagram && <p className="mt-1 text-xs text-red-500 ml-[52px] md:ml-[60px]">{errors.socials.instagram.message}</p>}
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <FaTiktok className="w-4 h-4 md:w-5 md:h-5 text-[#1A1A1A]" />
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FaTiktok className="w-4 h-4 md:w-5 md:h-5 text-[#1A1A1A]" />
+                    </div>
+                    <input
+                      {...register('socials.tiktok')}
+                      type="text"
+                      placeholder="@username"
+                      className={`flex-1 bg-white border ${errors.socials?.tiktok ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
+                    />
                   </div>
-                  <input
-                    {...register('socials.tiktok')}
-                    type="text"
-                    placeholder="@username"
-                    className="flex-1 bg-white border border-gray-100 rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm"
-                  />
+                  {errors.socials?.tiktok && <p className="mt-1 text-xs text-red-500 ml-[52px] md:ml-[60px]">{errors.socials.tiktok.message}</p>}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Youtube className="w-5 h-5 md:w-6 md:h-6 text-[#1A1A1A]" />
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Youtube className="w-5 h-5 md:w-6 md:h-6 text-[#1A1A1A]" />
+                  </div>
+                  <input
+                    {...register('socials.youtube')}
+                    type="text"
+                    placeholder="youtube/username"
+                    className={`flex-1 bg-white border ${errors.socials?.youtube ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
+                  />
                 </div>
-                <input
-                  {...register('socials.youtube')}
-                  type="text"
-                  placeholder="youtube/username"
-                  className="flex-1 bg-white border border-gray-100 rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm"
-                />
+                {errors.socials?.youtube && <p className="mt-1 text-xs text-red-500 ml-[52px] md:ml-[60px]">{errors.socials.youtube.message}</p>}
               </div>
             </div>
 
@@ -373,8 +399,9 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                 {...register('otherLink')}
                 type="text"
                 placeholder="Paste your link"
-                className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]"
+                className={`w-full bg-white border ${errors.otherLink ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]`}
               />
+              {errors.otherLink && <p className="mt-1 text-xs text-red-500">{errors.otherLink.message}</p>}
             </div>
 
             {/* Submit Button */}

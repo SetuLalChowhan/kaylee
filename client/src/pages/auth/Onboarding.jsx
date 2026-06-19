@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Instagram, Youtube, Link as LinkIcon, Upload, User, Globe } from 'lucide-react';
@@ -7,23 +7,46 @@ import CommonButton from '@/components/ui/CommonButton';
 import AuthInput from '@/components/ui/AuthInput';
 import { toast } from 'react-toastify';
 import { useCompleteOnboarding } from '@/api/apiHooks/useUser';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/redux/slices/authSlice';
+import { getImgUrl } from '@/utils/image';
+import { handleBackendErrors } from '@/utils/validation';
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const onboardingMutation = useCompleteOnboarding();
+  const user = useSelector(selectCurrentUser);
   
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, setError, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
-      displayName: '',
-      bio: '',
-      instagram: '',
-      youtube: '',
-      otherLink: ''
+      displayName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || '',
+      bio: user?.shortBio || '',
+      instagram: user?.socialLinks?.instagram || '',
+      tiktok: user?.socialLinks?.website || '',
+      youtube: user?.socialLinks?.youtube || '',
+      otherLink: user?.socialLinks?.other || ''
     }
   });
 
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(user?.avatar ? getImgUrl(user.avatar) : null);
   const [profileFile, setProfileFile] = useState(null);
+
+  // Sync form values and avatar preview when redux user changes
+  useEffect(() => {
+    if (user) {
+      reset({
+        displayName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+        bio: user?.shortBio || '',
+        instagram: user?.socialLinks?.instagram || '',
+        tiktok: user?.socialLinks?.website || '',
+        youtube: user?.socialLinks?.youtube || '',
+        otherLink: user?.socialLinks?.other || ''
+      });
+      if (user.avatar) {
+        setProfileImage(getImgUrl(user.avatar));
+      }
+    }
+  }, [user, reset]);
 
   // Watch all fields for live preview
   const formData = watch();
@@ -60,9 +83,12 @@ const Onboarding = () => {
 
     onboardingMutation.mutate(formPayload, {
       onSuccess: () => {
-        toast.success("Profile setup complete! Please log in to continue.");
-        navigate('/login');
+        toast.success("Profile setup complete! Welcome to your dashboard.");
+        navigate('/dashboard');
       },
+      onError: (error) => {
+        handleBackendErrors(error, setError);
+      }
     });
   };
 
@@ -166,36 +192,45 @@ const Onboarding = () => {
                 <div className="mb-8">
                   <label className="block text-[#1A1A1A] text-sm font-semibold mb-4">Social Links</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                        <Instagram className="w-5 h-5" />
+                    <div className="mb-1">
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <Instagram className="w-5 h-5" />
+                        </div>
+                        <input 
+                          {...register("instagram")}
+                          placeholder="@username"
+                          className={`w-full pl-12 pr-4 py-3.5 bg-white border ${errors.instagram ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-sm focus:outline-none focus:border-Primary transition-all`}
+                        />
                       </div>
-                      <input 
-                        {...register("instagram")}
-                        placeholder="@username"
-                        className="w-full pl-12 pr-4 py-3.5 bg-white border border-[#E6E6E6] rounded-xl text-sm focus:outline-none focus:border-Primary transition-all"
-                      />
+                      {errors.instagram && <p className="mt-1 text-xs text-red-500">{errors.instagram.message}</p>}
                     </div>
-                    <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                        <Globe className="w-5 h-5" />
+                    <div className="mb-1">
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <Globe className="w-5 h-5" />
+                        </div>
+                        <input 
+                          {...register("tiktok")}
+                          placeholder="@username"
+                          className={`w-full pl-12 pr-4 py-3.5 bg-white border ${errors.tiktok ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-sm focus:outline-none focus:border-Primary transition-all`}
+                        />
                       </div>
-                      <input 
-                        {...register("tiktok")}
-                        placeholder="@username"
-                        className="w-full pl-12 pr-4 py-3.5 bg-white border border-[#E6E6E6] rounded-xl text-sm focus:outline-none focus:border-Primary transition-all"
-                      />
+                      {errors.tiktok && <p className="mt-1 text-xs text-red-500">{errors.tiktok.message}</p>}
                     </div>
                   </div>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                      <Youtube className="w-5 h-5" />
+                  <div>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Youtube className="w-5 h-5" />
+                      </div>
+                      <input 
+                        {...register("youtube")}
+                        placeholder="URL link here"
+                        className={`w-full pl-12 pr-4 py-3.5 bg-white border ${errors.youtube ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-sm focus:outline-none focus:border-Primary transition-all`}
+                      />
                     </div>
-                    <input 
-                      {...register("youtube")}
-                      placeholder="URL link here"
-                      className="w-full pl-12 pr-4 py-3.5 bg-white border border-[#E6E6E6] rounded-xl text-sm focus:outline-none focus:border-Primary transition-all"
-                    />
+                    {errors.youtube && <p className="mt-1 text-xs text-red-500">{errors.youtube.message}</p>}
                   </div>
                 </div>
 

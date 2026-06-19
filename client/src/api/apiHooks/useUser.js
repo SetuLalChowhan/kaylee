@@ -83,7 +83,6 @@ export const useCompleteOnboarding = () => {
       return res.data;
     },
     onSuccess: (data) => {
-      toast.success(data?.message || "Onboarding completed successfully!");
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: (error) => {
@@ -138,3 +137,20 @@ export const useChangePassword = () => {
     },
   });
 };
+
+/**
+ * useDashboardStats — Fetch authenticated user's dashboard statistics
+ */
+export const useDashboardStats = () => {
+  const axiosSecure = useAxiosSecure();
+
+  return useQuery({
+    queryKey: ["dashboardStats"],
+    queryFn: async () => {
+      const res = await axiosSecure.get(USER.DASHBOARD_STATS);
+      return res.data?.data || res.data;
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+};
+

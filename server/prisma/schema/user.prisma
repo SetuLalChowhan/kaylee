@@ -27,10 +27,17 @@ model User {
 
   role              String   @default("user") // "user" | "admin"
 
+  // Notification Preferences
+  notifyDeadlineReminders Boolean @default(true)
+  notifyInvoiceUpdates    Boolean @default(true)
+  notifyContentApprovals  Boolean @default(false)
+  notifyTaskReminders     Boolean @default(false)
+
   portfolioItems    PortfolioItem[]
   invoices          Invoice[]
   tasks             Task[]
   ugcCampaigns      UgcCampaign[]
+  notifications     Notification[]
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

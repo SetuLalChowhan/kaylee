@@ -52,3 +52,42 @@ export const NAME_RULES = {
   minLength: { value: 1, message: 'This field is required' },
   maxLength: { value: 50, message: 'Cannot exceed 50 characters' },
 };
+
+/**
+ * Map backend validation errors to React Hook Form fields.
+ * @param {object} error - The Axios error object
+ * @param {function} setError - React Hook Form's setError function
+ * @param {object} customMap - Optional custom field mapping (backendFieldName -> frontendFieldName)
+ */
+export const handleBackendErrors = (error, setError, customMap = {}) => {
+  const errorData = error?.response?.data;
+  if (errorData?.status === "fail" && Array.isArray(errorData?.errors)) {
+    errorData.errors.forEach((err) => {
+      const backendField = err.field;
+      let fieldName = customMap[backendField] || backendField;
+      
+      // If not in custom mapping, check default patterns
+      if (fieldName === backendField) {
+        if (fieldName.startsWith("socialLinks.")) {
+          const subField = fieldName.split(".")[1];
+          if (subField === "website") {
+            fieldName = "tiktok";
+          } else if (subField === "other") {
+            fieldName = "otherLink";
+          } else {
+            fieldName = subField;
+          }
+        } else if (fieldName === "shortBio") {
+          fieldName = "bio";
+        }
+      }
+      
+      setError(fieldName, {
+        type: "server",
+        message: err.message,
+      });
+    });
+    return true;
+  }
+  return false;
+};

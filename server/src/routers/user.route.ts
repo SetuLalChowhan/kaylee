@@ -1,5 +1,5 @@
 import express from "express";
-import { getMe, updateProfile, changePassword, completeOnboarding, deleteBrandLogo } from "../controllers/user.controller.js";
+import { getMe, updateProfile, changePassword, completeOnboarding, deleteBrandLogo, updateNotificationSettings, getDashboardStats } from "../controllers/user.controller.js";
 import {
   createPortfolioItem,
   getPortfolioItems,
@@ -22,6 +22,7 @@ router.get("/portfolio-preview/:slug", getPublicPortfolio);
 router.use(authGuard);
 
 router.get("/me", getMe);
+router.get("/dashboard-stats", getDashboardStats);
 router.patch(
   "/update",
   uploadAvatar.fields([
@@ -34,6 +35,7 @@ router.patch(
 router.patch("/change-password", validate(changePasswordSchema), changePassword);
 router.put("/onboarding", uploadAvatar.single("avatar"), validate(onboardingSchema), completeOnboarding);
 router.delete("/brand-logo", deleteBrandLogo);
+router.patch("/notification-settings", updateNotificationSettings);
 
 // ── Portfolio CRUD ─────────────────────────────────────────────────────────────
 router.post("/portfolio", uploadAvatar.single("file"), validate(createPortfolioSchema), createPortfolioItem);

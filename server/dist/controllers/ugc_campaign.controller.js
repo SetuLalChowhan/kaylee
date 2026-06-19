@@ -1,0 +1,481 @@
+import prisma from "../config/db.js";
+import { AppError } from "../utils/AppError.js";
+import { catchAsync } from "../utils/catchAsync.js";
+import fs from "fs";
+/**
+ * GET /api/ugc-campaigns — Retrieve creator's campaigns
+ */
+export const getUgcCampaigns = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { status } = req.query;
+    const where = { userId };
+    if (status && status !== "all") {
+        let formattedStatus = status;
+        if (status === "draft")
+            formattedStatus = "Draft";
+        if (status === "under-review")
+            formattedStatus = "Under Review";
+        if (status === "approved")
+            formattedStatus = "Approved";
+        if (status === "completed")
+            formattedStatus = "Completed";
+        where.status = formattedStatus;
+    }
+    const campaigns = await prisma.ugcCampaign.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+    });
+    res.status(200).json({
+        status: "success",
+        data: campaigns,
+    });
+});
+/**
+ * GET /api/ugc-campaigns/:id — Retrieve full campaign details
+ */
+export const getUgcCampaignById = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { id } = req.params;
+    const campaign = await prisma.ugcCampaign.findFirst({
+        where: { id, userId },
+        include: {
+            deliverables: { orderBy: { createdAt: "asc" } },
+            tasks: { orderBy: { createdAt: "asc" } },
+            media: { orderBy: { createdAt: "asc" } },
+            documents: { orderBy: { createdAt: "asc" } },
+            notesComments: { orderBy: { createdAt: "desc" } },
+            feedback: {
+                orderBy: { createdAt: "asc" },
+                include: { media: true },
+            },
+        },
+    });
+    if (!campaign) {
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    }
+    res.status(200).json({
+        status: "success",
+        data: campaign,
+    });
+});
+/**
+ * POST /api/ugc-campaigns — Create a new campaign
+ */
+export const createUgcCampaign = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignName, brandName, deadline, amount, status, notes } = req.body;
+    const baseSlug = `${brandName}-${campaignName}`
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    const slug = `${baseSlug}-${randomSuffix}`;
+    const campaign = await prisma.ugcCampaign.create({
+        data: {
+            userId,
+            name: campaignName,
+            brandName,
+            deadline,
+            amount,
+            status: status || "Pending",
+            notes: notes ?? null,
+            slug,
+        },
+    });
+    res.status(201).json({
+        status: "success",
+        message: "Campaign created successfully",
+        data: campaign,
+    });
+});
+/**
+ * PATCH /api/ugc-campaigns/:id — Update campaign details
+ */
+export const updateUgcCampaign = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { id } = req.params;
+    const { campaignName, brandName, deadline, amount, status, releaseFiles, notes, paymentStatus } = req.body;
+    const existing = await prisma.ugcCampaign.findFirst({ where: { id, userId } });
+    if (!existing) {
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    }
+    const updated = await prisma.ugcCampaign.update({
+        where: { id },
+        data: {
+            ...(campaignName !== undefined && { name: campaignName }),
+            ...(brandName !== undefined && { brandName }),
+            ...(deadline !== undefined && { deadline }),
+            ...(amount !== undefined && { amount }),
+            ...(status !== undefined && { status }),
+            ...(releaseFiles !== undefined && { releaseFiles }),
+            ...(notes !== undefined && { notes: notes ?? null }),
+            ...(paymentStatus !== undefined && { paymentStatus }),
+        },
+    });
+    res.status(200).json({
+        status: "success",
+        message: "Campaign updated successfully",
+        data: updated,
+    });
+});
+/**
+ * DELETE /api/ugc-campaigns/:id — Delete a campaign
+ */
+export const deleteUgcCampaign = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { id } = req.params;
+    const existing = await prisma.ugcCampaign.findFirst({ where: { id, userId } });
+    if (!existing) {
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    }
+    const mediaItems = await prisma.ugcMedia.findMany({ where: { campaignId: id } });
+    for (const item of mediaItems) {
+        if (fs.existsSync(item.url)) {
+            try {
+                fs.unlinkSync(item.url);
+            }
+            catch { }
+        }
+    }
+    const docs = await prisma.ugcDocument.findMany({ where: { campaignId: id } });
+    for (const doc of docs) {
+        if (fs.existsSync(doc.url)) {
+            try {
+                fs.unlinkSync(doc.url);
+            }
+            catch { }
+        }
+    }
+    await prisma.ugcCampaign.delete({ where: { id } });
+    res.status(200).json({
+        status: "success",
+        message: "Campaign deleted successfully",
+    });
+});
+/**
+ * Deliverables Operations
+ */
+export const createDeliverable = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId } = req.params;
+    const { text } = req.body;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const deliverable = await prisma.ugcDeliverable.create({
+        data: { campaignId, text },
+    });
+    res.status(201).json({ status: "success", data: deliverable });
+});
+export const deleteDeliverable = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId, id } = req.params;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    await prisma.ugcDeliverable.delete({ where: { id } });
+    res.status(200).json({ status: "success", message: "Deliverable deleted successfully" });
+});
+/**
+ * Tasks Operations
+ */
+export const createCampaignTask = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId } = req.params;
+    const { name, date, completed } = req.body;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const task = await prisma.ugcCampaignTask.create({
+        data: { campaignId, name, date, completed: completed ?? false },
+    });
+    res.status(201).json({ status: "success", data: task });
+});
+export const updateCampaignTask = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId, id } = req.params;
+    const { name, date, completed } = req.body;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const task = await prisma.ugcCampaignTask.update({
+        where: { id },
+        data: {
+            ...(name !== undefined && { name }),
+            ...(date !== undefined && { date }),
+            ...(completed !== undefined && { completed }),
+        },
+    });
+    res.status(200).json({ status: "success", data: task });
+});
+export const deleteCampaignTask = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId, id } = req.params;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    await prisma.ugcCampaignTask.delete({ where: { id } });
+    res.status(200).json({ status: "success", message: "Task deleted successfully" });
+});
+/**
+ * Media Operations
+ */
+export const uploadMedia = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId } = req.params;
+    const { description } = req.body;
+    if (!req.file)
+        return next(new AppError("Media file is required", 400));
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
+    const url = req.file.path.replace(/\\/g, "/");
+    const media = await prisma.ugcMedia.create({
+        data: {
+            campaignId,
+            name: req.file.originalname,
+            type,
+            url,
+            description: description ?? null,
+            status: "pending",
+        },
+    });
+    res.status(201).json({ status: "success", data: media });
+});
+/**
+ * PATCH /api/ugc-campaigns/:campaignId/media/:id/replace — Replace a single media item
+ */
+export const replaceMedia = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId, id } = req.params;
+    const { description } = req.body;
+    if (!req.file)
+        return next(new AppError("Replacement file is required", 400));
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    // Find and delete the old physical file
+    const existing = await prisma.ugcMedia.findUnique({ where: { id } });
+    if (!existing)
+        return next(new AppError("Media item not found", 404));
+    if (existing.url && fs.existsSync(existing.url)) {
+        try {
+            fs.unlinkSync(existing.url);
+        }
+        catch { }
+    }
+    const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
+    const url = req.file.path.replace(/\\/g, "/");
+    // Update the existing record in-place (preserves ID & relations, resets status to pending)
+    const updated = await prisma.ugcMedia.update({
+        where: { id },
+        data: {
+            name: req.file.originalname,
+            type,
+            url,
+            description: description ?? existing.description,
+            status: "pending",
+        },
+    });
+    res.status(200).json({ status: "success", data: updated });
+});
+export const deleteMedia = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId, id } = req.params;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const media = await prisma.ugcMedia.findUnique({ where: { id } });
+    if (media && fs.existsSync(media.url)) {
+        try {
+            fs.unlinkSync(media.url);
+        }
+        catch { }
+    }
+    await prisma.ugcMedia.delete({ where: { id } });
+    res.status(200).json({ status: "success", message: "Media deleted successfully" });
+});
+/**
+ * Documents Operations
+ */
+export const uploadDocument = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId } = req.params;
+    if (!req.file)
+        return next(new AppError("Document file is required", 400));
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const url = req.file.path.replace(/\\/g, "/");
+    const doc = await prisma.ugcDocument.create({
+        data: {
+            campaignId,
+            name: req.file.originalname,
+            url,
+        },
+    });
+    res.status(201).json({ status: "success", data: doc });
+});
+export const deleteDocument = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId, id } = req.params;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const doc = await prisma.ugcDocument.findUnique({ where: { id } });
+    if (doc && fs.existsSync(doc.url)) {
+        try {
+            fs.unlinkSync(doc.url);
+        }
+        catch { }
+    }
+    await prisma.ugcDocument.delete({ where: { id } });
+    res.status(200).json({ status: "success", message: "Document deleted successfully" });
+});
+/**
+ * Notes Operations
+ */
+export const createNote = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId } = req.params;
+    const { text } = req.body;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const note = await prisma.ugcNote.create({
+        data: { campaignId, text },
+    });
+    res.status(201).json({ status: "success", data: note });
+});
+export const deleteNote = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId, id } = req.params;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    await prisma.ugcNote.delete({ where: { id } });
+    res.status(200).json({ status: "success", message: "Note deleted successfully" });
+});
+/**
+ * Feedback Messages
+ */
+export const createFeedback = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const { campaignId } = req.params;
+    const { text, mediaId } = req.body;
+    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    let fileUrl = null;
+    if (req.file) {
+        fileUrl = req.file.path.replace(/\\/g, "/");
+    }
+    const message = await prisma.ugcFeedbackMessage.create({
+        data: {
+            campaignId,
+            text,
+            from: "creator",
+            mediaId: mediaId || null,
+            fileUrl,
+        },
+        include: { media: true },
+    });
+    res.status(201).json({ status: "success", data: message });
+});
+/**
+ * ── GUEST PUBLIC ENDPOINTS ──────────────────────────────────────────────────
+ */
+/**
+ * GET /api/ugc-campaigns/public/:slug — Retrieve public campaign
+ */
+export const getPublicCampaignBySlug = catchAsync(async (req, res, next) => {
+    const { slug } = req.params;
+    const campaign = await prisma.ugcCampaign.findUnique({
+        where: { slug },
+        include: {
+            deliverables: { orderBy: { createdAt: "asc" } },
+            tasks: { orderBy: { createdAt: "asc" } },
+            media: { orderBy: { createdAt: "asc" } },
+            documents: { orderBy: { createdAt: "asc" } },
+            notesComments: { orderBy: { createdAt: "desc" } },
+            feedback: {
+                orderBy: { createdAt: "asc" },
+                include: { media: true },
+            },
+        },
+    });
+    if (!campaign) {
+        return next(new AppError("Campaign not found", 404));
+    }
+    res.status(200).json({
+        status: "success",
+        data: campaign,
+    });
+});
+/**
+ * PATCH /api/ugc-campaigns/public/:slug/media/:mediaId/status — Approve file
+ */
+export const updatePublicMediaStatus = catchAsync(async (req, res, next) => {
+    const { slug, mediaId } = req.params;
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { slug } });
+    if (!campaign)
+        return next(new AppError("Campaign not found", 404));
+    if (mediaId === "all") {
+        await prisma.ugcMedia.updateMany({
+            where: { campaignId: campaign.id },
+            data: { status: "approved" },
+        });
+        return res.status(200).json({ status: "success", message: "All media items approved" });
+    }
+    const updatedMedia = await prisma.ugcMedia.update({
+        where: { id: mediaId },
+        data: { status: "approved" },
+    });
+    res.status(200).json({ status: "success", data: updatedMedia });
+});
+/**
+ * POST /api/ugc-campaigns/public/:slug/media/:mediaId/request-changes — Request changes on media
+ */
+export const requestChangesPublicMedia = catchAsync(async (req, res, next) => {
+    const { slug, mediaId } = req.params;
+    const { text } = req.body;
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { slug } });
+    if (!campaign)
+        return next(new AppError("Campaign not found", 404));
+    await prisma.ugcMedia.update({
+        where: { id: mediaId },
+        data: { status: "changes_requested" },
+    });
+    const message = await prisma.ugcFeedbackMessage.create({
+        data: {
+            campaignId: campaign.id,
+            text,
+            from: "brand",
+            mediaId,
+        },
+        include: { media: true },
+    });
+    res.status(200).json({ status: "success", data: message });
+});
+/**
+ * POST /api/ugc-campaigns/public/:slug/feedback — Submit feedback chat from brand
+ */
+export const createPublicFeedback = catchAsync(async (req, res, next) => {
+    const { slug } = req.params;
+    const { text, mediaId } = req.body;
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { slug } });
+    if (!campaign)
+        return next(new AppError("Campaign not found", 404));
+    const message = await prisma.ugcFeedbackMessage.create({
+        data: {
+            campaignId: campaign.id,
+            text,
+            from: "brand",
+            mediaId: mediaId || null,
+        },
+        include: { media: true },
+    });
+    res.status(201).json({ status: "success", data: message });
+});
+//# sourceMappingURL=ugc_campaign.controller.js.map

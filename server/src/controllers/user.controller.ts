@@ -66,6 +66,11 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
       email: true,
       avatar: true,
       isVerified: true,
+      role: true,
+      notifyDeadlineReminders: true,
+      notifyInvoiceUpdates: true,
+      notifyContentApprovals: true,
+      notifyTaskReminders: true,
     },
   });
 
@@ -292,3 +297,164 @@ export const changePassword = catchAsync(async (req: Request, res: Response, nex
     message: "Password changed successfully!",
   });
 });
+
+export const updateNotificationSettings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = (req as AuthRequest).user;
+  const { notifyDeadlineReminders, notifyInvoiceUpdates, notifyContentApprovals, notifyTaskReminders } = req.body as {
+    notifyDeadlineReminders?: boolean;
+    notifyInvoiceUpdates?: boolean;
+    notifyContentApprovals?: boolean;
+    notifyTaskReminders?: boolean;
+  };
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(notifyDeadlineReminders !== undefined && { notifyDeadlineReminders }),
+      ...(notifyInvoiceUpdates !== undefined && { notifyInvoiceUpdates }),
+      ...(notifyContentApprovals !== undefined && { notifyContentApprovals }),
+      ...(notifyTaskReminders !== undefined && { notifyTaskReminders }),
+    },
+    select: {
+      notifyDeadlineReminders: true,
+      notifyInvoiceUpdates: true,
+      notifyContentApprovals: true,
+      notifyTaskReminders: true,
+    }
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Notification settings updated successfully",
+    data: updatedUser
+  });
+});
+
+/**
+ * GET /api/user/dashboard-stats — Retrieve authenticated user's dashboard metrics
+ */
+export const getDashboardStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = (req as AuthRequest).user;
+
+  // 1. Stats Card calculations
+  const activeCampaignsCount = await prisma.ugcCampaign.count({
+    where: {
+      userId,
+      status: { in: ["Active", "Approved", "Pending"] }
+    }
+  });
+
+  const awaitingReviewCount = await prisma.ugcCampaign.count({
+    where: {
+      userId,
+      status: "Under Review"
+    }
+  });
+
+  const completedCampaignsCount = await prisma.ugcCampaign.count({
+    where: {
+      userId,
+      status: "Completed"
+    }
+  });
+
+  const campaigns = await prisma.ugcCampaign.findMany({
+    where: { userId },
+    select: { amount: true, status: true, paymentStatus: true }
+  });
+
+  const totalEarnedValue = campaigns
+    .filter(c => c.status === "Completed" || c.paymentStatus === "Paid")
+    .reduce((sum, c) => {
+      const cleanAmount = c.amount.replace(/[^0-9.]/g, "");
+      const amt = parseFloat(cleanAmount) || 0;
+      return sum + amt;
+    }, 0);
+
+  // 2. Recent Active/Draft campaigns (up to 4)
+  const recentCampaigns = await prisma.ugcCampaign.findMany({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+    take: 4
+  });
+
+  // 3. Upcoming Deadlines (up to 5)
+  const activeCampaignsForDeadlines = await prisma.ugcCampaign.findMany({
+    where: {
+      userId,
+      status: { not: "Completed" },
+      deadline: { not: "" }
+    },
+    select: {
+      id: true,
+      name: true,
+      brandName: true,
+      deadline: true
+    }
+  });
+
+  const parsedDeadlines = activeCampaignsForDeadlines
+    .map(c => {
+      const date = new Date(c.deadline);
+      return {
+        id: c.id,
+        title: c.brandName,
+        sub: c.name,
+        date,
+        day: isNaN(date.getTime()) ? "" : date.getDate().toString().padStart(2, "0"),
+        month: isNaN(date.getTime()) ? "" : date.toLocaleString("en-US", { month: "short" })
+      };
+    })
+    .filter(d => d.day !== "")
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(0, 5)
+    .map(({ id, title, sub, day, month }) => ({ id, title, sub, day, month }));
+
+  // 4. Pending & Upcoming Tasks from Planner (up to 5)
+  const tasks = await prisma.task.findMany({
+    where: { userId },
+    orderBy: { date: "asc" }
+  });
+
+  const parsedTasks = tasks
+    .map(t => {
+      const dateObj = new Date(t.date);
+      let formattedDate = t.date;
+      if (!isNaN(dateObj.getTime())) {
+        formattedDate = dateObj.toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric" });
+      }
+      return {
+        id: t.id,
+        title: t.name,
+        sub: t.campaign,
+        date: formattedDate,
+        rawDate: t.date,
+        completed: t.completed
+      };
+    })
+    .sort((a, b) => {
+      // Sort in-completed first, then by date
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      const dateA = new Date(a.rawDate).getTime();
+      const dateB = new Date(b.rawDate).getTime();
+      return (isNaN(dateA) ? 0 : dateA) - (isNaN(dateB) ? 0 : dateB);
+    })
+    .slice(0, 5);
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      stats: {
+        activeCampaigns: activeCampaignsCount,
+        awaitingReview: awaitingReviewCount,
+        completedCampaigns: completedCampaignsCount,
+        totalEarned: totalEarnedValue
+      },
+      recentCampaigns,
+      deadlines: parsedDeadlines,
+      tasks: parsedTasks
+    }
+  });
+});

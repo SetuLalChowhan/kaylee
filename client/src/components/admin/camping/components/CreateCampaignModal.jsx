@@ -80,11 +80,11 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
                 <div className="relative">
                   <input
                     {...register('deadline', { required: 'Deadline is required' })}
-                    type="text"
-                    defaultValue="04/25/2026"
+                    type="date"
+                    defaultValue="2026-04-25"
                     className={`w-full bg-white border rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm pr-12 ${errors.deadline ? 'border-red-500' : 'border-gray-100'}`}
                   />
-                  <Calendar className="absolute right-4 md:right-5 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
+                  <Calendar className="absolute right-4 md:right-5 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400 pointer-events-none" />
                 </div>
                 {errors.deadline && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.deadline.message}</p>}
               </div>

@@ -1,27 +1,41 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import CampaignCard from '../camping/components/CampaignCard';
+import { useDeleteUgcCampaign } from '@/api/apiHooks/useUgcCampaign';
 
-const CampaignGrid = () => {
+const CampaignGrid = ({ campaigns = [] }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const deleteMutation = useDeleteUgcCampaign();
 
-  const campaigns = [
-    { id: 1, title: "Summer Skincare Promo", brand: "GlowCare", amount: "$500.00", dueDate: "May 06, 2025", status: "Draft", progress: 50 },
-    { id: 2, title: "Summer Skincare Promo", brand: "GlowCare", amount: "$500.00", dueDate: "May 06, 2025", status: "Under Review", progress: 85 },
-    { id: 3, title: "Summer Skincare Promo", brand: "GlowCare", amount: "$500.00", dueDate: "May 06, 2025", status: "Under Review", progress: 60 },
-    { id: 4, title: "Summer Skincare Promo", brand: "GlowCare", amount: "$500.00", dueDate: "May 06, 2025", status: "Approved", progress: 100 },
-  ];
+  const getProgress = (status) => {
+    switch (status) {
+      case 'Completed': return 100;
+      case 'Approved': return 100;
+      case 'Under Review': return 75;
+      case 'Active': return 50;
+      case 'Draft': return 25;
+      default: return 10;
+    }
+  };
 
   const handleEdit = (id) => {
     console.log('Edit Campaign from Dashboard:', id);
   };
 
   const handleDelete = (id) => {
-    console.log('Delete Campaign from Dashboard:', id);
+    if (window.confirm("Are you sure you want to delete this campaign?")) {
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+        },
+      });
+    }
   };
 
   return (
-    <div className="flex-1 bg-white rounded-xl p-6">
+    <div className="flex-1 bg-white rounded-xl p-6 w-full">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-xl font-bold text-[#1A1A1A]">Active Campaigns</h2>
         <button 
@@ -32,17 +46,30 @@ const CampaignGrid = () => {
         </button>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {campaigns.map((campaign) => (
-          <CampaignCard 
-            key={campaign.id} 
-            {...campaign} 
-            onEdit={() => handleEdit(campaign.id)}
-            onDelete={() => handleDelete(campaign.id)}
-          />
-        ))}
+        {campaigns.length > 0 ? (
+          campaigns.map((campaign) => (
+            <CampaignCard 
+              key={campaign.id} 
+              id={campaign.id}
+              title={campaign.name}
+              brand={campaign.brandName}
+              amount={campaign.amount}
+              dueDate={campaign.deadline}
+              status={campaign.status}
+              progress={getProgress(campaign.status)}
+              onEdit={() => handleEdit(campaign.id)}
+              onDelete={() => handleDelete(campaign.id)}
+            />
+          ))
+        ) : (
+          <div className="col-span-1 xl:col-span-2 text-center py-12 border-2 border-dashed border-gray-100 rounded-[32px] bg-white">
+            <p className="text-gray-400 font-medium">No active campaigns found.</p>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default CampaignGrid;
+

@@ -20,6 +20,7 @@ export const AUTH = {
 
 export const USER = {
   GET_ME: `${API_BASE}/user/me`,
+  DASHBOARD_STATS: `${API_BASE}/user/dashboard-stats`,
   UPDATE: `${API_BASE}/user/update`,
   CHANGE_PASSWORD: `${API_BASE}/user/change-password`,
   ONBOARDING: `${API_BASE}/user/onboarding`,

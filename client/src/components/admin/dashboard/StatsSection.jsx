@@ -28,17 +28,26 @@ const StatsCard = ({ title, value, label, icon: Icon, isPrimary, index }) => (
   </motion.div>
 );
 
-const StatsSection = () => {
-  const stats = [
-    { title: "Active Campaigns", value: "03", label: "Active Campaigns", icon: CampaignIcon, isPrimary: true },
-    { title: "Awaiting Review", value: "02", label: "Awaiting Review", icon: Clock, isPrimary: false },
-    { title: "Completed Campaigns", value: "04", label: "Completed Campaigns", icon: CheckCircle, isPrimary: false },
-    { title: "Total Earned", value: "$500.00", label: "Total Earned", icon: DollarSign, isPrimary: false },
+const StatsSection = ({ stats }) => {
+  const activeCampaignsVal = String(stats?.activeCampaigns ?? 0).padStart(2, '0');
+  const awaitingReviewVal = String(stats?.awaitingReview ?? 0).padStart(2, '0');
+  const completedVal = String(stats?.completedCampaigns ?? 0).padStart(2, '0');
+  
+  const totalEarnedVal = '$' + parseFloat(stats?.totalEarned ?? 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const statsList = [
+    { title: "Active Campaigns", value: activeCampaignsVal, label: "Active Campaigns", icon: CampaignIcon, isPrimary: true },
+    { title: "Awaiting Review", value: awaitingReviewVal, label: "Awaiting Review", icon: Clock, isPrimary: false },
+    { title: "Completed Campaigns", value: completedVal, label: "Completed Campaigns", icon: CheckCircle, isPrimary: false },
+    { title: "Total Earned", value: totalEarnedVal, label: "Total Earned", icon: DollarSign, isPrimary: false },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-      {stats.map((stat, index) => (
+      {statsList.map((stat, index) => (
         <StatsCard key={stat.title} {...stat} index={index} />
       ))}
     </div>

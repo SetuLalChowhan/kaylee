@@ -40,6 +40,7 @@ export const useRegister = () => {
 export const useVerifyEmail = () => {
   const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   return useMutation({
     mutationFn: async ({ email, otp }) => {
@@ -47,6 +48,7 @@ export const useVerifyEmail = () => {
       return res.data;
     },
     onSuccess: (data) => {
+      dispatch(setCredentials({ token: data.accessToken, user: data.user }));
       toast.success(data?.message || "Email verified successfully!");
       navigate("/onboarding");
     },

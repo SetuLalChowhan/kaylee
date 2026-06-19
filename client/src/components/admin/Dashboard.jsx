@@ -5,16 +5,29 @@ import CampaignGrid from './dashboard/CampaignGrid';
 import DeadlinesSidebar from './dashboard/DeadlinesSidebar';
 import CommonButton from '@/components/ui/CommonButton';
 import CreateCampaignModal from './camping/components/CreateCampaignModal';
+import { useUserProfile, useDashboardStats } from '@/api/apiHooks/useUser';
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user, isLoading: isUserLoading } = useUserProfile();
+  const { data: dashboardData, isLoading: isStatsLoading } = useDashboardStats();
+
+  if (isUserLoading || isStatsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-Primary"></div>
+      </div>
+    );
+  }
+
+  const welcomeName = user?.firstName || user?.displayName || 'Jahan';
 
   return (
     <div className="py-2">
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">Welcome back, Jahan</h1>
+          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">Welcome back, {welcomeName}</h1>
           <p className="text-gray-500 text-sm">Here's what's happening with your campaigns.</p>
         </div>
         <CommonButton 
@@ -27,15 +40,15 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Section */}
-      <StatsSection />
+      <StatsSection stats={dashboardData?.stats} />
 
       {/* Main Content Layout */}
       <div className="flex flex-col lg:flex-row gap-10 items-start">
         {/* Left Column: Campaigns */}
-        <CampaignGrid />
+        <CampaignGrid campaigns={dashboardData?.recentCampaigns} />
 
         {/* Right Column: Deadlines & Tasks */}
-        <DeadlinesSidebar />
+        <DeadlinesSidebar deadlines={dashboardData?.deadlines} tasks={dashboardData?.tasks} />
       </div>
 
       <CreateCampaignModal 
@@ -45,5 +58,6 @@ const Dashboard = () => {
     </div>
   );
 };
+
 
 export default Dashboard;
