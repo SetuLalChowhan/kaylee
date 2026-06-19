@@ -55,6 +55,12 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
     services: profileData.servicesOffered || '',
     brands: Array.isArray(profileData.brandLogos) ? profileData.brandLogos.map(logo => getImgUrl(logo)) : [],
     image: getImgUrl(profileData.avatar) || '',
+    otherLink: profileData.socialLinks?.other || '',
+    socials: {
+      instagram: profileData.socialLinks?.instagram || '',
+      tiktok: profileData.socialLinks?.website || '', // website field maps tiktok
+      youtube: profileData.socialLinks?.youtube || '',
+    },
   };
 
   const mediaItems = Array.isArray(items)

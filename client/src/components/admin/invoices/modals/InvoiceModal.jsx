@@ -2,17 +2,27 @@ import React, { useEffect } from 'react';
 import { X, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
+import { useCampaigns } from '@/api/apiHooks/useCampaign';
 
 const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create' }) => {
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { data: campaigns = [] } = useCampaigns();
+
+  // Helper to format ISO Date string from backend into YYYY-MM-DD format for date input
+  const toInputDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     if (invoice) {
       reset({
         invoiceNo: invoice.invoiceNo || '',
         campaign: invoice.campaign || '',
-        issueDate: invoice.issueDate || '',
-        dueDate: invoice.dueDate || '',
+        issueDate: toInputDate(invoice.issueDate),
+        dueDate: toInputDate(invoice.dueDate),
         amount: invoice.amount || '',
         status: invoice.status || 'Pending',
       });
@@ -75,8 +85,11 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create' }) =
                     className={`w-full bg-white border rounded-2xl py-4 px-6 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] appearance-none ${type === 'create' && errors.campaign ? 'border-red-500' : 'border-gray-100'}`}
                   >
                     <option value="">Select a campaign</option>
-                    <option value="Nike UGC Shoot">Nike UGC Shoot</option>
-                    <option value="Summer Skincare Promo">Summer Skincare Promo</option>
+                    {campaigns.map((c) => (
+                      <option key={c.id} value={c.title}>
+                        {c.title}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none group-focus-within:text-Primary transition-colors" />
                 </div>

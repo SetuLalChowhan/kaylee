@@ -4,6 +4,20 @@ import { selectCurrentToken, clearAuth, setToken } from "../redux/slices/authSli
 import { useMemo, useRef } from "react";
 import { AUTH } from "../api/apiEndPoint";
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 const useAxiosSecure = () => {
   const token = useSelector(selectCurrentToken);
   const dispatch = useDispatch();
@@ -41,7 +55,21 @@ const useAxiosSecure = () => {
 
         // Only attempt refresh on 401 and if we haven't retried yet
         if (error?.response?.status === 401 && !originalRequest._retry) {
+          if (isRefreshing) {
+            return new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            })
+              .then((newToken) => {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return instance(originalRequest);
+              })
+              .catch((err) => {
+                return Promise.reject(err);
+              });
+          }
+
           originalRequest._retry = true;
+          isRefreshing = true;
 
           try {
             const res = await axios.post(
@@ -54,9 +82,14 @@ const useAxiosSecure = () => {
             dispatch(setToken({ token: newToken }));
             tokenRef.current = newToken; // Update ref immediately
 
+            processQueue(null, newToken);
+            isRefreshing = false;
+
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return instance(originalRequest);
           } catch (refreshError) {
+            processQueue(refreshError, null);
+            isRefreshing = false;
             dispatch(clearAuth());
             window.location.href = "/login";
             return Promise.reject(refreshError);

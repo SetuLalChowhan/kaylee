@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import InvoiceCard from './InvoiceCard';
 import InvoiceModal from './modals/InvoiceModal';
 import DeleteInvoiceModal from './modals/DeleteInvoiceModal';
+import {
+  useInvoices,
+  useCreateInvoice,
+  useUpdateInvoice,
+  useDeleteInvoice,
+} from '@/api/apiHooks/useInvoice';
 
 const Invoices = () => {
-  const [invoices, setInvoices] = useState([
-    { id: 1, invoiceNo: 'INV-1023', campaign: 'Nike UGC Shoot', issueDate: 'May 06, 2025', dueDate: 'May 20, 2025', status: 'Pending', amount: '$500.00' },
-    { id: 2, invoiceNo: 'INV-1024', campaign: 'Nike UGC Shoot', issueDate: 'May 06, 2025', dueDate: 'May 20, 2025', status: 'Overdue', amount: '$500.00' },
-    { id: 3, invoiceNo: 'INV-1025', campaign: 'Nike UGC Shoot', issueDate: 'May 06, 2025', dueDate: 'May 20, 2025', status: 'Paid', amount: '$500.00' },
-    { id: 4, invoiceNo: 'INV-1026', campaign: 'Summer Skincare Promo', issueDate: 'May 06, 2025', dueDate: 'May 20, 2025', status: 'Paid', amount: '$500.00' },
-    { id: 5, invoiceNo: 'INV-1026', campaign: 'Summer Skincare Promo', issueDate: 'May 06, 2025', dueDate: 'May 20, 2025', status: 'Paid', amount: '$500.00' },
-  ]);
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  // Fetch invoices dynamically based on status filter
+  const { data: invoices = [], isLoading } = useInvoices(statusFilter);
+
+  // Mutation hooks
+  const createMutation = useCreateInvoice();
+  const updateMutation = useUpdateInvoice();
+  const deleteMutation = useDeleteInvoice();
 
   // Modal States
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -37,22 +45,39 @@ const Invoices = () => {
   };
 
   const handleInvoiceSubmit = (data) => {
+    // Format payload to backend fields
+    const payload = {
+      invoiceNo: data.invoiceNo,
+      campaign: data.campaign,
+      issueDate: data.issueDate,
+      dueDate: data.dueDate,
+      amount: data.amount,
+      status: data.status,
+    };
+
     if (modalType === 'create') {
-      const newInvoice = {
-        id: Date.now(),
-        ...data,
-      };
-      setInvoices([...invoices, newInvoice]);
+      createMutation.mutate(payload, {
+        onSuccess: () => setIsInvoiceModalOpen(false),
+      });
     } else {
-      setInvoices(invoices.map(inv => inv.id === selectedInvoice.id ? { ...inv, ...data } : inv));
+      updateMutation.mutate(
+        { id: selectedInvoice.id, invoiceData: payload },
+        {
+          onSuccess: () => setIsInvoiceModalOpen(false),
+        }
+      );
     }
-    setIsInvoiceModalOpen(false);
   };
 
   const handleDeleteConfirm = () => {
-    setInvoices(invoices.filter(inv => inv.id !== selectedInvoice.id));
-    setIsDeleteModalOpen(false);
+    if (selectedInvoice) {
+      deleteMutation.mutate(selectedInvoice.id, {
+        onSuccess: () => setIsDeleteModalOpen(false),
+      });
+    }
   };
+
+  const tabs = ['All', 'Paid', 'Pending', 'Overdue'];
 
   return (
     <div className="py-2">
@@ -74,17 +99,50 @@ const Invoices = () => {
         </button>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {invoices.map((invoice) => (
-          <InvoiceCard
-            key={invoice.id}
-            invoice={invoice}
-            onEdit={handleEditInvoice}
-            onDelete={handleDeleteInvoice}
-          />
-        ))}
+      {/* Tabs Filter */}
+      <div className="flex gap-2 mb-8 border-b border-gray-100 pb-4 overflow-x-auto custom-scrollbar">
+        {tabs.map((tab) => {
+          const isActive = statusFilter === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setStatusFilter(tab)}
+              className={`px-6 py-2.5 rounded-full text-xs md:text-sm font-bold transition-all duration-200 ${
+                isActive
+                  ? 'bg-Primary text-white shadow-lg shadow-Primary/20'
+                  : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'
+              }`}
+            >
+              {tab}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Grid Loader/Grid */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 text-Primary animate-spin" />
+        </div>
+      ) : invoices.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm">
+          <p className="text-gray-400 text-sm font-semibold">No invoices found for status "{statusFilter}".</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {invoices.map((invoice) => (
+            <InvoiceCard
+              key={invoice.id}
+              invoice={{
+                ...invoice,
+                campaign: invoice.campaignName, // display backend campaignName
+              }}
+              onEdit={handleEditInvoice}
+              onDelete={handleDeleteInvoice}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Modals */}
       <InvoiceModal

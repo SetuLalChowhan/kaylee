@@ -8,8 +8,13 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 import authRoutes from "./routers/auth.route.js";
 import userRoutes from "./routers/user.route.js";
+import invoiceRoutes from "./routers/invoice.route.js";
+import campaignRoutes from "./routers/campaign.route.js";
+import plannerRoutes from "./routers/planner.route.js";
+import ugcCampaignRoutes from "./routers/ugc_campaign.route.js";
 import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import { AppError } from "./utils/AppError.js";
+import prisma from "./config/db.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +39,10 @@ app.get("/", (_req, res) => {
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/invoice", invoiceRoutes);
+app.use("/api/campaign", campaignRoutes);
+app.use("/api/planner", plannerRoutes);
+app.use("/api/ugc-campaigns", ugcCampaignRoutes);
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, _res, next) => {
@@ -42,6 +51,26 @@ app.use((req, _res, next) => {
 
 // ── Global Error Handler (must be last) ───────────────────────────────────────
 app.use(globalErrorHandler);
+
+// ── Campaign Auto-seeding ─────────────────────────────────────────────────────
+async function seedCampaigns() {
+  try {
+    const count = await prisma.campaign.count();
+    if (count === 0) {
+      await prisma.campaign.createMany({
+        data: [
+          { title: "Nike UGC Shoot", description: "Default Nike UGC Campaign" },
+          { title: "Summer Skincare Promo", description: "Default Summer Skincare Campaign" },
+          { title: "Adidas Activewear Launch", description: "Default Adidas Campaign" },
+        ],
+      });
+      console.log("Database successfully seeded with default campaigns.");
+    }
+  } catch (err) {
+    console.error("Error seeding campaigns:", err);
+  }
+}
+seedCampaigns();
 
 app.listen(PORT, () => {
   console.log(`Server running → http://localhost:${PORT}`);

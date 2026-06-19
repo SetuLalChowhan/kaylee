@@ -25,7 +25,12 @@ model User {
   resetToken        String?  @unique
   resetTokenExpires DateTime?
 
+  role              String   @default("user") // "user" | "admin"
+
   portfolioItems    PortfolioItem[]
+  invoices          Invoice[]
+  tasks             Task[]
+  ugcCampaigns      UgcCampaign[]
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

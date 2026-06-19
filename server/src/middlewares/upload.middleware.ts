@@ -65,5 +65,26 @@ export const uploadBrandLogo = multer({
   limits,
 });
 
+// Campaign uploads config supporting images, videos, and documents
+const campaignDir = "uploads/campaigns";
+if (!fs.existsSync(campaignDir)) {
+  fs.mkdirSync(campaignDir, { recursive: true });
+}
+
+const campaignStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, campaignDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+export const uploadCampaignFile = multer({
+  storage: campaignStorage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
+});
+
 // Re-export for backward compatibility (single avatar upload)
 export const upload = uploadAvatar;

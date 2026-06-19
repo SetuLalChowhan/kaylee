@@ -1,11 +1,29 @@
 import React from 'react';
-import { Send, Copy, Instagram, Youtube, MoreHorizontal } from 'lucide-react';
+import { Send, Copy, Instagram, Youtube, MoreHorizontal, ExternalLink } from 'lucide-react';
 import { FaTiktok } from 'react-icons/fa';
 import { getImgUrl } from '@/utils/image';
 import { toast } from 'react-toastify';
 
 const ProfileCard = ({ profile }) => {
   const services = profile.services.split('\n').filter(s => s.trim());
+
+  const getSocialUrl = (platform, usernameOrUrl) => {
+    if (!usernameOrUrl) return '#';
+    if (usernameOrUrl.startsWith('http://') || usernameOrUrl.startsWith('https://')) {
+      return usernameOrUrl;
+    }
+    const cleanValue = usernameOrUrl.replace(/^@/, '');
+    if (platform === 'instagram') {
+      return `https://instagram.com/${cleanValue}`;
+    }
+    if (platform === 'tiktok') {
+      return `https://tiktok.com/@${cleanValue}`;
+    }
+    if (platform === 'youtube') {
+      return `https://youtube.com/@${cleanValue}`;
+    }
+    return usernameOrUrl;
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(profile.portfolioLink);
@@ -37,9 +55,15 @@ const ProfileCard = ({ profile }) => {
         </div>
         <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1">{profile.name}</h2>
         <p className="text-sm font-bold text-Primary mb-4">@{profile.slug}</p>
-        <div className="flex items-center gap-2 text-[11px] font-bold text-[#4A4A4A] bg-gray-50 px-3 py-1.5 rounded-full mb-8">
+        <a 
+          href={profile.portfolioLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-[11px] font-bold text-[#4A4A4A] hover:text-Primary transition-all bg-gray-50 px-4 py-1.5 rounded-full mb-8 group"
+        >
           <span>{profile.portfolioLink}</span>
-        </div>
+          <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-Primary transition-colors" />
+        </a>
 
         <div className="flex items-center gap-3 w-full">
           <button 
@@ -90,10 +114,46 @@ const ProfileCard = ({ profile }) => {
 
       {/* Socials */}
       <div className="flex items-center gap-4 text-gray-400">
-        <button className="hover:text-Primary transition-colors"><Instagram className="w-5 h-5" /></button>
-        <button className="hover:text-Primary transition-colors"><FaTiktok className="w-4 h-4" /></button>
-        <button className="hover:text-Primary transition-colors"><Youtube className="w-5 h-5" /></button>
-        <button className="hover:text-Primary transition-colors"><MoreHorizontal className="w-5 h-5" /></button>
+        {profile.socials?.instagram && (
+          <a 
+            href={getSocialUrl('instagram', profile.socials.instagram)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-Primary transition-colors"
+          >
+            <Instagram className="w-5 h-5" />
+          </a>
+        )}
+        {profile.socials?.tiktok && (
+          <a 
+            href={getSocialUrl('tiktok', profile.socials.tiktok)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-Primary transition-colors"
+          >
+            <FaTiktok className="w-4 h-4" />
+          </a>
+        )}
+        {profile.socials?.youtube && (
+          <a 
+            href={getSocialUrl('youtube', profile.socials.youtube)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-Primary transition-colors"
+          >
+            <Youtube className="w-5 h-5" />
+          </a>
+        )}
+        {profile.otherLink && (
+          <a 
+            href={profile.otherLink.startsWith('http') ? profile.otherLink : `https://${profile.otherLink}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-Primary transition-colors"
+          >
+            <MoreHorizontal className="w-5 h-5" />
+          </a>
+        )}
       </div>
     </div>
   );

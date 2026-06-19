@@ -1,18 +1,50 @@
-import React, { useState } from 'react';
-import { MessageCircle, Eye } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { MessageCircle, Paperclip, Play, X, FileText } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useUpdateUgcCampaign, useCreateFeedback } from '@/api/apiHooks/useUgcCampaign';
+import { getImgUrl } from '@/utils/image';
 
-const BrandFeedback = () => {
-  const [messages, setMessages] = useState([
-    { id: 1, text: 'Can you improve the lighting in the video?', from: 'brand', media: null }
-  ]);
+const BrandFeedback = ({ campaign }) => {
   const [newMessage, setNewMessage] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewVideo, setPreviewVideo] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const updateCampaignMutation = useUpdateUgcCampaign();
+  const createFeedbackMutation = useCreateFeedback();
+
+  const handleStatusChange = (e) => {
+    updateCampaignMutation.mutate({
+      id: campaign.id,
+      campaignData: { status: e.target.value },
+    });
+  };
+
+  const handleReleaseToggle = () => {
+    updateCampaignMutation.mutate({
+      id: campaign.id,
+      campaignData: { releaseFiles: !campaign.releaseFiles },
+    });
+  };
 
   const handleSend = () => {
-    if (!newMessage.trim()) return;
-    const msg = { id: Date.now(), text: newMessage, from: 'creator', media: null };
-    setMessages(prev => [...prev, msg]);
-    console.log('Brand Feedback Message Sent:', msg);
-    setNewMessage('');
+    if (!newMessage.trim() && !selectedFile) return;
+
+    const formData = new FormData();
+    formData.append('text', newMessage);
+    if (selectedFile) {
+      formData.append('file', selectedFile);
+    }
+
+    createFeedbackMutation.mutate(
+      { campaignId: campaign.id, formData },
+      {
+        onSuccess: () => {
+          setNewMessage('');
+          setSelectedFile(null);
+        },
+      }
+    );
   };
 
   const handleKeyDown = (e) => {
@@ -22,59 +54,199 @@ const BrandFeedback = () => {
     }
   };
 
+  const messages = campaign.feedback || [];
+
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-6">
-      <div className="flex items-center gap-3 mb-5">
+    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+      <div className="flex items-center gap-3 mb-5 border-b border-gray-50 pb-4">
         <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center">
           <MessageCircle className="w-5 h-5 text-Primary" />
         </div>
-        <h3 className="text-sm font-bold text-[#1A1A1A]">Brand Feedback</h3>
+        <div>
+          <h3 className="text-sm font-bold text-[#1A1A1A]">Brand Feedback</h3>
+          <p className="text-xs text-gray-400">Collaborate and resolve revision requests</p>
+        </div>
       </div>
 
-      {/* Status */}
-      <div className="bg-gray-50 rounded-xl p-4 mb-4">
-        <p className="text-xs text-gray-400 mb-1.5">Campaign Status</p>
-        <span className="text-xs font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">Pending</span>
+      {/* Controls Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Status Dropdown */}
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col justify-between">
+          <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 block">Campaign Status</label>
+          <div className="relative">
+            <select
+              value={campaign.status}
+              onChange={handleStatusChange}
+              className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 focus:outline-none focus:border-Primary text-xs font-bold text-[#1A1A1A] cursor-pointer"
+            >
+              <option value="Pending">Pending</option>
+              <option value="Draft">Draft</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Approved">Approved</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Release File toggle */}
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col justify-between">
+          <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 block">Download Lock Status</label>
+          <button
+            onClick={handleReleaseToggle}
+            className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all border ${
+              campaign.releaseFiles
+                ? 'bg-green-50 text-green-500 border-green-200 hover:bg-green-100/50'
+                : 'bg-orange-50 text-orange-500 border-orange-200 hover:bg-orange-100/50'
+            }`}
+          >
+            {campaign.releaseFiles ? 'Files Released for Brand' : 'Lock Downloads (Pending)'}
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="space-y-3 mb-4">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.from === 'creator' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] px-4 py-3 rounded-xl text-sm ${
-              msg.from === 'creator' 
-                ? 'bg-Primary text-white rounded-br-none' 
-                : 'bg-gray-50 text-[#1A1A1A] border border-gray-100 rounded-bl-none'
-            }`}>
-              <p>{msg.text}</p>
-              {msg.media && (
-                <button className="mt-2 flex items-center gap-1 text-xs opacity-80 hover:opacity-100 transition-opacity">
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>View attached media</span>
-                </button>
-              )}
+      <div className="bg-[#F8FAFC] border border-gray-50 rounded-2xl p-4 min-h-[250px] max-h-[400px] overflow-y-auto custom-scrollbar space-y-3 mb-4">
+        {messages.length > 0 ? (
+          messages.map((msg) => (
+            <div key={msg.id} className={`flex ${msg.from === 'creator' ? 'justify-end' : 'justify-start'}`}>
+              <div className="max-w-[80%]">
+                {/* Media reference box */}
+                {msg.media && (
+                  <div className="bg-white border border-gray-100 rounded-xl p-2.5 mb-1.5 shadow-sm max-w-[200px] text-left">
+                    <div className="text-[10px] font-bold text-[#1A1A1A] truncate">{msg.media.name}</div>
+                    <div className="aspect-square rounded-lg overflow-hidden mt-1.5 bg-gray-50">
+                      {msg.media.type === 'video' ? (
+                        <div
+                          className="relative w-full h-full cursor-pointer group/vid"
+                          onClick={() => setPreviewVideo(msg.media)}
+                        >
+                          <video
+                            src={getImgUrl(msg.media.url)}
+                            className="w-full h-full object-cover"
+                            muted
+                            playsInline
+                            preload="metadata"
+                          />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover/vid:bg-black/60 transition-all">
+                            <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow">
+                              <Play className="w-3.5 h-3.5 text-[#1A1A1A] ml-0.5" fill="#1A1A1A" />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <img src={getImgUrl(msg.media.url)} alt="" className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className={`px-4 py-3 rounded-2xl text-sm ${
+                  msg.from === 'creator' 
+                    ? 'bg-Primary text-white rounded-tr-none text-right' 
+                    : 'bg-white text-[#1A1A1A] border border-gray-100 rounded-tl-none text-left'
+                }`}>
+                  <p>{msg.text}</p>
+                  
+                  {msg.fileUrl && (
+                    <a
+                      href={getImgUrl(msg.fileUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`mt-2 flex items-center gap-1 text-xs font-bold ${
+                        msg.from === 'creator' ? 'text-white/80 hover:text-white' : 'text-Primary hover:underline'
+                      }`}
+                    >
+                      <Paperclip className="w-3.5 h-3.5" />
+                      <span>Attachment ({msg.fileUrl.split('/').pop()})</span>
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-400">
+            <MessageCircle className="w-8 h-8 text-gray-300 mb-2 animate-bounce" />
+            <p className="text-xs font-medium">No messages yet. Send a message to start collaboration!</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Input */}
-      <div className="flex items-center gap-3">
-        <input
-          type="text"
-          placeholder="Enter your message"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1 bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all"
-        />
-        <button
-          onClick={handleSend}
-          className="bg-Primary text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all"
-        >
-          Send
-        </button>
+      <div className="space-y-2">
+        {selectedFile && (
+          <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2 border border-gray-100">
+            <span className="text-xs text-gray-500 font-bold truncate max-w-[80%]">{selectedFile.name}</span>
+            <button onClick={() => setSelectedFile(null)} className="text-red-500 text-xs font-bold hover:underline">Remove</button>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => setSelectedFile(e.target.files[0] || null)}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className={`p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all ${
+              selectedFile ? 'text-Primary bg-Primary/5' : 'text-gray-400'
+            }`}
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
+          <input
+            type="text"
+            placeholder="Enter your message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-1 bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+          />
+          <button
+            onClick={handleSend}
+            disabled={createFeedbackMutation.isPending}
+            className="bg-Primary text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all disabled:opacity-50"
+          >
+            Send
+          </button>
+        </div>
       </div>
+      {/* Video Preview Modal */}
+      <AnimatePresence>
+        {previewVideo && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setPreviewVideo(null)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative max-w-2xl w-full z-[1001]"
+            >
+              <button
+                onClick={() => setPreviewVideo(null)}
+                className="absolute -top-10 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer border border-white/20 rounded-full bg-black/20"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="rounded-2xl overflow-hidden bg-black">
+                <video
+                  src={getImgUrl(previewVideo.url)}
+                  className="w-full max-h-[75vh]"
+                  controls
+                  autoPlay
+                />
+              </div>
+              <p className="mt-2 text-center text-white/70 text-xs font-medium">{previewVideo.name}</p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -52,7 +52,7 @@ const Portfolio = () => {
         otherLink: reduxUser.socialLinks?.other || '',
         socials: {
           instagram: reduxUser.socialLinks?.instagram || '',
-          tiktok: '',
+          tiktok: reduxUser.socialLinks?.website || '',
           youtube: reduxUser.socialLinks?.youtube || '',
         },
       });

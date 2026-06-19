@@ -67,7 +67,7 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-8">
+      <div className="lg:mb-8 mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden mr-3">
             <div
@@ -93,12 +93,14 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
         </div>
         <div className="text-right">
           <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Status</p>
-          <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${status === 'Draft' ? 'bg-gray-100 text-gray-500' :
+          <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${
+            status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
+            status === 'Draft' ? 'bg-gray-100 text-gray-500' :
             status === 'Under Review' ? 'bg-orange-50 text-orange-500' :
-              status === 'Approved' ? 'bg-green-50 text-green-500' :
-                status === 'Completed' ? 'bg-blue-50 text-Primary' :
-                  'bg-gray-100 text-gray-500'
-            }`}>
+            status === 'Approved' ? 'bg-green-50 text-green-500' :
+            status === 'Completed' ? 'bg-blue-50 text-Primary' :
+            'bg-gray-100 text-gray-500'
+          }`}>
             {status}
           </span>
         </div>

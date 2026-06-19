@@ -26,6 +26,10 @@ export const USER = {
   DELETE_BRAND_LOGO: `${API_BASE}/user/brand-logo`,
   PORTFOLIO: `${API_BASE}/user/portfolio`,
   PORTFOLIO_PREVIEW: `${API_BASE}/user/portfolio-preview`,
+  INVOICE: `${API_BASE}/invoice`,
+  CAMPAIGN: `${API_BASE}/campaign`,
+  PLANNER: `${API_BASE}/planner`,
+  UGC_CAMPAIGN: `${API_BASE}/ugc-campaigns`,
 };
 
 export default { AUTH, USER };

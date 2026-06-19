@@ -61,6 +61,11 @@ const router = createBrowserRouter([
     path: "preview/:slug",
     element: <PortfolioPreview isPublic={true} />,
   },
+  // Public Brand View route
+  {
+    path: "brand-view/:slug",
+    element: <BrandView isPublic={true} />,
+  },
   // Admin dashboard routes (protected)
   {
     path: "dashboard",

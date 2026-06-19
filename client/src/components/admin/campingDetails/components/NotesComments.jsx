@@ -1,23 +1,38 @@
 import React, { useState } from 'react';
 import { StickyNote, Trash2 } from 'lucide-react';
+import { useCreateCampaignNote, useDeleteCampaignNote } from '@/api/apiHooks/useUgcCampaign';
 
-const NotesComments = () => {
-  const [notes, setNotes] = useState([
-    { id: 1, text: 'Brand wants more energy in the opening shot. Reshoot first 5 seconds.', date: 'Apr 15, 2026' },
-  ]);
+const NotesComments = ({ campaign }) => {
   const [newNote, setNewNote] = useState('');
+  const createMutation = useCreateCampaignNote();
+  const deleteMutation = useDeleteCampaignNote();
+
+  const notes = campaign.notesComments || [];
 
   const handleAdd = () => {
     if (!newNote.trim()) return;
-    const note = { id: Date.now(), text: newNote, date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) };
-    setNotes(prev => [...prev, note]);
-    console.log('Note Added:', note);
-    setNewNote('');
+    createMutation.mutate({ campaignId: campaign.id, text: newNote }, {
+      onSuccess: () => {
+        setNewNote('');
+      }
+    });
   };
 
   const handleDelete = (id) => {
-    setNotes(prev => prev.filter(n => n.id !== id));
-    console.log('Note Deleted:', id);
+    if (window.confirm("Are you sure you want to delete this note?")) {
+      deleteMutation.mutate({ campaignId: campaign.id, id });
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -29,20 +44,23 @@ const NotesComments = () => {
         <h3 className="text-sm font-bold text-[#1A1A1A]">Notes & Comments</h3>
       </div>
 
-      <div className="space-y-2 mb-4">
+      <div className="space-y-2 mb-4 max-h-[300px] overflow-y-auto custom-scrollbar">
         {notes.map((note) => (
           <div key={note.id} className="bg-gray-50 rounded-xl px-4 py-3.5 group">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-[#1A1A1A] mb-1">{note.text}</p>
-                <p className="text-[10px] text-gray-400">{note.date}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-[#1A1A1A] mb-1 whitespace-pre-wrap">{note.text}</p>
+                <p className="text-[10px] text-gray-400">{formatDate(note.createdAt)}</p>
               </div>
-              <button onClick={() => handleDelete(note.id)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all mt-1">
+              <button onClick={() => handleDelete(note.id)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all mt-1 cursor-pointer shrink-0">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
           </div>
         ))}
+        {notes.length === 0 && (
+          <p className="text-xs text-gray-400 text-center py-4">No internal notes added yet.</p>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
@@ -52,9 +70,9 @@ const NotesComments = () => {
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-          className="flex-1 bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all"
+          className="flex-1 bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
         />
-        <button onClick={handleAdd} className="bg-Primary text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all">Add</button>
+        <button onClick={handleAdd} className="bg-Primary text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer">Add</button>
       </div>
     </div>
   );

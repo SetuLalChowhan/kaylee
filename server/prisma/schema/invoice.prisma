@@ -1,0 +1,17 @@
+model Invoice {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceNo    String
+  campaignId   String?
+  campaign     Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  campaignName String
+  issueDate    DateTime
+  dueDate      DateTime
+  amount       String
+  status       String    @default("Pending") // "Pending", "Paid", "Overdue"
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("invoices")
+}

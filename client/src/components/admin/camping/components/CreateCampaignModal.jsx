@@ -2,13 +2,18 @@ import React from 'react';
 import { X, Calendar, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
+import { useCreateUgcCampaign } from '@/api/apiHooks/useUgcCampaign';
 
 const CreateCampaignModal = ({ isOpen, onClose }) => {
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const createCampaignMutation = useCreateUgcCampaign();
 
   const onSubmit = (data) => {
-    console.log('Campaign Created:', data);
-    onClose();
+    createCampaignMutation.mutate(data, {
+      onSuccess: () => {
+        onClose();
+      },
+    });
   };
 
   if (!isOpen) return null;
@@ -100,11 +105,13 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
                   <div className="relative">
                     <select
                       {...register('status', { required: 'Required' })}
-                      className={`w-full bg-white border rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm appearance-none cursor-pointer text-gray-400 ${errors.status ? 'border-red-500' : 'border-gray-100'}`}
+                      className={`w-full bg-white border rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm appearance-none cursor-pointer text-[#1A1A1A] ${errors.status ? 'border-red-500' : 'border-gray-100'}`}
                     >
                       <option value="Pending">Pending</option>
                       <option value="Draft">Draft</option>
-                      <option value="Active">Active</option>
+                      <option value="Under Review">Under Review</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Completed">Completed</option>
                     </select>
                     <ChevronDown className="absolute right-4 md:right-5 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400 pointer-events-none" />
                   </div>

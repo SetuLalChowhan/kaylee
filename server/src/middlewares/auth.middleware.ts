@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../utils/AppError.js";
+import prisma from "../config/db.js";
+import { catchAsync } from "../utils/catchAsync.js";
 
 interface JwtPayload {
   userId: string;
@@ -24,4 +26,19 @@ export const authGuard = (req: Request, _res: Response, next: NextFunction): voi
     (req as Request & { user: JwtPayload }).user = decoded as JwtPayload;
     next();
   });
-};
+};
+
+export const adminGuard = catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
+  const { userId } = (req as Request & { user: { userId: string } }).user;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+
+  if (!user || user.role !== "admin") {
+    return next(new AppError("You do not have permission to perform this action.", 403));
+  }
+
+  next();
+});

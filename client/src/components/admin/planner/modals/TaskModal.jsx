@@ -2,9 +2,11 @@ import React, { useEffect } from 'react';
 import { X, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
+import { useCampaigns } from '@/api/apiHooks/useCampaign';
 
 const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
   const { register, handleSubmit, reset, setValue, watch } = useForm();
+  const { data: campaigns = [] } = useCampaigns();
 
   useEffect(() => {
     if (task) {
@@ -84,9 +86,11 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
                 >
                   <option value="">Select a campaign</option>
                   <option value="Content Creation">Content Creation</option>
-                  <option value="Nike UGC Shoot">Nike UGC Shoot</option>
-                  <option value="Coffee Brand Reel Campaign">Coffee Brand Reel Campaign</option>
-                  <option value="Summer Skincare Promo">Summer Skincare Promo</option>
+                  {campaigns.map((c) => (
+                    <option key={c.id} value={c.title}>
+                      {c.title}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-300 pointer-events-none group-focus-within:text-Primary transition-colors" />
               </div>
