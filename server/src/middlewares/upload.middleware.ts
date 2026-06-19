@@ -2,18 +2,32 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+const avatarDir = "uploads/avatars";
+const brandLogoDir = "uploads/brand-logos";
 
-const uploadDir = "uploads/avatars";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure upload directories exist
+if (!fs.existsSync(avatarDir)) {
+  fs.mkdirSync(avatarDir, { recursive: true });
+}
+if (!fs.existsSync(brandLogoDir)) {
+  fs.mkdirSync(brandLogoDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
+const avatarStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    cb(null, avatarDir);
   },
   filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
 
+const brandLogoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, brandLogoDir);
+  },
+  filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   },
@@ -27,8 +41,19 @@ const fileFilter = (req: any, file: any, cb: any) => {
   }
 };
 
-export const upload = multer({ 
-  storage, 
+const limits = { fileSize: 2 * 1024 * 1024 };
+
+export const uploadAvatar = multer({
+  storage: avatarStorage,
   fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 } 
+  limits,
 });
+
+export const uploadBrandLogo = multer({
+  storage: brandLogoStorage,
+  fileFilter,
+  limits,
+});
+
+// Re-export for backward compatibility (single avatar upload)
+export const upload = uploadAvatar;

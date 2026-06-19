@@ -16,7 +16,7 @@ import { OAuth2Client } from "google-auth-library";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 export const register = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { name, email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -29,7 +29,8 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
 
   const newUser = await prisma.user.create({
     data: {
-      name,
+      firstName,
+      lastName,
       email,
       password: hashedPassword,
       verificationOtp: otp,
@@ -90,7 +91,7 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
     status: "success",
     message: "Login successful",
     accessToken,
-    user: { id: user.id, name: user.name, email: user.email },
+    user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, avatar: user.avatar },
   });
 });
 export const googleLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -122,7 +123,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
       return next(new AppError("Google authentication failed", 400));
     }
 
-    const { email, name, picture } = payload;
+    const { email, name, picture, given_name, family_name } = payload;
 
     // Check database for existing user
     let user = await prisma.user.findUnique({ where: { email } });
@@ -130,7 +131,8 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     if (!user) {
       user = await prisma.user.create({
         data: {
-          name: name || "Google User",
+          firstName: given_name || name?.split(" ")[0] || "Google",
+          lastName: family_name || name?.split(" ").slice(1).join(" ") || "User",
           email,
           password: "", // Empty password for OAuth users
           isVerified: true, // Google accounts are pre-verified
@@ -156,7 +158,8 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
       accessToken,
       user: {
         id: user.id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         avatar: user.avatar,
       },

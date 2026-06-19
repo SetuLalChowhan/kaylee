@@ -18,7 +18,18 @@ paths:
                     type: object
                     properties:
                       id: { type: string }
-                      name: { type: string }
+                      firstName: { type: string }
+                      lastName: { type: string }
+                      displayName: { type: string, nullable: true }
+                      shortBio: { type: string, nullable: true }
+                      servicesOffered: { type: string, nullable: true }
+                      brandLogos:
+                        type: array
+                        items: { type: string }
+                        nullable: true
+                      socialLinks:
+                        type: object
+                        nullable: true
                       email: { type: string }
                       avatar: { type: string, nullable: true }
                       isVerified: { type: boolean }
@@ -29,7 +40,7 @@ paths:
 
   /api/user/update:
     patch:
-      summary: Update profile name and/or avatar
+      summary: Update profile (firstName, lastName, servicesOffered, brandLogos) and/or avatar
       tags: [User]
       security:
         - bearerAuth: []
@@ -40,10 +51,28 @@ paths:
             schema:
               type: object
               properties:
-                name: { type: string }
+                firstName: { type: string }
+                lastName: { type: string }
+                servicesOffered: { type: string }
                 avatar:
                   type: string
                   format: binary
+                brandLogos:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                servicesOffered: { type: string }
+                avatar: { type: string }
+                brandLogos:
+                  type: array
+                  items: { type: string }
       responses:
         200:
           description: Profile updated successfully
@@ -58,7 +87,13 @@ paths:
                     type: object
                     properties:
                       id: { type: string }
-                      name: { type: string }
+                      firstName: { type: string }
+                      lastName: { type: string }
+                      servicesOffered: { type: string, nullable: true }
+                      brandLogos:
+                        type: array
+                        items: { type: string }
+                        nullable: true
                       email: { type: string }
                       avatar: { type: string, nullable: true }
         401:
@@ -87,6 +122,54 @@ paths:
           description: Password changed successfully
         400:
           description: Incorrect old password or missing fields
+        401:
+          description: Unauthorized — no token provided
+        403:
+          description: Forbidden — invalid or expired token
+
+  /api/user/onboarding:
+    put:
+      summary: Complete user onboarding with profile details (displayName, shortBio, avatar, socialLinks)
+      tags: [User]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [displayName]
+              properties:
+                displayName: { type: string }
+                shortBio: { type: string }
+                avatar:
+                  type: string
+                  format: binary
+                socialLinks:
+                  type: object
+                  properties:
+                    instagram: { type: string }
+                    website: { type: string }
+                    youtube: { type: string }
+                    other: { type: string }
+          application/json:
+            schema:
+              type: object
+              required: [displayName]
+              properties:
+                displayName: { type: string }
+                shortBio: { type: string }
+                avatar: { type: string }
+                socialLinks:
+                  type: object
+                  properties:
+                    instagram: { type: string }
+                    website: { type: string }
+                    youtube: { type: string }
+                    other: { type: string }
+        400:
+          description: Validation failed
         401:
           description: Unauthorized — no token provided
         403:
