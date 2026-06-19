@@ -35,6 +35,7 @@ export const useCreateInvoice = () => {
     onSuccess: (data) => {
       toast.success(data?.message || "Invoice created successfully!");
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to create invoice";
@@ -58,6 +59,7 @@ export const useUpdateInvoice = () => {
     onSuccess: (data) => {
       toast.success(data?.message || "Invoice updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update invoice";
@@ -81,6 +83,7 @@ export const useDeleteInvoice = () => {
     onSuccess: (data) => {
       toast.success(data?.message || "Invoice deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to delete invoice";

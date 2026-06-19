@@ -34,6 +34,7 @@ export const useCreateTask = () => {
     onSuccess: (data) => {
       toast.success(data?.message || "Task created successfully!");
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to create task";
@@ -57,6 +58,7 @@ export const useUpdateTask = () => {
     onSuccess: (data) => {
       toast.success(data?.message || "Task updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update task";
@@ -80,6 +82,7 @@ export const useDeleteTask = () => {
     onSuccess: (data) => {
       toast.success(data?.message || "Task deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to delete task";

@@ -10,7 +10,7 @@ export const authGuard = (req, _res, next) => {
     }
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-            next(new AppError("Invalid or expired token. Please log in again.", 403));
+            next(new AppError("Invalid or expired token. Please log in again.", 401));
             return;
         }
         req.user = decoded;
