@@ -62,10 +62,27 @@ const testimonials = [
     },
 ];
 
-const Testmonial = () => {
+const Testmonial = ({ cms }) => {
     const [prevEl, setPrevEl] = useState(null);
     const [nextEl, setNextEl] = useState(null);
     const [progress, setProgress] = useState(0);
+
+    let displayTestimonials = testimonials;
+    if (cms?.testimonials) {
+        try {
+            const parsed = JSON.parse(cms.testimonials);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                displayTestimonials = parsed.map((item) => ({
+                    quote: item.text || item.quote || "",
+                    author: item.name || item.author || "",
+                    role: item.role || "",
+                    avatar: item.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(item.name || "avatar")}`
+                }));
+            }
+        } catch (e) {
+            console.error("Failed to parse testimonials CMS config", e);
+        }
+    }
 
     return (
         <section id="customers" className="section-padding bg-white overflow-hidden">
@@ -102,7 +119,7 @@ const Testmonial = () => {
                         }}
                         className="testimonial-swiper"
                     >
-                        {testimonials.map((testimonial, index) => (
+                        {displayTestimonials.map((testimonial, index) => (
                             <SwiperSlide key={index} className="flex !h-auto">
                                 <TestimonialCard {...testimonial} />
                             </SwiperSlide>

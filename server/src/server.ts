@@ -14,6 +14,7 @@ import plannerRoutes from "./routers/planner.route.js";
 import ugcCampaignRoutes from "./routers/ugc_campaign.route.js";
 import faqRoutes from "./routers/faq.route.js";
 import notificationRoutes from "./routers/notification.route.js";
+import cmsRoutes from "./routers/cms.route.js";
 import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import { AppError } from "./utils/AppError.js";
 import prisma from "./config/db.js";
@@ -23,7 +24,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Core Middleware ───────────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173", credentials: true }));
+const allowedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:5173",
+  process.env.ADMIN_URL || "http://localhost:5174",
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
@@ -48,6 +64,7 @@ app.use("/api/planner", plannerRoutes);
 app.use("/api/ugc-campaigns", ugcCampaignRoutes);
 app.use("/api/faq", faqRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/cms", cmsRoutes);
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, _res, next) => {

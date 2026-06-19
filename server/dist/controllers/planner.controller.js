@@ -5,9 +5,10 @@ import { catchAsync } from "../utils/catchAsync.js";
  * GET /api/planner — Retrieve user's planner tasks
  */
 export const getTasks = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const tasks = await prisma.task.findMany({
-        where: { userId },
+        where: isAdmin ? {} : { userId },
         orderBy: { date: "asc" },
     });
     res.status(200).json({
@@ -19,11 +20,11 @@ export const getTasks = catchAsync(async (req, res, next) => {
  * POST /api/planner — Create a new task
  */
 export const createTask = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
-    const { name, campaign, date, completed } = req.body;
+    const { userId, role } = req.user;
+    const { name, campaign, date, completed, targetUserId } = req.body;
     const task = await prisma.task.create({
         data: {
-            userId,
+            userId: (role === "admin" && targetUserId) ? targetUserId : userId,
             name,
             campaign,
             date,
@@ -40,11 +41,12 @@ export const createTask = catchAsync(async (req, res, next) => {
  * PATCH /api/planner/:id — Update a task
  */
 export const updateTask = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { id } = req.params;
     const { name, campaign, date, completed } = req.body;
     const existingTask = await prisma.task.findFirst({
-        where: { id, userId },
+        where: isAdmin ? { id } : { id, userId },
     });
     if (!existingTask) {
         return next(new AppError("Task not found or unauthorized", 404));
@@ -68,10 +70,11 @@ export const updateTask = catchAsync(async (req, res, next) => {
  * DELETE /api/planner/:id — Delete a task
  */
 export const deleteTask = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { id } = req.params;
     const existingTask = await prisma.task.findFirst({
-        where: { id, userId },
+        where: isAdmin ? { id } : { id, userId },
     });
     if (!existingTask) {
         return next(new AppError("Task not found or unauthorized", 404));

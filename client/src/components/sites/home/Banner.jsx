@@ -5,7 +5,7 @@ import DashLayout from "@/assets/images/dashLayout.png";
 import CommonButton from '@/components/ui/CommonButton';
 import { BannerTitle, Subtext } from '@/components/ui/Typography';
 
-const Banner = () => {
+const Banner = ({ cms }) => {
     return (
         <section
             className="relative w-full overflow-hidden bg-white   pt-20 md:pt-[130px] "
@@ -34,13 +34,17 @@ const Banner = () => {
 
                     {/* Heading - Using Common Component */}
                     <BannerTitle className="mb-6 lg:mb-8">
-                        Manage your campaigns. Deliver <br className="hidden md:block" />
-                        with confidence.
+                        {cms?.banner_title || (
+                            <>
+                                Manage your campaigns. Deliver <br className="hidden md:block" />
+                                with confidence.
+                            </>
+                        )}
                     </BannerTitle>
 
                     {/* Subheading - Using Common Component */}
                     <Subtext className="mb-10 lg:mb-12 max-w-2xl px-4">
-                        Upload, share, and get approvals from brands - all in one simple workflow built for creators
+                        {cms?.banner_subtext || "Upload, share, and get approvals from brands - all in one simple workflow built for creators"}
                     </Subtext>
 
                     {/* CTA Button */}
@@ -54,7 +58,7 @@ const Banner = () => {
                             path="/signup"
                             className="bg-Primary text-white text-sm lg:text-lg font-semibold px-8 lg:px-10 py-4 lg:py-5 rounded-xl lg:rounded-2xl hover:bg-Primary/90 shadow-xl shadow-Primary/20"
                         >
-                            Get Started Free
+                            {cms?.banner_cta || "Get Started Free"}
                         </CommonButton>
                     </motion.div>
 

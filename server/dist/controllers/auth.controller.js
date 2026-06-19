@@ -45,8 +45,8 @@ export const verifyEmail = catchAsync(async (req, res, next) => {
         where: { email },
         data: { isVerified: true, verificationOtp: null, otpExpires: null },
     });
-    const accessToken = generateAccessToken({ userId: updatedUser.id });
-    const refreshToken = generateRefreshToken({ userId: updatedUser.id });
+    const accessToken = generateAccessToken({ userId: updatedUser.id, role: updatedUser.role });
+    const refreshToken = generateRefreshToken({ userId: updatedUser.id, role: updatedUser.role });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
@@ -63,6 +63,7 @@ export const verifyEmail = catchAsync(async (req, res, next) => {
             lastName: updatedUser.lastName,
             email: updatedUser.email,
             avatar: updatedUser.avatar,
+            role: updatedUser.role,
         },
     });
 });
@@ -76,8 +77,8 @@ export const login = catchAsync(async (req, res, next) => {
     const isPasswordMatch = await comparePassword(password, user.password);
     if (!isPasswordMatch)
         return next(new AppError("Invalid credentials!", 401));
-    const accessToken = generateAccessToken({ userId: user.id });
-    const refreshToken = generateRefreshToken({ userId: user.id });
+    const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+    const refreshToken = generateRefreshToken({ userId: user.id, role: user.role });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
@@ -94,6 +95,7 @@ export const login = catchAsync(async (req, res, next) => {
             lastName: user.lastName,
             email: user.email,
             avatar: user.avatar,
+            role: user.role,
         },
     });
 });
@@ -137,8 +139,8 @@ export const googleLogin = async (req, res, next) => {
                 },
             });
         }
-        const accessToken = generateAccessToken({ userId: user.id });
-        const refreshToken = generateRefreshToken({ userId: user.id });
+        const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+        const refreshToken = generateRefreshToken({ userId: user.id, role: user.role });
         // Set Refresh Token in Cookie
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
@@ -156,6 +158,7 @@ export const googleLogin = async (req, res, next) => {
                 lastName: user.lastName,
                 email: user.email,
                 avatar: user.avatar,
+                role: user.role,
             },
         });
     }
@@ -246,7 +249,7 @@ export const refreshTokenHandler = catchAsync(async (req, res, next) => {
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
         if (err)
             return next(new AppError("Invalid or Expired Refresh Token", 403));
-        const accessToken = generateAccessToken({ userId: decoded.userId });
+        const accessToken = generateAccessToken({ userId: decoded.userId, role: decoded.role });
         res.status(200).json({ status: "success", accessToken });
     });
 });

@@ -5,15 +5,15 @@ import { catchAsync } from "../utils/catchAsync.js";
  * POST /api/invoice — Create a new invoice
  */
 export const createInvoice = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
-    const { invoiceNo, campaign, issueDate, dueDate, amount, status } = req.body;
+    const { userId, role } = req.user;
+    const { invoiceNo, campaign, issueDate, dueDate, amount, status, targetUserId } = req.body;
     // Find dynamic campaign by title to link campaignId
     const dbCampaign = await prisma.campaign.findUnique({
         where: { title: campaign },
     });
     const invoice = await prisma.invoice.create({
         data: {
-            userId,
+            userId: (role === "admin" && targetUserId) ? targetUserId : userId,
             invoiceNo,
             campaignId: dbCampaign?.id || null,
             campaignName: campaign,
@@ -33,10 +33,11 @@ export const createInvoice = catchAsync(async (req, res, next) => {
  * GET /api/invoice — Retrieve user's invoices with optional status filtering
  */
 export const getInvoices = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { status } = req.query;
     const where = {
-        userId,
+        ...(isAdmin ? {} : { userId }),
         ...(status && status !== "All" && { status }),
     };
     const invoices = await prisma.invoice.findMany({
@@ -52,11 +53,12 @@ export const getInvoices = catchAsync(async (req, res, next) => {
  * PATCH /api/invoice/:id — Update an existing invoice
  */
 export const updateInvoice = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { id } = req.params;
     const { invoiceNo, campaign, issueDate, dueDate, amount, status } = req.body;
     const existingInvoice = await prisma.invoice.findFirst({
-        where: { id, userId },
+        where: isAdmin ? { id } : { id, userId },
     });
     if (!existingInvoice) {
         return next(new AppError("Invoice not found or unauthorized", 404));
@@ -92,10 +94,11 @@ export const updateInvoice = catchAsync(async (req, res, next) => {
  * DELETE /api/invoice/:id — Delete an invoice
  */
 export const deleteInvoice = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { id } = req.params;
     const existingInvoice = await prisma.invoice.findFirst({
-        where: { id, userId },
+        where: isAdmin ? { id } : { id, userId },
     });
     if (!existingInvoice) {
         return next(new AppError("Invoice not found or unauthorized", 404));

@@ -4,21 +4,22 @@ import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 
 interface AuthRequest extends Request {
-  user: { userId: string };
+  user: { userId: string; role: string };
 }
 
 /**
  * POST /api/invoice — Create a new invoice
  */
 export const createInvoice = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
-  const { invoiceNo, campaign, issueDate, dueDate, amount, status } = req.body as {
+  const { userId, role } = (req as AuthRequest).user;
+  const { invoiceNo, campaign, issueDate, dueDate, amount, status, targetUserId } = req.body as {
     invoiceNo: string;
     campaign: string;
     issueDate: string;
     dueDate: string;
     amount: string;
     status?: string;
+    targetUserId?: string;
   };
 
   // Find dynamic campaign by title to link campaignId
@@ -28,7 +29,7 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
 
   const invoice = await prisma.invoice.create({
     data: {
-      userId,
+      userId: (role === "admin" && targetUserId) ? targetUserId : userId,
       invoiceNo,
       campaignId: dbCampaign?.id || null,
       campaignName: campaign,
@@ -50,11 +51,12 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
  * GET /api/invoice — Retrieve user's invoices with optional status filtering
  */
 export const getInvoices = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const { userId, role } = (req as AuthRequest).user;
+  const isAdmin = role === "admin";
   const { status } = req.query as { status?: string };
-
+ 
   const where = {
-    userId,
+    ...(isAdmin ? {} : { userId }),
     ...(status && status !== "All" && { status }),
   };
 
@@ -73,7 +75,8 @@ export const getInvoices = catchAsync(async (req: Request, res: Response, next: 
  * PATCH /api/invoice/:id — Update an existing invoice
  */
 export const updateInvoice = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const { userId, role } = (req as AuthRequest).user;
+  const isAdmin = role === "admin";
   const { id } = req.params as { id: string };
   const { invoiceNo, campaign, issueDate, dueDate, amount, status } = req.body as {
     invoiceNo?: string;
@@ -83,9 +86,9 @@ export const updateInvoice = catchAsync(async (req: Request, res: Response, next
     amount?: string;
     status?: string;
   };
-
+ 
   const existingInvoice = await prisma.invoice.findFirst({
-    where: { id, userId },
+    where: isAdmin ? { id } : { id, userId },
   });
 
   if (!existingInvoice) {
@@ -127,11 +130,12 @@ export const updateInvoice = catchAsync(async (req: Request, res: Response, next
  * DELETE /api/invoice/:id — Delete an invoice
  */
 export const deleteInvoice = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const { userId, role } = (req as AuthRequest).user;
+  const isAdmin = role === "admin";
   const { id } = req.params as { id: string };
-
+ 
   const existingInvoice = await prisma.invoice.findFirst({
-    where: { id, userId },
+    where: isAdmin ? { id } : { id, userId },
   });
 
   if (!existingInvoice) {

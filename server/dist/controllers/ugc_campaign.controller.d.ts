@@ -11,9 +11,6 @@ export declare const getUgcCampaignById: (req: Request, res: Response, next: Nex
  * POST /api/ugc-campaigns — Create a new campaign
  */
 export declare const createUgcCampaign: (req: Request, res: Response, next: NextFunction) => void;
-/**
- * PATCH /api/ugc-campaigns/:id — Update campaign details
- */
 export declare const updateUgcCampaign: (req: Request, res: Response, next: NextFunction) => void;
 /**
  * DELETE /api/ugc-campaigns/:id — Delete a campaign

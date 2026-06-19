@@ -276,28 +276,29 @@ export const updateNotificationSettings = catchAsync(async (req, res, next) => {
  * GET /api/user/dashboard-stats — Retrieve authenticated user's dashboard metrics
  */
 export const getDashboardStats = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     // 1. Stats Card calculations
     const activeCampaignsCount = await prisma.ugcCampaign.count({
         where: {
-            userId,
+            ...(isAdmin ? {} : { userId }),
             status: { in: ["Active", "Approved", "Pending"] }
         }
     });
     const awaitingReviewCount = await prisma.ugcCampaign.count({
         where: {
-            userId,
+            ...(isAdmin ? {} : { userId }),
             status: "Under Review"
         }
     });
     const completedCampaignsCount = await prisma.ugcCampaign.count({
         where: {
-            userId,
+            ...(isAdmin ? {} : { userId }),
             status: "Completed"
         }
     });
     const campaigns = await prisma.ugcCampaign.findMany({
-        where: { userId },
+        where: isAdmin ? {} : { userId },
         select: { amount: true, status: true, paymentStatus: true }
     });
     const totalEarnedValue = campaigns
@@ -309,14 +310,14 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
     }, 0);
     // 2. Recent Active/Draft campaigns (up to 4)
     const recentCampaigns = await prisma.ugcCampaign.findMany({
-        where: { userId },
+        where: isAdmin ? {} : { userId },
         orderBy: { updatedAt: "desc" },
         take: 4
     });
     // 3. Upcoming Deadlines (up to 5)
     const activeCampaignsForDeadlines = await prisma.ugcCampaign.findMany({
         where: {
-            userId,
+            ...(isAdmin ? {} : { userId }),
             status: { not: "Completed" },
             deadline: { not: "" }
         },
@@ -345,7 +346,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         .map(({ id, title, sub, day, month }) => ({ id, title, sub, day, month }));
     // 4. Pending & Upcoming Tasks from Planner (up to 5)
     const tasks = await prisma.task.findMany({
-        where: { userId },
+        where: isAdmin ? {} : { userId },
         orderBy: { date: "asc" }
     });
     const parsedTasks = tasks
@@ -387,6 +388,99 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
             deadlines: parsedDeadlines,
             tasks: parsedTasks
         }
+    });
+});
+/**
+ * GET /api/user/admin/users — Retrieve all registered users (Admin-only)
+ */
+export const adminGetAllUsers = catchAsync(async (req, res, next) => {
+    const users = await prisma.user.findMany({
+        orderBy: { createdAt: "desc" },
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            displayName: true,
+            email: true,
+            role: true,
+            isVerified: true,
+            createdAt: true,
+            slug: true
+        }
+    });
+    res.status(200).json({
+        status: "success",
+        data: users
+    });
+});
+/**
+ * POST /api/user/admin/users — Admin creates a new user directly (Admin-only)
+ */
+export const adminCreateUser = catchAsync(async (req, res, next) => {
+    const { firstName, lastName, email, password, role } = req.body;
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing)
+        return next(new AppError("User already exists with this email", 400));
+    const pwd = password || "user123";
+    const hashedPassword = await hashPassword(pwd);
+    const newUser = await prisma.user.create({
+        data: {
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            role: role || "user",
+            isVerified: true
+        }
+    });
+    res.status(201).json({
+        status: "success",
+        message: "User created successfully",
+        data: newUser
+    });
+});
+/**
+ * PATCH /api/user/admin/users/:id — Admin updates any user's profile or role (Admin-only)
+ */
+export const adminUpdateUser = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const { firstName, lastName, displayName, role, isVerified } = req.body;
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user)
+        return next(new AppError("User not found", 404));
+    const updatedUser = await prisma.user.update({
+        where: { id },
+        data: {
+            ...(firstName !== undefined && { firstName }),
+            ...(lastName !== undefined && { lastName }),
+            ...(displayName !== undefined && { displayName }),
+            ...(role !== undefined && { role }),
+            ...(isVerified !== undefined && { isVerified })
+        }
+    });
+    res.status(200).json({
+        status: "success",
+        message: "User updated successfully",
+        data: updatedUser
+    });
+});
+/**
+ * DELETE /api/user/admin/users/:id — Admin deletes any user (Admin-only)
+ */
+export const adminDeleteUser = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user)
+        return next(new AppError("User not found", 404));
+    // Protect the user from deleting themselves
+    const { userId } = req.user;
+    if (id === userId) {
+        return next(new AppError("You cannot delete your own admin account", 400));
+    }
+    await prisma.user.delete({ where: { id } });
+    res.status(200).json({
+        status: "success",
+        message: "User deleted successfully"
     });
 });
 //# sourceMappingURL=user.controller.js.map

@@ -7,7 +7,7 @@ import fs from "fs";
 
 // Typed request with authenticated user payload
 interface AuthRequest extends Request {
-  user: { userId: string };
+  user: { userId: string; role: string };
 }
 
 /**
@@ -334,32 +334,33 @@ export const updateNotificationSettings = catchAsync(async (req: Request, res: R
  * GET /api/user/dashboard-stats — Retrieve authenticated user's dashboard metrics
  */
 export const getDashboardStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const { userId, role } = (req as AuthRequest).user;
+  const isAdmin = role === "admin";
 
   // 1. Stats Card calculations
   const activeCampaignsCount = await prisma.ugcCampaign.count({
     where: {
-      userId,
+      ...(isAdmin ? {} : { userId }),
       status: { in: ["Active", "Approved", "Pending"] }
     }
   });
 
   const awaitingReviewCount = await prisma.ugcCampaign.count({
     where: {
-      userId,
+      ...(isAdmin ? {} : { userId }),
       status: "Under Review"
     }
   });
 
   const completedCampaignsCount = await prisma.ugcCampaign.count({
     where: {
-      userId,
+      ...(isAdmin ? {} : { userId }),
       status: "Completed"
     }
   });
 
   const campaigns = await prisma.ugcCampaign.findMany({
-    where: { userId },
+    where: isAdmin ? {} : { userId },
     select: { amount: true, status: true, paymentStatus: true }
   });
 
@@ -373,7 +374,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
 
   // 2. Recent Active/Draft campaigns (up to 4)
   const recentCampaigns = await prisma.ugcCampaign.findMany({
-    where: { userId },
+    where: isAdmin ? {} : { userId },
     orderBy: { updatedAt: "desc" },
     take: 4
   });
@@ -381,7 +382,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   // 3. Upcoming Deadlines (up to 5)
   const activeCampaignsForDeadlines = await prisma.ugcCampaign.findMany({
     where: {
-      userId,
+      ...(isAdmin ? {} : { userId }),
       status: { not: "Completed" },
       deadline: { not: "" }
     },
@@ -412,7 +413,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
 
   // 4. Pending & Upcoming Tasks from Planner (up to 5)
   const tasks = await prisma.task.findMany({
-    where: { userId },
+    where: isAdmin ? {} : { userId },
     orderBy: { date: "asc" }
   });
 
@@ -457,4 +458,123 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
       tasks: parsedTasks
     }
   });
-});
+});
+
+/**
+ * GET /api/user/admin/users — Retrieve all registered users (Admin-only)
+ */
+export const adminGetAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      displayName: true,
+      email: true,
+      role: true,
+      isVerified: true,
+      createdAt: true,
+      slug: true
+    }
+  });
+
+  res.status(200).json({
+     status: "success",
+     data: users
+  });
+});
+
+/**
+ * POST /api/user/admin/users — Admin creates a new user directly (Admin-only)
+ */
+export const adminCreateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { firstName, lastName, email, password, role } = req.body as {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password?: string;
+    role?: string;
+  };
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return next(new AppError("User already exists with this email", 400));
+
+  const pwd = password || "user123";
+  const hashedPassword = await hashPassword(pwd);
+
+  const newUser = await prisma.user.create({
+    data: {
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      role: role || "user",
+      isVerified: true
+    }
+  });
+
+  res.status(201).json({
+    status: "success",
+    message: "User created successfully",
+    data: newUser
+  });
+});
+
+/**
+ * PATCH /api/user/admin/users/:id — Admin updates any user's profile or role (Admin-only)
+ */
+export const adminUpdateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params as { id: string };
+  const { firstName, lastName, displayName, role, isVerified } = req.body as {
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    role?: string;
+    isVerified?: boolean;
+  };
+
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) return next(new AppError("User not found", 404));
+
+  const updatedUser = await prisma.user.update({
+    where: { id },
+    data: {
+      ...(firstName !== undefined && { firstName }),
+      ...(lastName !== undefined && { lastName }),
+      ...(displayName !== undefined && { displayName }),
+      ...(role !== undefined && { role }),
+      ...(isVerified !== undefined && { isVerified })
+    }
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "User updated successfully",
+    data: updatedUser
+  });
+});
+
+/**
+ * DELETE /api/user/admin/users/:id — Admin deletes any user (Admin-only)
+ */
+export const adminDeleteUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params as { id: string };
+
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) return next(new AppError("User not found", 404));
+
+  // Protect the user from deleting themselves
+  const { userId } = (req as AuthRequest).user;
+  if (id === userId) {
+    return next(new AppError("You cannot delete your own admin account", 400));
+  }
+
+  await prisma.user.delete({ where: { id } });
+
+  res.status(200).json({
+    status: "success",
+    message: "User deleted successfully"
+  });
+});
+

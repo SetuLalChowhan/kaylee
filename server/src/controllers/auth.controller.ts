@@ -70,8 +70,8 @@ export const verifyEmail = catchAsync(
       data: { isVerified: true, verificationOtp: null, otpExpires: null },
     });
 
-    const accessToken = generateAccessToken({ userId: updatedUser.id });
-    const refreshToken = generateRefreshToken({ userId: updatedUser.id });
+    const accessToken = generateAccessToken({ userId: updatedUser.id, role: updatedUser.role });
+    const refreshToken = generateRefreshToken({ userId: updatedUser.id, role: updatedUser.role });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -90,6 +90,7 @@ export const verifyEmail = catchAsync(
         lastName: updatedUser.lastName,
         email: updatedUser.email,
         avatar: updatedUser.avatar,
+        role: updatedUser.role,
       },
     });
   },
@@ -108,8 +109,8 @@ export const login = catchAsync(
     if (!isPasswordMatch)
       return next(new AppError("Invalid credentials!", 401));
 
-    const accessToken = generateAccessToken({ userId: user.id });
-    const refreshToken = generateRefreshToken({ userId: user.id });
+    const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+    const refreshToken = generateRefreshToken({ userId: user.id, role: user.role });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -128,6 +129,7 @@ export const login = catchAsync(
         lastName: user.lastName,
         email: user.email,
         avatar: user.avatar,
+        role: user.role,
       },
     });
   },
@@ -186,8 +188,8 @@ export const googleLogin = async (
       });
     }
 
-    const accessToken = generateAccessToken({ userId: user.id });
-    const refreshToken = generateRefreshToken({ userId: user.id });
+    const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+    const refreshToken = generateRefreshToken({ userId: user.id, role: user.role });
 
     // Set Refresh Token in Cookie
     res.cookie("refreshToken", refreshToken, {
@@ -207,6 +209,7 @@ export const googleLogin = async (
         lastName: user.lastName,
         email: user.email,
         avatar: user.avatar,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -338,7 +341,7 @@ export const refreshTokenHandler = catchAsync(
       (err: any, decoded: any) => {
         if (err)
           return next(new AppError("Invalid or Expired Refresh Token", 403));
-        const accessToken = generateAccessToken({ userId: decoded.userId });
+        const accessToken = generateAccessToken({ userId: decoded.userId, role: decoded.role });
         res.status(200).json({ status: "success", accessToken });
       },
     );

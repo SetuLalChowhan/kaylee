@@ -35,7 +35,7 @@ const features = [
     },
 ];
 
-const ManageAndDeliver = () => {
+const ManageAndDeliver = ({ cms }) => {
     return (
         <section id="features" className="section-padding bg-white overflow-hidden">
             <div className="">
@@ -43,10 +43,14 @@ const ManageAndDeliver = () => {
                 <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16 lg:mb-24">
                     <Label>Features</Label>
                     <SectionHeader className="mb-6">
-                        Everything you need to manage and <br className="hidden md:block" /> deliver campaigns
+                        {cms?.features_title || (
+                            <>
+                                Everything you need to manage and <br className="hidden md:block" /> deliver campaigns
+                            </>
+                        )}
                     </SectionHeader>
                     <Subtext className="max-w-3xl">
-                        From creation to delivery - manage your entire workflow in one simple platform
+                        {cms?.features_subtext || "From creation to delivery - manage your entire workflow in one simple platform"}
                     </Subtext>
                 </div>
 

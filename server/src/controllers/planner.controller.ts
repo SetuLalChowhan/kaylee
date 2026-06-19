@@ -4,17 +4,18 @@ import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 
 interface AuthRequest extends Request {
-  user: { userId: string };
+  user: { userId: string; role: string };
 }
 
 /**
  * GET /api/planner — Retrieve user's planner tasks
  */
 export const getTasks = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
-
+  const { userId, role } = (req as AuthRequest).user;
+  const isAdmin = role === "admin";
+ 
   const tasks = await prisma.task.findMany({
-    where: { userId },
+    where: isAdmin ? {} : { userId },
     orderBy: { date: "asc" },
   });
 
@@ -28,17 +29,18 @@ export const getTasks = catchAsync(async (req: Request, res: Response, next: Nex
  * POST /api/planner — Create a new task
  */
 export const createTask = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
-  const { name, campaign, date, completed } = req.body as {
+  const { userId, role } = (req as AuthRequest).user;
+  const { name, campaign, date, completed, targetUserId } = req.body as {
     name: string;
     campaign: string;
     date: string;
     completed?: boolean;
+    targetUserId?: string;
   };
-
+ 
   const task = await prisma.task.create({
     data: {
-      userId,
+      userId: (role === "admin" && targetUserId) ? targetUserId : userId,
       name,
       campaign,
       date,
@@ -57,7 +59,8 @@ export const createTask = catchAsync(async (req: Request, res: Response, next: N
  * PATCH /api/planner/:id — Update a task
  */
 export const updateTask = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const { userId, role } = (req as AuthRequest).user;
+  const isAdmin = role === "admin";
   const { id } = req.params as { id: string };
   const { name, campaign, date, completed } = req.body as {
     name?: string;
@@ -65,9 +68,9 @@ export const updateTask = catchAsync(async (req: Request, res: Response, next: N
     date?: string;
     completed?: boolean;
   };
-
+ 
   const existingTask = await prisma.task.findFirst({
-    where: { id, userId },
+    where: isAdmin ? { id } : { id, userId },
   });
 
   if (!existingTask) {
@@ -95,11 +98,12 @@ export const updateTask = catchAsync(async (req: Request, res: Response, next: N
  * DELETE /api/planner/:id — Delete a task
  */
 export const deleteTask = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const { userId, role } = (req as AuthRequest).user;
+  const isAdmin = role === "admin";
   const { id } = req.params as { id: string };
-
+ 
   const existingTask = await prisma.task.findFirst({
-    where: { id, userId },
+    where: isAdmin ? { id } : { id, userId },
   });
 
   if (!existingTask) {

@@ -2,13 +2,21 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import fs from "fs";
+async function checkCampaignAccess(campaignId, req) {
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
+    return prisma.ugcCampaign.findFirst({
+        where: isAdmin ? { id: campaignId } : { id: campaignId, userId }
+    });
+}
 /**
  * GET /api/ugc-campaigns — Retrieve creator's campaigns
  */
 export const getUgcCampaigns = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { status } = req.query;
-    const where = { userId };
+    const where = isAdmin ? {} : { userId };
     if (status && status !== "all") {
         let formattedStatus = status;
         if (status === "draft")
@@ -34,10 +42,11 @@ export const getUgcCampaigns = catchAsync(async (req, res, next) => {
  * GET /api/ugc-campaigns/:id — Retrieve full campaign details
  */
 export const getUgcCampaignById = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { id } = req.params;
     const campaign = await prisma.ugcCampaign.findFirst({
-        where: { id, userId },
+        where: isAdmin ? { id } : { id, userId },
         include: {
             deliverables: { orderBy: { createdAt: "asc" } },
             tasks: { orderBy: { createdAt: "asc" } },
@@ -62,8 +71,8 @@ export const getUgcCampaignById = catchAsync(async (req, res, next) => {
  * POST /api/ugc-campaigns — Create a new campaign
  */
 export const createUgcCampaign = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
-    const { campaignName, brandName, deadline, amount, status, notes } = req.body;
+    const { userId, role } = req.user;
+    const { campaignName, brandName, deadline, amount, status, notes, targetUserId } = req.body;
     const baseSlug = `${brandName}-${campaignName}`
         .toLowerCase()
         .replace(/[^a-z0-9-]+/g, "-")
@@ -72,7 +81,7 @@ export const createUgcCampaign = catchAsync(async (req, res, next) => {
     const slug = `${baseSlug}-${randomSuffix}`;
     const campaign = await prisma.ugcCampaign.create({
         data: {
-            userId,
+            userId: (role === "admin" && targetUserId) ? targetUserId : userId,
             name: campaignName,
             brandName,
             deadline,
@@ -88,14 +97,14 @@ export const createUgcCampaign = catchAsync(async (req, res, next) => {
         data: campaign,
     });
 });
-/**
- * PATCH /api/ugc-campaigns/:id — Update campaign details
- */
 export const updateUgcCampaign = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { id } = req.params;
     const { campaignName, brandName, deadline, amount, status, releaseFiles, notes, paymentStatus } = req.body;
-    const existing = await prisma.ugcCampaign.findFirst({ where: { id, userId } });
+    const existing = await prisma.ugcCampaign.findFirst({
+        where: isAdmin ? { id } : { id, userId }
+    });
     if (!existing) {
         return next(new AppError("Campaign not found or unauthorized", 404));
     }
@@ -122,9 +131,12 @@ export const updateUgcCampaign = catchAsync(async (req, res, next) => {
  * DELETE /api/ugc-campaigns/:id — Delete a campaign
  */
 export const deleteUgcCampaign = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const { userId, role } = req.user;
+    const isAdmin = role === "admin";
     const { id } = req.params;
-    const existing = await prisma.ugcCampaign.findFirst({ where: { id, userId } });
+    const existing = await prisma.ugcCampaign.findFirst({
+        where: isAdmin ? { id } : { id, userId }
+    });
     if (!existing) {
         return next(new AppError("Campaign not found or unauthorized", 404));
     }
@@ -159,7 +171,7 @@ export const createDeliverable = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId } = req.params;
     const { text } = req.body;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const deliverable = await prisma.ugcDeliverable.create({
@@ -170,7 +182,7 @@ export const createDeliverable = catchAsync(async (req, res, next) => {
 export const deleteDeliverable = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId, id } = req.params;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     await prisma.ugcDeliverable.delete({ where: { id } });
@@ -183,7 +195,7 @@ export const createCampaignTask = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId } = req.params;
     const { name, date, completed } = req.body;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const task = await prisma.ugcCampaignTask.create({
@@ -195,7 +207,7 @@ export const updateCampaignTask = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId, id } = req.params;
     const { name, date, completed } = req.body;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const task = await prisma.ugcCampaignTask.update({
@@ -211,7 +223,7 @@ export const updateCampaignTask = catchAsync(async (req, res, next) => {
 export const deleteCampaignTask = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId, id } = req.params;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     await prisma.ugcCampaignTask.delete({ where: { id } });
@@ -226,7 +238,7 @@ export const uploadMedia = catchAsync(async (req, res, next) => {
     const { description } = req.body;
     if (!req.file)
         return next(new AppError("Media file is required", 400));
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
@@ -252,7 +264,7 @@ export const replaceMedia = catchAsync(async (req, res, next) => {
     const { description } = req.body;
     if (!req.file)
         return next(new AppError("Replacement file is required", 400));
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     // Find and delete the old physical file
@@ -283,7 +295,7 @@ export const replaceMedia = catchAsync(async (req, res, next) => {
 export const deleteMedia = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId, id } = req.params;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const media = await prisma.ugcMedia.findUnique({ where: { id } });
@@ -304,7 +316,7 @@ export const uploadDocument = catchAsync(async (req, res, next) => {
     const { campaignId } = req.params;
     if (!req.file)
         return next(new AppError("Document file is required", 400));
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const url = req.file.path.replace(/\\/g, "/");
@@ -320,7 +332,7 @@ export const uploadDocument = catchAsync(async (req, res, next) => {
 export const deleteDocument = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId, id } = req.params;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const doc = await prisma.ugcDocument.findUnique({ where: { id } });
@@ -340,7 +352,7 @@ export const createNote = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId } = req.params;
     const { text } = req.body;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const note = await prisma.ugcNote.create({
@@ -351,7 +363,7 @@ export const createNote = catchAsync(async (req, res, next) => {
 export const deleteNote = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId, id } = req.params;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     await prisma.ugcNote.delete({ where: { id } });
@@ -364,7 +376,7 @@ export const createFeedback = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId } = req.params;
     const { text, mediaId } = req.body;
-    const campaign = await prisma.ugcCampaign.findFirst({ where: { id: campaignId, userId } });
+    const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     let fileUrl = null;
