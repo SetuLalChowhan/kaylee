@@ -1,13 +1,24 @@
 import express from "express";
-import { getMe, updateProfile, changePassword, completeOnboarding } from "../controllers/user.controller.js";
+import { getMe, updateProfile, changePassword, completeOnboarding, deleteBrandLogo } from "../controllers/user.controller.js";
+import {
+  createPortfolioItem,
+  getPortfolioItems,
+  updatePortfolioItem,
+  deletePortfolioItem,
+  getPublicPortfolio,
+} from "../controllers/portfolio.controller.js";
 import { authGuard } from "../middlewares/auth.middleware.js";
 import { uploadAvatar } from "../middlewares/upload.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { updateProfileSchema, changePasswordSchema, onboardingSchema } from "../validations/user.validation.js";
+import { createPortfolioSchema, updatePortfolioSchema } from "../validations/portfolio.validation.js";
 
 const router = express.Router();
 
-// Apply authGuard to all user routes
+// ── Public Routes ─────────────────────────────────────────────────────────────
+router.get("/portfolio-preview/:slug", getPublicPortfolio);
+
+// ── Protected Routes (Auth Required) ──────────────────────────────────────────
 router.use(authGuard);
 
 router.get("/me", getMe);
@@ -22,5 +33,12 @@ router.patch(
 );
 router.patch("/change-password", validate(changePasswordSchema), changePassword);
 router.put("/onboarding", uploadAvatar.single("avatar"), validate(onboardingSchema), completeOnboarding);
+router.delete("/brand-logo", deleteBrandLogo);
+
+// ── Portfolio CRUD ─────────────────────────────────────────────────────────────
+router.post("/portfolio", uploadAvatar.single("file"), validate(createPortfolioSchema), createPortfolioItem);
+router.get("/portfolio", getPortfolioItems);
+router.patch("/portfolio/:id", uploadAvatar.single("file"), validate(updatePortfolioSchema), updatePortfolioItem);
+router.delete("/portfolio/:id", deletePortfolioItem);
 
 export default router;

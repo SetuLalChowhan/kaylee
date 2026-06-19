@@ -23,6 +23,9 @@ export const USER = {
   UPDATE: `${API_BASE}/user/update`,
   CHANGE_PASSWORD: `${API_BASE}/user/change-password`,
   ONBOARDING: `${API_BASE}/user/onboarding`,
+  DELETE_BRAND_LOGO: `${API_BASE}/user/brand-logo`,
+  PORTFOLIO: `${API_BASE}/user/portfolio`,
+  PORTFOLIO_PREVIEW: `${API_BASE}/user/portfolio-preview`,
 };
 
 export default { AUTH, USER };

@@ -3,26 +3,29 @@ import { X, Upload, Instagram, Youtube, Link as LinkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { FaTiktok } from 'react-icons/fa';
-import { useUpdateProfile } from '@/api/apiHooks/useUser';
+import { useUpdateProfile, useDeleteBrandLogo } from '@/api/apiHooks/useUser';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
-import { getImgUrl } from '@/utils/image';
+import { getImgUrl, getBrandLogos } from '@/utils/image';
 
 const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
   const user = useSelector(selectCurrentUser);
   const updateProfileMutation = useUpdateProfile();
+  const deleteBrandLogoMutation = useDeleteBrandLogo();
 
   const [previewImage, setPreviewImage] = React.useState(
     getImgUrl(profile?.image || profile?.avatar || user?.avatar) || ''
   );
   const [profileFile, setProfileFile] = React.useState(null);
-  const [uploadedBrands, setUploadedBrands] = React.useState([]);
-  const [brandFiles, setBrandFiles] = React.useState([]);
+  // existingBrandLogos = logos already on the server (with full URLs)
+  const [existingBrandLogos, setExistingBrandLogos] = React.useState([]);
+  // newBrandUploads = newly selected local files (blob URLs)
+  const [newBrandUploads, setNewBrandUploads] = React.useState([]);
+  const [loadingDelete, setLoadingDelete] = React.useState(null);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
       name: profile?.name || user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
-      niche: profile?.niche || '',
       bio: profile?.bio || user?.shortBio || '',
       services: profile?.services || user?.servicesOffered || '',
       otherLink: profile?.otherLink || '',
@@ -31,19 +34,17 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
         tiktok: profile?.socials?.tiktok || '',
         youtube: profile?.socials?.youtube || user?.socialLinks?.youtube || '',
       },
-      brands: [],
     },
   });
 
   const profileInputRef = React.useRef(null);
   const brandInputRef = React.useRef(null);
 
-  // Reset form when profile changes
+  // Reset form when profile or user changes
   React.useEffect(() => {
     if (profile) {
       reset({
         name: profile?.name || user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
-        niche: profile?.niche || '',
         bio: profile?.bio || user?.shortBio || '',
         services: profile?.services || user?.servicesOffered || '',
         otherLink: profile?.otherLink || '',
@@ -54,8 +55,9 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
         },
       });
       setPreviewImage(getImgUrl(profile?.image || profile?.avatar || user?.avatar) || '');
-      setUploadedBrands([]);
-      setBrandFiles([]);
+      // Load existing brand logos from user data
+      setExistingBrandLogos(getBrandLogos(user));
+      setNewBrandUploads([]);
     }
   }, [profile, user, reset]);
 
@@ -75,14 +77,30 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
         url: URL.createObjectURL(file),
         file,
       }));
-      setUploadedBrands((prev) => [...prev, ...newBrands]);
-      setBrandFiles((prev) => [...prev, ...files]);
+      setNewBrandUploads((prev) => [...prev, ...newBrands]);
     }
   };
 
-  const removeBrand = (idx) => {
-    setUploadedBrands((prev) => prev.filter((_, i) => i !== idx));
-    setBrandFiles((prev) => prev.filter((_, i) => i !== idx));
+  // Remove a NEWLY uploaded brand (local only)
+  const removeNewBrand = (idx) => {
+    setNewBrandUploads((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  // Delete an EXISTING brand logo from the server using its full URL
+  const deleteExistingBrand = (fullUrl) => {
+    // Find the matching relative path in the original user.brandLogos
+    const brandLogos = user?.brandLogos || [];
+    const idx = brandLogos.findIndex((logo) => getImgUrl(logo) === fullUrl);
+    if (idx === -1 || !brandLogos[idx]) return;
+    setLoadingDelete(idx);
+    deleteBrandLogoMutation.mutate(brandLogos[idx], {
+      onSuccess: (res) => {
+        const updatedLogos = res?.data?.data?.brandLogos || [];
+        setExistingBrandLogos(getBrandLogos({ brandLogos: updatedLogos }));
+        setLoadingDelete(null);
+      },
+      onError: () => setLoadingDelete(null),
+    });
   };
 
   const onFormSubmit = (data) => {
@@ -93,9 +111,14 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
       const nameParts = data.name.trim().split(' ');
       formPayload.append('firstName', nameParts[0] || '');
       formPayload.append('lastName', nameParts.slice(1).join(' ') || '');
+      // When display name changes, backend automatically updates slug, which will be returned in the response
+      formPayload.append('displayName', data.name.trim());
     }
     if (data.services) {
       formPayload.append('servicesOffered', data.services);
+    }
+    if (data.bio !== undefined) {
+      formPayload.append('shortBio', data.bio);
     }
 
     // Append avatar file
@@ -103,10 +126,19 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
       formPayload.append('avatar', profileFile);
     }
 
-    // Append brand logos
-    if (brandFiles.length > 0) {
-      brandFiles.forEach((file) => {
-        formPayload.append('brandLogos', file);
+    // Send the remaining existing brand logo paths (after deletions) as JSON
+    const remainingLogos = user?.brandLogos?.filter((_, i) => {
+      // Only include logos that haven't been deleted
+      return existingBrandLogos.includes(getImgUrl(user.brandLogos[i]));
+    }) || [];
+    if (remainingLogos.length > 0 || existingBrandLogos.length > 0) {
+      formPayload.append('brandLogos', JSON.stringify(remainingLogos));
+    }
+
+    // Append new files
+    if (newBrandUploads.length > 0) {
+      newBrandUploads.forEach(({ file }) => {
+        if (file) formPayload.append('brandLogos', file);
       });
     }
 
@@ -126,6 +158,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
         if (onSave) {
           onSave({
             ...data,
+            slug: updatedData?.slug,
             avatar: updatedData?.avatar,
             servicesOffered: updatedData?.servicesOffered,
             brandLogos: updatedData?.brandLogos,
@@ -195,26 +228,14 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-              {/* Display Name */}
-              <div>
-                <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2 md:mb-3">Display name</label>
-                <input
-                  {...register('name')}
-                  type="text"
-                  className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]"
-                />
-              </div>
-
-              {/* Niche */}
-              <div>
-                <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2 md:mb-3">Niche</label>
-                <input
-                  {...register('niche')}
-                  type="text"
-                  className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]"
-                />
-              </div>
+            {/* Display Name */}
+            <div>
+              <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2 md:mb-3">Display name</label>
+              <input
+                {...register('name')}
+                type="text"
+                className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]"
+              />
             </div>
 
             {/* Bio */}
@@ -259,23 +280,50 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                 <p className="text-xs md:text-sm font-bold text-[#1A1A1A]">Upload media here</p>
               </div>
 
-              {/* Uploaded Brands Preview */}
+              {/* Brand Logos Preview — Existing + New */}
               <div className="flex flex-wrap gap-3 md:gap-4">
-                {uploadedBrands.map((brand, idx) => (
-                  <div key={idx} className="relative group">
+                {/* Existing brand logos (from server) */}
+                {existingBrandLogos.map((url, idx) => (
+                  <div key={`existing-${idx}`} className="relative group">
                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border border-gray-100 p-2 bg-white flex items-center justify-center shadow-sm">
-                      <img src={brand.url} alt="Brand" className="max-w-full h-auto" />
+                      <img src={url} alt="Brand" className="max-w-full h-auto max-h-full object-contain" />
                     </div>
-                    <button 
-                      type="button" 
-                      onClick={() => removeBrand(idx)}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    <button
+                      type="button"
+                      disabled={loadingDelete === idx}
+                      onClick={() => deleteExistingBrand(url)}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white p-1 rounded-full shadow-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                    >
+                      {loadingDelete === idx ? (
+                        <span className="w-3 h-3 block">...</span>
+                      ) : (
+                        <X className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                ))}
+                {/* Newly uploaded brands (local) */}
+                {newBrandUploads.map((brand, idx) => (
+                  <div key={`new-${idx}`} className="relative group">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border border-gray-100 p-2 bg-white flex items-center justify-center shadow-sm">
+                      <img src={brand.url} alt="Brand" className="max-w-full h-auto max-h-full object-contain" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeNewBrand(idx)}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white p-1 rounded-full shadow-lg hover:bg-red-600 transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 ))}
               </div>
+              {/* Empty state */}
+              {existingBrandLogos.length === 0 && newBrandUploads.length === 0 && (
+                <p className="text-xs text-gray-400 font-medium text-center mt-2">
+                  No brand logos yet. Upload your first one above.
+                </p>
+              )}
             </div>
 
             {/* Social Links */}

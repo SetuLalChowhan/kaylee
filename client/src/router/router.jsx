@@ -56,6 +56,11 @@ const router = createBrowserRouter([
     path: "onboarding",
     element: <Onboarding />,
   },
+  // Public Portfolio Preview route
+  {
+    path: "preview/:slug",
+    element: <PortfolioPreview isPublic={true} />,
+  },
   // Admin dashboard routes (protected)
   {
     path: "dashboard",

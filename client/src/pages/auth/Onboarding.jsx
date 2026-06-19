@@ -94,9 +94,12 @@ const Onboarding = () => {
                   )}
                 </div>
 
-                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">
+                 <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1">
                   {formData.displayName || 'Display Name'}
                 </h2>
+                <p className="text-sm font-bold text-Primary mb-4">
+                  @{((formData.displayName || '').toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/(^-|-$)/g, "")) || 'username'}
+                </p>
                 <p className="text-gray-600 text-base leading-relaxed mb-6">
                   {formData.bio || 'Tell brands about yourself...'}
                 </p>

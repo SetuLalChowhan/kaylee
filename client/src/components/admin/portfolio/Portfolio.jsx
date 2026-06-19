@@ -10,6 +10,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import { useUserProfile } from '@/api/apiHooks/useUser';
+import {
+  usePortfolioItems,
+  useCreatePortfolioItem,
+  useUpdatePortfolioItem,
+  useDeletePortfolioItem,
+} from '@/api/apiHooks/usePortfolio';
 import { getImgUrl, getBrandLogos } from '@/utils/image';
 import natureVideo from '@/assets/videos/nature.mp4';
 
@@ -30,18 +36,16 @@ const Portfolio = () => {
     socials: { instagram: '', tiktok: '', youtube: '' },
   });
 
-  // Sync profile from Redux user data whenever it changes
   useEffect(() => {
     if (reduxUser) {
+      const slug = reduxUser.slug || (reduxUser.displayName || '').toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/(^-|-$)/g, "");
       setProfile({
         name:
           reduxUser.displayName ||
           `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim(),
-        niche: reduxUser.niche || reduxUser.shortBio || '',
+        slug,
         bio: reduxUser.shortBio || '',
-        portfolioLink: `https://stakd.co/portfolio/${reduxUser.displayName || 'user'}`
-          .toLowerCase()
-          .replace(/\s+/g, ''),
+        portfolioLink: `${window.location.origin}/preview/${slug || 'user'}`,
         services: reduxUser.servicesOffered || '',
         brands: getBrandLogos(reduxUser),
         image: getImgUrl(reduxUser.avatar) || '',
@@ -55,15 +59,24 @@ const Portfolio = () => {
     }
   }, [reduxUser]);
 
-  // Media State
-  const [mediaItems, setMediaItems] = useState([
-    { id: 1, title: 'Nike shoe Promotion', date: 'Apr 25.2026', type: 'image', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop' },
-    { id: 2, title: 'Summer Skincare Promo', date: 'May 06.2025', type: 'video', url: natureVideo },
-    { id: 3, title: 'Brand Lifestyle Shoot', date: 'Jun 12.2025', type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop' },
-    { id: 4, title: 'Product Unboxing', date: 'Jul 20.2025', type: 'video', url: natureVideo },
-    { id: 5, title: 'Morning Routine Reel', date: 'Aug 15.2025', type: 'image', url: 'https://images.unsplash.com/photo-1511499767390-90342f16b147?q=80&w=600&auto=format&fit=crop' },
-    { id: 6, title: 'Coffee Brand Ad', date: 'Sep 02.2025', type: 'video', url: natureVideo },
-  ]);
+  const { data: items } = usePortfolioItems();
+  const createMutation = useCreatePortfolioItem();
+  const updateMutation = useUpdatePortfolioItem();
+  const deleteMutation = useDeletePortfolioItem();
+
+  const mediaItems = Array.isArray(items)
+    ? items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        type: item.type,
+        url: getImgUrl(item.url),
+        date: new Date(item.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric',
+        }),
+      }))
+    : [];
 
   // Modal States
   const [modals, setModals] = useState({
@@ -84,26 +97,33 @@ const Portfolio = () => {
   };
 
   const handleUploadContent = (data) => {
-    console.log('New Content Uploaded:', data);
-    const newItem = {
-      id: Date.now(),
-      title: data.title,
-      type: data.type || (data.file?.type?.startsWith('video') ? 'video' : 'image'),
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-      url: data.file ? URL.createObjectURL(data.file) : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop'
-    };
-    setMediaItems(prev => [newItem, ...prev]);
-    toggleModal('uploadContent', false);
+    const formData = new FormData();
+    formData.append('title', data.title);
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+    createMutation.mutate(formData, {
+      onSuccess: () => toggleModal('uploadContent', false),
+    });
   };
 
   const handleUpdateContent = (data) => {
-    console.log('Content Updated:', data);
-    setMediaItems(prev => prev.map(m => m.id === selectedMedia.id ? { ...m, ...data } : m));
-    toggleModal('editContent', false);
+    const formData = new FormData();
+    if (data.title) {
+      formData.append('title', data.title);
+    }
+    if (data.newFile) {
+      formData.append('file', data.newFile);
+    }
+    updateMutation.mutate({ id: selectedMedia.id, formData }, {
+      onSuccess: () => toggleModal('editContent', false),
+    });
   };
 
   const handleDeleteContent = (item) => {
-    setMediaItems(prev => prev.filter(m => m.id !== item.id));
+    if (window.confirm("Are you sure you want to delete this portfolio item?")) {
+      deleteMutation.mutate(item.id);
+    }
   };
 
   return (
@@ -116,12 +136,6 @@ const Portfolio = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 md:gap-4">
-          <button
-            onClick={() => navigate('/dashboard/portfolio/preview')}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#F8FAFC] text-[#1A1A1A] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl text-xs md:text-sm font-bold hover:bg-gray-100 transition-all border border-gray-100"
-          >
-            Preview
-          </button>
           <button
             onClick={() => toggleModal('editPortfolio', true)}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#F8FAFC] text-[#1A1A1A] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl text-xs md:text-sm font-bold hover:bg-gray-100 transition-all border border-gray-100"

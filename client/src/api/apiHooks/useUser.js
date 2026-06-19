@@ -94,6 +94,31 @@ export const useCompleteOnboarding = () => {
 };
 
 /**
+ * useDeleteBrandLogo — Delete a brand logo by file path
+ */
+export const useDeleteBrandLogo = () => {
+  const queryClient = useQueryClient();
+  const axiosSecure = useAxiosSecure();
+
+  return useMutation({
+    mutationFn: async (filePath) => {
+      const res = await axiosSecure.delete(USER.DELETE_BRAND_LOGO, {
+        data: { filePath },
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || "Brand logo deleted!");
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to delete brand logo";
+      toast.error(msg);
+    },
+  });
+};
+
+/**
  * useChangePassword — Change user password
  */
 export const useChangePassword = () => {

@@ -13,7 +13,7 @@ const PreviewHeader = ({ profile }) => {
             <img src={profile.image} alt="Profile" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-1">{profile.name}</h1>
-          <p className="text-sm font-semibold text-gray-500 mb-2">{profile.niche}</p>
+          <p className="text-sm font-bold text-Primary mb-2">@{profile.slug}</p>
           <a 
             href={profile.portfolioLink} 
             target="_blank" 

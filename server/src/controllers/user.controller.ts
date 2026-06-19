@@ -11,6 +11,42 @@ interface AuthRequest extends Request {
 }
 
 /**
+ * Helper to generate a unique lowercase URL slug from a display name
+ */
+async function generateUniqueSlug(displayName: string, userId: string): Promise<string> {
+  const baseSlug = displayName
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  
+  let finalSlug = baseSlug || "user";
+  let isUnique = false;
+  let count = 0;
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { slug: true } });
+  if (user && user.slug === finalSlug) {
+    return finalSlug;
+  }
+
+  while (!isUnique) {
+    const candidateSlug = count === 0 ? finalSlug : `${finalSlug}-${count}`;
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        slug: candidateSlug,
+        id: { not: userId }
+      }
+    });
+    if (!existingUser) {
+      finalSlug = candidateSlug;
+      isUnique = true;
+    } else {
+      count++;
+    }
+  }
+  return finalSlug;
+}
+
+/**
  * GET /api/user/me — Fetch the authenticated user's profile
  */
 export const getMe = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -43,14 +79,24 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
  */
 export const updateProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = (req as AuthRequest).user;
-  const { firstName, lastName, servicesOffered } = req.body as {
+  const { firstName, lastName, servicesOffered, displayName, shortBio, socialLinks } = req.body as {
     firstName?: string;
     lastName?: string;
     servicesOffered?: string;
+    displayName?: string;
+    shortBio?: string;
+    socialLinks?: { instagram?: string; website?: string; youtube?: string; other?: string };
   };
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return next(new AppError("User not found", 404));
+
+  let finalSlug = user.slug;
+  if (displayName) {
+    finalSlug = await generateUniqueSlug(displayName, userId);
+  } else if (!finalSlug && user.displayName) {
+    finalSlug = await generateUniqueSlug(user.displayName, userId);
+  }
 
   let avatarUrl = user.avatar;
 
@@ -65,40 +111,53 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
     avatarUrl = avatarFile.path.replace(/\\/g, "/");
   }
 
-  let brandLogoUrls: string[] = [];
-  if (files?.brandLogos?.length) {
-    brandLogoUrls = files.brandLogos.map((f) => f.path.replace(/\\/g, "/"));
-  }
+  // Merge existing + new brand logos
+  let existingBrandLogos: string[] = Array.isArray(user.brandLogos) ? (user.brandLogos as string[]) : [];
 
-  // If brandLogos sent via JSON (array of existing URLs), parse them
-  let parsedBrandLogos: string[] | undefined;
+  // 1. If client sent a JSON array of EXISTING logo paths (after deletions), use that as the base
   if (req.body.brandLogos) {
     if (typeof req.body.brandLogos === "string") {
       try {
-        parsedBrandLogos = JSON.parse(req.body.brandLogos);
+        existingBrandLogos = JSON.parse(req.body.brandLogos);
       } catch {
-        parsedBrandLogos = undefined;
+        // ignore parse errors
       }
     } else if (Array.isArray(req.body.brandLogos)) {
-      parsedBrandLogos = req.body.brandLogos;
+      existingBrandLogos = req.body.brandLogos;
     }
   }
 
-  const finalBrandLogos = brandLogoUrls.length > 0 ? brandLogoUrls : parsedBrandLogos;
+  // 2. Append newly uploaded files
+  const newLogoPaths: string[] = [];
+  if (files?.brandLogos?.length) {
+    files.brandLogos.forEach((f) => {
+      newLogoPaths.push(f.path.replace(/\\/g, "/"));
+    });
+  }
+
+  const finalBrandLogos = [...existingBrandLogos, ...newLogoPaths];
 
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: {
       ...(firstName && { firstName }),
       ...(lastName && { lastName }),
+      ...(displayName && { displayName }),
+      ...(finalSlug !== undefined && { slug: finalSlug || null }),
       ...(servicesOffered !== undefined && { servicesOffered }),
       ...(finalBrandLogos !== undefined && { brandLogos: finalBrandLogos }),
+      ...(shortBio !== undefined && { shortBio }),
+      ...(socialLinks && { socialLinks }),
       avatar: avatarUrl,
     },
     select: {
       id: true,
       firstName: true,
       lastName: true,
+      displayName: true,
+      slug: true,
+      shortBio: true,
+      socialLinks: true,
       servicesOffered: true,
       brandLogos: true,
       email: true,
@@ -125,6 +184,11 @@ export const completeOnboarding = catchAsync(async (req: Request, res: Response,
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return next(new AppError("User not found", 404));
 
+  let finalSlug = user.slug;
+  if (displayName) {
+    finalSlug = await generateUniqueSlug(displayName, userId);
+  }
+
   let avatarUrl = user.avatar;
 
   if (req.file) {
@@ -138,6 +202,7 @@ export const completeOnboarding = catchAsync(async (req: Request, res: Response,
     where: { id: userId },
     data: {
       ...(displayName && { displayName }),
+      ...(finalSlug && { slug: finalSlug }),
       ...(shortBio !== undefined && { shortBio }),
       ...(socialLinks && { socialLinks }),
       avatar: avatarUrl,
@@ -147,6 +212,7 @@ export const completeOnboarding = catchAsync(async (req: Request, res: Response,
       firstName: true,
       lastName: true,
       displayName: true,
+      slug: true,
       shortBio: true,
       socialLinks: true,
       avatar: true,
@@ -156,6 +222,46 @@ export const completeOnboarding = catchAsync(async (req: Request, res: Response,
   res.status(200).json({
     status: "success",
     message: "Onboarding completed successfully",
+    data: updatedUser,
+  });
+});
+
+/**
+ * DELETE /api/user/brand-logo — Delete a single brand logo by its file path
+ */
+export const deleteBrandLogo = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = (req as AuthRequest).user;
+  const { filePath } = req.body as { filePath: string };
+
+  if (!filePath) return next(new AppError("filePath is required", 400));
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return next(new AppError("User not found", 404));
+
+  const currentLogos: string[] = Array.isArray(user.brandLogos) ? (user.brandLogos as string[]) : [];
+
+  // Remove the file path from the array
+  const updatedLogos = currentLogos.filter((logo) => logo !== filePath);
+
+  // If it was removed, also delete the physical file
+  if (updatedLogos.length < currentLogos.length) {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { brandLogos: updatedLogos },
+    select: {
+      id: true,
+      brandLogos: true,
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Brand logo deleted successfully",
     data: updatedUser,
   });
 });

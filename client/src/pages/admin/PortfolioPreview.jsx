@@ -1,42 +1,75 @@
 import React, { useState } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import PreviewHeader from '../../components/admin/portfolio/preview/PreviewHeader';
 import PreviewInfoSection from '../../components/admin/portfolio/preview/PreviewInfoSection';
 import PreviewMediaGrid from '../../components/admin/portfolio/preview/PreviewMediaGrid';
-import natureVideo from '@/assets/videos/nature.mp4';
+import { useUserProfile } from '@/api/apiHooks/useUser';
+import { usePortfolioItems, usePublicPortfolio } from '@/api/apiHooks/usePortfolio';
+import { getImgUrl } from '@/utils/image';
 
-const PortfolioPreview = ({ onClose }) => {
+const PortfolioPreview = ({ isPublic = false, onClose }) => {
   const navigate = useNavigate();
+  const { slug } = useParams();
   const [previewItem, setPreviewItem] = useState(null);
 
-  // Data (In a real app, this would come from a context or API)
+  // 1. Fetch public portfolio data if isPublic is true
+  const { data: publicData, isLoading: isPublicLoading } = usePublicPortfolio(isPublic ? slug : undefined);
+
+  // 2. Fetch logged in user's profile and items if isPublic is false
+  const { user: currentUserProfile, isLoading: isProfileLoading } = useUserProfile();
+  const { data: portfolioItems, isLoading: isItemsLoading } = usePortfolioItems();
+
+  const isLoading = isPublic ? isPublicLoading : (isProfileLoading || isItemsLoading);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-10 h-10 border-4 border-Primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const profileData = isPublic ? publicData?.profile : currentUserProfile;
+  const items = isPublic ? publicData?.portfolioItems : portfolioItems;
+
+  if (!profileData) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Portfolio Not Found</h2>
+        <p className="text-gray-500 mb-6">The requested portfolio does not exist or has not been set up yet.</p>
+        <button onClick={() => navigate(-1)} className="px-6 py-3 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 transition-all shadow-md">
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   const profile = {
-    name: 'Maya Johnson',
-    niche: 'Lifestyle',
-    bio: 'UGC creator crafting honest, conversion-ready content for lifestyle and beauty brands.',
-    portfolioLink: 'https://stakd.co/portfolio/mayajohnson',
-    services: '-Product photography\n-Voiceover\n-Unboxing',
-    brands: [
-      'https://api.iconify.design/logos:nike.svg',
-      'https://api.iconify.design/logos:adidas-icon.svg',
-      'https://api.iconify.design/logos:puma.svg',
-      'https://api.iconify.design/logos:starbucks.svg'
-    ],
-    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop'
+    name: profileData.displayName || `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim(),
+    slug: profileData.slug || '',
+    niche: profileData.shortBio || '',
+    bio: profileData.shortBio || '',
+    portfolioLink: `${window.location.origin}/preview/${profileData.slug || ''}`.toLowerCase(),
+    services: profileData.servicesOffered || '',
+    brands: Array.isArray(profileData.brandLogos) ? profileData.brandLogos.map(logo => getImgUrl(logo)) : [],
+    image: getImgUrl(profileData.avatar) || '',
   };
 
-  const mediaItems = [
-    { id: 1, title: 'Nike shoe Promotion', date: 'Apr 25.2026', type: 'image', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop' },
-    { id: 2, title: 'Summer Skincare Promo', date: 'May 06.2025', type: 'video', url: natureVideo },
-    { id: 3, title: 'Brand Lifestyle Shoot', date: 'Jun 12.2025', type: 'image', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop' },
-    { id: 4, title: 'Product Unboxing', date: 'Jul 20.2025', type: 'video', url: natureVideo },
-    { id: 5, title: 'Morning Routine Reel', date: 'Aug 15.2025', type: 'image', url: 'https://images.unsplash.com/photo-1511499767390-90342f16b147?q=80&w=600&auto=format&fit=crop' },
-    { id: 6, title: 'Coffee Brand Ad', date: 'Sep 02.2025', type: 'video', url: natureVideo },
-    { id: 7, title: 'Travel Essentials', date: 'Oct 10.2025', type: 'image', url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=600&auto=format&fit=crop' },
-    { id: 8, title: 'Fitness Gear Showcase', date: 'Nov 05.2025', type: 'video', url: natureVideo },
-  ];
+  const mediaItems = Array.isArray(items)
+    ? items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        type: item.type,
+        url: getImgUrl(item.url),
+        date: new Date(item.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric',
+        }),
+      }))
+    : [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -77,7 +110,7 @@ const PortfolioPreview = ({ onClose }) => {
               </button>
               <div className="rounded-2xl overflow-hidden bg-black">
                 {previewItem.type === 'video' ? (
-                  <video src={natureVideo} className="w-full max-h-[80vh]" controls autoPlay />
+                  <video src={previewItem.url} className="w-full max-h-[80vh]" controls autoPlay />
                 ) : (
                   <img src={previewItem.url} alt={previewItem.title} className="w-full max-h-[80vh] object-contain" />
                 )}

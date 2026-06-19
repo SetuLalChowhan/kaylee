@@ -1,13 +1,15 @@
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentToken, clearAuth, setToken } from "../redux/slices/authSlice";
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useRef } from "react";
 import { AUTH } from "../api/apiEndPoint";
 
 const useAxiosSecure = () => {
   const token = useSelector(selectCurrentToken);
   const dispatch = useDispatch();
+
+  const tokenRef = useRef(token);
+  tokenRef.current = token;
 
   const axiosSecure = useMemo(() => {
     const instance = axios.create({
@@ -19,11 +21,12 @@ const useAxiosSecure = () => {
       },
     });
 
-    // Request interceptor — attach token
+    // Request interceptor — attach token dynamically using the ref
     instance.interceptors.request.use(
       (config) => {
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        const currentToken = tokenRef.current;
+        if (currentToken) {
+          config.headers.Authorization = `Bearer ${currentToken}`;
         }
         return config;
       },
@@ -49,6 +52,7 @@ const useAxiosSecure = () => {
 
             const newToken = res.data.accessToken;
             dispatch(setToken({ token: newToken }));
+            tokenRef.current = newToken; // Update ref immediately
 
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return instance(originalRequest);
@@ -64,7 +68,7 @@ const useAxiosSecure = () => {
     );
 
     return instance;
-  }, [token, dispatch]);
+  }, [dispatch]);
 
   return axiosSecure;
 };

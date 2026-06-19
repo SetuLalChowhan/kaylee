@@ -4,6 +4,7 @@ import fs from "fs";
 
 const avatarDir = "uploads/avatars";
 const brandLogoDir = "uploads/brand-logos";
+const portfolioDir = "uploads/portfolios";
 
 // Ensure upload directories exist
 if (!fs.existsSync(avatarDir)) {
@@ -12,10 +13,19 @@ if (!fs.existsSync(avatarDir)) {
 if (!fs.existsSync(brandLogoDir)) {
   fs.mkdirSync(brandLogoDir, { recursive: true });
 }
+if (!fs.existsSync(portfolioDir)) {
+  fs.mkdirSync(portfolioDir, { recursive: true });
+}
 
 const avatarStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, avatarDir);
+    if (file.fieldname === "brandLogos") {
+      cb(null, brandLogoDir);
+    } else if (file.fieldname === "file") {
+      cb(null, portfolioDir);
+    } else {
+      cb(null, avatarDir);
+    }
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
