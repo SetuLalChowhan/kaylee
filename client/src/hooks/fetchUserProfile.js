@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
-import { selectCurrentToken } from "@/redux/slices/authSlice";
+import { selectCurrentToken, setUser } from "@/redux/slices/authSlice";
 import useAxiosSecure from "./useAxiosSecure";
 import { useEffect } from "react";
-import { setUser } from "@/redux/slices/uiSlice";
+import { USER } from "@/api/apiEndPoint";
 
 export const useUserProfile = () => {
   const token = useSelector(selectCurrentToken);
@@ -14,8 +14,8 @@ export const useUserProfile = () => {
     queryKey: ["userProfile", token],
     queryFn: async () => {
       if (!token) return null;
-      const res = await axiosSecure.get("/get-profile");
-      return res.data.userdata || res.data;
+      const res = await axiosSecure.get(USER.GET_ME);
+      return res.data?.data || res.data;
     },
     enabled: !!token,
     staleTime: 1000 * 60 * 5, // 5 minutes

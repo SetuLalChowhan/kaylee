@@ -4,8 +4,11 @@ import { X } from 'lucide-react';
 import NavLinks from './NavLinks';
 import Logo from "@/assets/images/logo.png";
 import CommonButton from '@/components/ui/CommonButton';
+import { useNavigate } from 'react-router-dom';
 
-const MobileNavbar = ({ isOpen, onClose }) => {
+const MobileNavbar = ({ isOpen, onClose, isAuthenticated = false, user = null }) => {
+  const navigate = useNavigate();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -42,20 +45,32 @@ const MobileNavbar = ({ isOpen, onClose }) => {
             </nav>
 
             <div className="mt-auto flex flex-col gap-4">
-              <CommonButton 
-                type="link"
-                path="/login"
-                className="w-full py-4 px-6 bg-Primary text-white font-semibold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20"
-              >
-                Login
-              </CommonButton>
-              <CommonButton 
-                type="link"
-                path="/signup"
-                className="w-full py-4 px-6 text-gray-700 bg-white border border-gray-100 font-semibold rounded-xl hover:bg-gray-50 shadow-sm"
-              >
-                Start Free trail
-              </CommonButton>
+              {isAuthenticated ? (
+                <CommonButton 
+                  type="link"
+                  path="/dashboard"
+                  className="w-full py-4 px-6 bg-Primary text-white font-semibold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20"
+                >
+                  Dashboard
+                </CommonButton>
+              ) : (
+                <>
+                  <CommonButton 
+                    type="link"
+                    path="/login"
+                    className="w-full py-4 px-6 bg-Primary text-white font-semibold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20"
+                  >
+                    Login
+                  </CommonButton>
+                  <CommonButton 
+                    type="link"
+                    path="/signup"
+                    className="w-full py-4 px-6 text-gray-700 bg-white border border-gray-100 font-semibold rounded-xl hover:bg-gray-50 shadow-sm"
+                  >
+                    Start Free trail
+                  </CommonButton>
+                </>
+              )}
             </div>
           </motion.div>
         </>

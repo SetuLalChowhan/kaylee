@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { selectIsAuthenticated, selectCurrentUser } from "@/redux/slices/authSlice";
+import { getImgUrl } from "@/utils/image";
 import Logo from "@/assets/images/logo.png";
 import NavLinks from "./NavLinks";
 import MobileNavbar from "./MobileNavbar";
@@ -11,6 +15,10 @@ const Navbar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,6 +49,8 @@ const Navbar = () => {
       document.body.style.overflow = 'unset';
     }
   }, [isMobileMenuOpen]);
+
+  const avatarUrl = getImgUrl(user?.avatar) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop';
 
   return (
     <>
@@ -81,27 +91,45 @@ const Navbar = () => {
             <NavLinks className="gap-8 xl:gap-12" />
           </motion.div>
 
-          {/* Desktop Buttons */}
+          {/* Desktop Buttons - Auth Aware */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="hidden lg:flex items-center gap-3"
           >
-            <CommonButton
-              type="link"
-              path="/login"
-              className="px-6 xl:px-8 py-2.5 bg-Primary text-white font-semibold rounded-xl hover:bg-Primary/90 shadow-md shadow-Primary/20 text-sm xl:text-base"
-            >
-              Login
-            </CommonButton>
-            <CommonButton
-              type="link"
-              path="/signup"
-              className="px-6 xl:px-8 py-2.5 bg-white text-gray-700 font-semibold rounded-xl border border-gray-100 hover:bg-gray-50 shadow-sm text-sm xl:text-base"
-            >
-              Start Free trail
-            </CommonButton>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-6 xl:px-8 py-2.5 bg-Primary text-white font-semibold rounded-xl hover:bg-Primary/90 shadow-md shadow-Primary/20 text-sm xl:text-base flex items-center gap-2"
+                >
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar"
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                  Dashboard
+                </button>
+              </div>
+            ) : (
+              <>
+                <CommonButton
+                  type="link"
+                  path="/login"
+                  className="px-6 xl:px-8 py-2.5 bg-Primary text-white font-semibold rounded-xl hover:bg-Primary/90 shadow-md shadow-Primary/20 text-sm xl:text-base"
+                >
+                  Login
+                </CommonButton>
+                <CommonButton
+                  type="link"
+                  path="/signup"
+                  className="px-6 xl:px-8 py-2.5 bg-white text-gray-700 font-semibold rounded-xl border border-gray-100 hover:bg-gray-50 shadow-sm text-sm xl:text-base"
+                >
+                  Start Free trail
+                </CommonButton>
+              </>
+            )}
           </motion.div>
 
           {/* Mobile Menu Trigger */}
@@ -118,6 +146,8 @@ const Navbar = () => {
       <MobileNavbar
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+        isAuthenticated={isAuthenticated}
+        user={user}
       />
     </>
   );

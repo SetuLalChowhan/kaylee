@@ -1,17 +1,34 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AuthInput from '@/components/ui/AuthInput';
 import CommonButton from '@/components/ui/CommonButton';
+import { useResetPassword } from '@/api/apiHooks/useAuth';
+import { PASSWORD_RULES, CONFIRM_PASSWORD_RULES } from '@/utils/validation';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const location = useLocation();
+  const resetToken = location.state?.resetToken;
+
+  const resetPasswordMutation = useResetPassword();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+
+  const newPassword = watch("newPassword");
 
   const onSubmit = (data) => {
-    console.log("Reset Password Data:", data);
-    navigate('/login');
+    if (!resetToken) {
+      navigate('/forgot-password');
+      return;
+    }
+    resetPasswordMutation.mutate({ resetToken, newPassword: data.newPassword });
   };
+
+  // Redirect if no resetToken
+  if (!resetToken) {
+    navigate('/forgot-password');
+    return null;
+  }
 
   return (
     <div className="w-full">
@@ -27,6 +44,7 @@ const ResetPassword = () => {
           name="newPassword"
           placeholder="Enter new password"
           register={register}
+          rules={PASSWORD_RULES}
           error={errors.newPassword}
           required
         />
@@ -36,6 +54,7 @@ const ResetPassword = () => {
           name="confirmPassword"
           placeholder="Re-enter your new password"
           register={register}
+          rules={CONFIRM_PASSWORD_RULES(newPassword)}
           error={errors.confirmPassword}
           required
         />
@@ -43,9 +62,10 @@ const ResetPassword = () => {
         <div className="mt-10">
           <CommonButton 
             type="submit"
-            className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20"
+            disabled={resetPasswordMutation.isPending}
+            className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Continue
+            {resetPasswordMutation.isPending ? "Resetting..." : "Continue"}
           </CommonButton>
         </div>
       </form>

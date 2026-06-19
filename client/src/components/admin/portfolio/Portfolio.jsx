@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Edit3, CloudUpload, Play, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit3, CloudUpload, X } from 'lucide-react';
 import ProfileCard from './ProfileCard';
 import MediaGrid from './MediaGrid';
 import EditPortfolioModal from './modals/EditPortfolioModal';
@@ -7,27 +7,53 @@ import UploadContentModal from './modals/UploadContentModal';
 import EditContentModal from './modals/EditContentModal';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/redux/slices/authSlice';
+import { useUserProfile } from '@/api/apiHooks/useUser';
+import { getImgUrl, getBrandLogos } from '@/utils/image';
 import natureVideo from '@/assets/videos/nature.mp4';
 
 const Portfolio = () => {
   const navigate = useNavigate();
-  // Profile State
+  const reduxUser = useSelector(selectCurrentUser);
+  const { refetch } = useUserProfile();
+
   const [profile, setProfile] = useState({
-    name: 'Maya Johnson',
-    niche: 'Lifestyle',
-    bio: 'UGC creator crafting honest, conversion-ready content for lifestyle and beauty brands.',
-    portfolioLink: 'https://stakd.co/portfolio/mayajohnson',
-    services: '-Product photography\n-Voiceover\n-Unboxing',
-    brands: [
-      'https://api.iconify.design/logos:nike.svg',
-      'https://api.iconify.design/logos:adidas-icon.svg',
-      'https://api.iconify.design/logos:puma.svg',
-      'https://api.iconify.design/logos:starbucks.svg'
-    ],
-    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+    name: '',
+    niche: '',
+    bio: '',
+    portfolioLink: '',
+    services: '',
+    brands: [],
+    image: '',
     otherLink: '',
-    socials: { instagram: '@mayajohnson', tiktok: '@mayajohnson', youtube: 'youtube/mayajohnson' }
+    socials: { instagram: '', tiktok: '', youtube: '' },
   });
+
+  // Sync profile from Redux user data whenever it changes
+  useEffect(() => {
+    if (reduxUser) {
+      setProfile({
+        name:
+          reduxUser.displayName ||
+          `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim(),
+        niche: reduxUser.niche || reduxUser.shortBio || '',
+        bio: reduxUser.shortBio || '',
+        portfolioLink: `https://stakd.co/portfolio/${reduxUser.displayName || 'user'}`
+          .toLowerCase()
+          .replace(/\s+/g, ''),
+        services: reduxUser.servicesOffered || '',
+        brands: getBrandLogos(reduxUser),
+        image: getImgUrl(reduxUser.avatar) || '',
+        otherLink: reduxUser.socialLinks?.other || '',
+        socials: {
+          instagram: reduxUser.socialLinks?.instagram || '',
+          tiktok: '',
+          youtube: reduxUser.socialLinks?.youtube || '',
+        },
+      });
+    }
+  }, [reduxUser]);
 
   // Media State
   const [mediaItems, setMediaItems] = useState([
@@ -52,8 +78,8 @@ const Portfolio = () => {
   const toggleModal = (key, val) => setModals(prev => ({ ...prev, [key]: val }));
 
   const handleUpdateProfile = (data) => {
-    console.log('Portfolio Update Values:', data);
     setProfile(prev => ({ ...prev, ...data }));
+    refetch();
     toggleModal('editPortfolio', false);
   };
 

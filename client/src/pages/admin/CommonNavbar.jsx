@@ -2,11 +2,24 @@ import React, { useState } from 'react';
 import { Search, Bell, ChevronDown, Menu, User as UserIcon, Settings, LogOut, CheckCircle, Clock, MessageSquare, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/redux/slices/authSlice';
+import { useLogout } from '@/api/apiHooks/useAuth';
+import { getImgUrl } from '@/utils/image';
 
 const CommonNavbar = ({ setOpen }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const navigate = useNavigate();
+  const user = useSelector(selectCurrentUser);
+  const logoutMutation = useLogout();
+
+  const displayName =
+    user?.displayName ||
+    `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
+    'User';
+
+  const avatarUrl = getImgUrl(user?.avatar) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop';
 
   const dummyNotifications = [
     {
@@ -51,6 +64,11 @@ const CommonNavbar = ({ setOpen }) => {
     navigate(path);
     setIsProfileOpen(false);
     setIsNotificationsOpen(false);
+  };
+
+  const handleLogout = () => {
+    setIsProfileOpen(false);
+    logoutMutation.mutate();
   };
 
   return (
@@ -128,7 +146,7 @@ const CommonNavbar = ({ setOpen }) => {
           </AnimatePresence>
         </div>
 
-        {/* Profile */}
+        {/* Profile Dropdown */}
         <div className="relative">
           <div
             className="flex items-center gap-3 pl-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -139,13 +157,13 @@ const CommonNavbar = ({ setOpen }) => {
           >
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-white">
               <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop"
+                src={avatarUrl}
                 alt="User Profile"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="hidden md:flex items-center gap-1.5">
-              <span className="text-sm font-bold text-[#1A1A1A]">Azamara Jahan</span>
+              <span className="text-sm font-bold text-[#1A1A1A]">{displayName}</span>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
             </div>
           </div>
@@ -179,11 +197,12 @@ const CommonNavbar = ({ setOpen }) => {
                   </button>
                   <div className="h-px bg-gray-50 my-1 mx-2" />
                   <button
-                    onClick={() => handleNavigate('/')}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50/50 transition-colors"
+                    onClick={handleLogout}
+                    disabled={logoutMutation.isPending}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50/50 transition-colors disabled:opacity-50"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Log Out</span>
+                    <span>{logoutMutation.isPending ? 'Logging out...' : 'Log Out'}</span>
                   </button>
                 </motion.div>
               </>

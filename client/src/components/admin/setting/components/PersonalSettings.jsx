@@ -1,18 +1,62 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/redux/slices/authSlice';
+import { useUpdateProfile } from '@/api/apiHooks/useUser';
+import { getImgUrl } from '@/utils/image';
 
 const PersonalSettings = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const user = useSelector(selectCurrentUser);
+  const updateProfileMutation = useUpdateProfile();
+
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(getImgUrl(user?.avatar) || '');
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
-      firstName: 'Maya',
-      lastName: 'Johnson',
-      email: 'mayajohnson@gmail.com'
-    }
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || '',
+      displayName: user?.displayName || '',
+      shortBio: user?.shortBio || '',
+    },
   });
 
+  // Reset form when user data loads
+  useEffect(() => {
+    if (user) {
+      reset({
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
+        email: user?.email || '',
+        displayName: user?.displayName || '',
+        shortBio: user?.shortBio || '',
+      });
+      setAvatarPreview(getImgUrl(user?.avatar) || '');
+    }
+  }, [user, reset]);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setAvatarPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit = (data) => {
-    console.log('Personal Info Saved:', data);
+    const formPayload = new FormData();
+    formPayload.append('firstName', data.firstName);
+    formPayload.append('lastName', data.lastName);
+
+    if (avatarFile) {
+      formPayload.append('avatar', avatarFile);
+    }
+
+    updateProfileMutation.mutate(formPayload);
   };
 
   return (
@@ -20,16 +64,29 @@ const PersonalSettings = () => {
       <h2 className="text-xl font-bold text-[#1A1A1A] mb-8">Personal Information</h2>
       
       <div className="border-t border-dashed border-gray-100 pt-10 mb-10">
+        {/* Avatar Upload */}
         <div className="relative w-32 h-32 rounded-full overflow-hidden group cursor-pointer mb-10">
-          <img 
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" 
-            alt="Profile" 
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
+          {avatarPreview ? (
+            <img
+              src={avatarPreview}
+              alt="Profile"
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
+              <Camera className="w-8 h-8" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <Camera className="w-6 h-6 text-white mb-1" />
             <span className="text-[10px] text-white font-bold">Update photo</span>
           </div>
+          <input
+            type="file"
+            className="absolute inset-0 opacity-0 cursor-pointer"
+            accept="image/*"
+            onChange={handleAvatarChange}
+          />
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -59,23 +116,45 @@ const PersonalSettings = () => {
             <input
               {...register('email')}
               type="email"
+              disabled
               placeholder="Enter your email"
+              className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 text-gray-400 text-sm cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-[#1A1A1A] mb-3">Display Name</label>
+            <input
+              {...register('displayName')}
+              type="text"
+              placeholder="Your creator display name"
               className="w-full bg-white border border-gray-100 rounded-2xl py-4 px-6 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] text-sm"
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-bold text-[#1A1A1A] mb-3">Short Bio</label>
+            <textarea
+              {...register('shortBio')}
+              rows={3}
+              placeholder="Tell brands about yourself"
+              className="w-full bg-white border border-gray-100 rounded-2xl py-4 px-6 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] text-sm resize-none"
+            />
+          </div>
+
           <div className="flex items-center justify-end gap-4 pt-6">
-            <button 
+            <button
               type="button"
               className="px-8 py-3.5 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-all text-sm"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
-              className="px-10 py-3.5 bg-Primary text-white rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-sm"
+              disabled={updateProfileMutation.isPending}
+              className="px-10 py-3.5 bg-Primary text-white rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Changes
+              {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>

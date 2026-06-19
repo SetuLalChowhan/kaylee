@@ -1,16 +1,16 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AuthInput from '@/components/ui/AuthInput';
 import CommonButton from '@/components/ui/CommonButton';
+import { useForgotPassword } from '@/api/apiHooks/useAuth';
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
+  const forgotPasswordMutation = useForgotPassword();
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = (data) => {
-    console.log("Forgot Password Data:", data);
-    navigate('/verify-otp');
+    forgotPasswordMutation.mutate({ email: data.email });
   };
 
   return (
@@ -34,9 +34,10 @@ const ForgotPassword = () => {
         <div className="mt-10">
           <CommonButton 
             type="submit"
-            className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20 mb-4"
+            disabled={forgotPasswordMutation.isPending}
+            className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20 mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
+            {forgotPasswordMutation.isPending ? "Sending..." : "Next"}
           </CommonButton>
         </div>
       </form>

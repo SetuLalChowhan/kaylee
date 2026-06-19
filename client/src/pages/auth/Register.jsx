@@ -1,17 +1,21 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AuthInput from '@/components/ui/AuthInput';
 import CommonButton from '@/components/ui/CommonButton';
 import { FcGoogle } from 'react-icons/fc';
+import { useRegister } from '@/api/apiHooks/useAuth';
+import { PASSWORD_RULES, CONFIRM_PASSWORD_RULES, NAME_RULES, EMAIL_RULES } from '@/utils/validation';
 
 const Register = () => {
-  const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const registerMutation = useRegister();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+
+  const password = watch("password");
 
   const onSubmit = (data) => {
-    console.log("Register Data:", data);
-    navigate('/onboarding');
+    const { terms, ...registerData } = data;
+    registerMutation.mutate(registerData);
   };
 
   return (
@@ -28,6 +32,7 @@ const Register = () => {
             name="firstName"
             placeholder="Enter your first name"
             register={register}
+            rules={NAME_RULES}
             error={errors.firstName}
             required
           />
@@ -36,6 +41,7 @@ const Register = () => {
             name="lastName"
             placeholder="Enter your last name"
             register={register}
+            rules={NAME_RULES}
             error={errors.lastName}
             required
           />
@@ -46,27 +52,29 @@ const Register = () => {
           name="email"
           placeholder="Enter your email"
           register={register}
+          rules={EMAIL_RULES}
           error={errors.email}
           required
-        />
-        <AuthInput
-          label="Password"
-          type="password"
-          name="password"
-          placeholder="Enter your password"
-          register={register}
-          error={errors.password}
-          required
-        />
-        <AuthInput
-          label="Confirm Password"
-          type="password"
-          name="confirmPassword"
-          placeholder="Re-enter your password"
-          register={register}
-          error={errors.confirmPassword}
-          required
-        />
+        />          <AuthInput
+            label="Password"
+            type="password"
+            name="password"
+            placeholder="Enter your password"
+            register={register}
+            rules={PASSWORD_RULES}
+            error={errors.password}
+            required
+          />
+          <AuthInput
+            label="Confirm Password"
+            type="password"
+            name="confirmPassword"
+            placeholder="Re-enter your password"
+            register={register}
+            rules={CONFIRM_PASSWORD_RULES(password)}
+            error={errors.confirmPassword}
+            required
+          />
 
         <div className="flex items-start gap-2 mb-8">
           <input
@@ -85,9 +93,10 @@ const Register = () => {
 
         <CommonButton
           type="submit"
-          className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20 mb-4"
+          disabled={registerMutation.isPending}
+          className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20 mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Sign Up
+          {registerMutation.isPending ? "Creating account..." : "Sign Up"}
         </CommonButton>
 
         <button

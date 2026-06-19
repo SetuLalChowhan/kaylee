@@ -1,54 +1,139 @@
 import React from 'react';
-import { X, Upload, Instagram, Youtube, Link as LinkIcon, Trash2 } from 'lucide-react';
+import { X, Upload, Instagram, Youtube, Link as LinkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { FaTiktok } from 'react-icons/fa';
+import { useUpdateProfile } from '@/api/apiHooks/useUser';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/redux/slices/authSlice';
+import { getImgUrl } from '@/utils/image';
 
 const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
-  const [previewImage, setPreviewImage] = React.useState(profile.image);
-  const [uploadedBrands, setUploadedBrands] = React.useState([]); // Start empty as requested
-  
+  const user = useSelector(selectCurrentUser);
+  const updateProfileMutation = useUpdateProfile();
+
+  const [previewImage, setPreviewImage] = React.useState(
+    getImgUrl(profile?.image || profile?.avatar || user?.avatar) || ''
+  );
+  const [profileFile, setProfileFile] = React.useState(null);
+  const [uploadedBrands, setUploadedBrands] = React.useState([]);
+  const [brandFiles, setBrandFiles] = React.useState([]);
+
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: {
-      ...profile,
-      brands: [] // Reset brands to empty initially
-    }
+      name: profile?.name || user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+      niche: profile?.niche || '',
+      bio: profile?.bio || user?.shortBio || '',
+      services: profile?.services || user?.servicesOffered || '',
+      otherLink: profile?.otherLink || '',
+      socials: {
+        instagram: profile?.socials?.instagram || user?.socialLinks?.instagram || '',
+        tiktok: profile?.socials?.tiktok || '',
+        youtube: profile?.socials?.youtube || user?.socialLinks?.youtube || '',
+      },
+      brands: [],
+    },
   });
 
   const profileInputRef = React.useRef(null);
   const brandInputRef = React.useRef(null);
 
+  // Reset form when profile changes
+  React.useEffect(() => {
+    if (profile) {
+      reset({
+        name: profile?.name || user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+        niche: profile?.niche || '',
+        bio: profile?.bio || user?.shortBio || '',
+        services: profile?.services || user?.servicesOffered || '',
+        otherLink: profile?.otherLink || '',
+        socials: {
+          instagram: profile?.socials?.instagram || user?.socialLinks?.instagram || '',
+          tiktok: profile?.socials?.tiktok || '',
+          youtube: profile?.socials?.youtube || user?.socialLinks?.youtube || '',
+        },
+      });
+      setPreviewImage(getImgUrl(profile?.image || profile?.avatar || user?.avatar) || '');
+      setUploadedBrands([]);
+      setBrandFiles([]);
+    }
+  }, [profile, user, reset]);
+
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setProfileFile(file);
       const url = URL.createObjectURL(file);
       setPreviewImage(url);
-      setValue('profileImage', file); // For console log
     }
   };
 
   const handleBrandUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
-      const newBrands = files.map(file => ({
+      const newBrands = files.map((file) => ({
         url: URL.createObjectURL(file),
-        file
+        file,
       }));
-      setUploadedBrands(prev => [...prev, ...newBrands]);
+      setUploadedBrands((prev) => [...prev, ...newBrands]);
+      setBrandFiles((prev) => [...prev, ...files]);
     }
   };
 
   const removeBrand = (idx) => {
-    setUploadedBrands(prev => prev.filter((_, i) => i !== idx));
+    setUploadedBrands((prev) => prev.filter((_, i) => i !== idx));
+    setBrandFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const onFormSubmit = (data) => {
-    const finalData = {
-      ...data,
-      uploadedBrands: uploadedBrands.map(b => b.file.name)
-    };
-    console.log('Final Portfolio Data:', finalData);
-    onSave(data);
+    const formPayload = new FormData();
+
+    // Append text fields
+    if (data.name) {
+      const nameParts = data.name.trim().split(' ');
+      formPayload.append('firstName', nameParts[0] || '');
+      formPayload.append('lastName', nameParts.slice(1).join(' ') || '');
+    }
+    if (data.services) {
+      formPayload.append('servicesOffered', data.services);
+    }
+
+    // Append avatar file
+    if (profileFile) {
+      formPayload.append('avatar', profileFile);
+    }
+
+    // Append brand logos
+    if (brandFiles.length > 0) {
+      brandFiles.forEach((file) => {
+        formPayload.append('brandLogos', file);
+      });
+    }
+
+    // Build and append socialLinks as JSON
+    const socialLinks = {};
+    if (data.socials?.instagram) socialLinks.instagram = data.socials.instagram;
+    if (data.socials?.tiktok) socialLinks.website = data.socials.tiktok; // map tiktok to website
+    if (data.socials?.youtube) socialLinks.youtube = data.socials.youtube;
+    if (data.otherLink) socialLinks.other = data.otherLink;
+    if (Object.keys(socialLinks).length > 0) {
+      formPayload.append('socialLinks', JSON.stringify(socialLinks));
+    }
+
+    updateProfileMutation.mutate(formPayload, {
+      onSuccess: (res) => {
+        const updatedData = res?.data?.data || res?.data;
+        if (onSave) {
+          onSave({
+            ...data,
+            avatar: updatedData?.avatar,
+            servicesOffered: updatedData?.servicesOffered,
+            brandLogos: updatedData?.brandLogos,
+          });
+        }
+        onClose();
+      },
+    });
   };
 
   if (!isOpen) return null;
@@ -85,7 +170,13 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
             {/* Profile Image */}
             <div className="flex items-center gap-4 md:gap-6">
               <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-lg ring-4 ring-gray-50 bg-gray-50">
-                <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                {previewImage ? (
+                  <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <Upload className="w-8 h-8" />
+                  </div>
+                )}
               </div>
               <input 
                 type="file" 
@@ -242,9 +333,10 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
             <div className="sticky bottom-0 left-0 right-0 pt-6 md:pt-8 bg-white border-t border-gray-50 z-20 -mx-6 md:-mx-10 px-6 md:px-10 pb-6 md:pb-10">
               <button
                 type="submit"
-                className="w-full bg-Primary text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm"
+                disabled={updateProfileMutation.isPending}
+                className="w-full bg-Primary text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Done
+                {updateProfileMutation.isPending ? "Saving..." : "Done"}
               </button>
             </div>
           </form>

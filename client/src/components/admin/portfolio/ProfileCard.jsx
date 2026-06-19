@@ -1,6 +1,7 @@
 import React from 'react';
 import { Send, Copy, Instagram, Youtube, MoreHorizontal } from 'lucide-react';
 import { FaTiktok } from 'react-icons/fa';
+import { getImgUrl } from '@/utils/image';
 
 const ProfileCard = ({ profile }) => {
   const services = profile.services.split('\n').filter(s => s.trim());
@@ -10,7 +11,7 @@ const ProfileCard = ({ profile }) => {
       {/* Profile Header */}
       <div className="flex flex-col items-center text-center mb-8">
         <div className="w-28 h-28 rounded-full overflow-hidden shadow-xl ring-4 ring-gray-50 mb-6">
-          <img src={profile.image} alt="Profile" className="w-full h-full object-cover" />
+          <img src={getImgUrl(profile.image) || profile.image} alt="Profile" className="w-full h-full object-cover" />
         </div>
         <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1">{profile.name}</h2>
         <p className="text-sm font-semibold text-gray-500 mb-4">{profile.niche}</p>
@@ -53,7 +54,7 @@ const ProfileCard = ({ profile }) => {
         <div className="flex flex-wrap gap-3">
           {profile.brands.map((brand, idx) => (
             <div key={idx} className="w-12 h-12 rounded-full border border-gray-50 p-2 bg-white flex items-center justify-center">
-              <img src={brand} alt="Brand" className="max-w-full h-auto grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all" />
+              <img src={getImgUrl(brand) || brand} alt="Brand" className="max-w-full h-auto grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all" />
             </div>
           ))}
         </div>

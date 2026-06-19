@@ -37,7 +37,8 @@ const useClient = ({
 };
 
 export default useClient;
+
 //   const { data, isLoading, isError } = useClient({
-//     queryKey: ["products" ],
+//     queryKey: ["products"],
 //     url: "/products",
 //   });

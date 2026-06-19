@@ -15,94 +15,77 @@ import Planner from "@/components/admin/planner/Planner";
 import Invoices from "@/components/admin/invoices/Invoices";
 import Portfolio from "@/components/admin/portfolio/Portfolio";
 import PortfolioPreview from "@/pages/admin/PortfolioPreview";
-
 import FAQPage from "@/components/admin/faq/FAQPage";
 import Setting from "@/components/admin/setting/Setting";
 import Campaign from "@/components/admin/camping/Campaign";
 import CampaingDetails from "@/components/admin/campingDetails/CampaingDetails";
 import BrandView from "@/components/admin/brandView/BrandView";
 import NotFound from "@/pages/NotFound";
+import PrivateRoute from "@/components/auth/PrivateRoute";
 
 const router = createBrowserRouter([
+  // Public site routes
   {
     path: "/",
     element: <Layout />,
     children: [
       {
-        path: "/",
+        index: true,
         element: <Home />,
       },
-
     ],
   },
   // Auth routes
   {
     element: <AuthLayout />,
     children: [
-      { path: "/login", element: <Login /> },
-      { path: "/signup", element: <Register /> },
-      { path: "/forgot-password", element: <ForgotPassword /> },
-      { path: "/verify-otp", element: <VerifyOTP /> },
-      { path: "/reset-password", element: <ResetPassword /> },
-    ]
-  },
-  // Onboarding route (separate layout/style)
-  {
-    path: "/onboarding",
-    element: <Onboarding />,
-  },
-  {
-    path: "/pricing",
-    element: <PricingPage />,
-  },
-  {
-    path: "/dashboard/portfolio/preview",
-    element: <PortfolioPreview />,
-  },
-  // Admin routes
-  {
-    path: "/dashboard",
-    element: <AdminLayout />,
-    children: [
-      {
-        path: "/dashboard",
-        element: <Dashboard />,
-      },
-      {
-        path: "/dashboard/campaigns",
-        element: <Campaign />,
-      },
-      {
-        path: "/dashboard/campaigns/:id",
-        element: <CampaingDetails />,
-      },
-      {
-        path: "/dashboard/planner",
-        element: <Planner />,
-      },
-      {
-        path: "/dashboard/invoices",
-        element: <Invoices />,
-      },
-      {
-        path: "/dashboard/portfolio",
-        element: <Portfolio />,
-      },
-      {
-        path: "/dashboard/faq",
-        element: <FAQPage />,
-      },
-      {
-        path: "/dashboard/settings",
-        element: <Setting />,
-      },
-      {
-        path: "/dashboard/campaigns/:id/brand-view",
-        element: <BrandView />,
-      }
-
+      { path: "login", element: <Login /> },
+      { path: "signup", element: <Register /> },
+      { path: "forgot-password", element: <ForgotPassword /> },
+      { path: "verify-otp", element: <VerifyOTP /> },
+      { path: "reset-password", element: <ResetPassword /> },
     ],
   },
+  // Pricing
+  {
+    path: "pricing",
+    element: <PricingPage />,
+  },
+  // Onboarding (public — user arrives here after email verification, before logging in)
+  {
+    path: "onboarding",
+    element: <Onboarding />,
+  },
+  // Admin dashboard routes (protected)
+  {
+    path: "dashboard",
+    element: <PrivateRoute />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: "campaigns", element: <Campaign /> },
+          { path: "campaigns/:id", element: <CampaingDetails /> },
+          { path: "campaigns/:id/brand-view", element: <BrandView /> },
+          { path: "planner", element: <Planner /> },
+          { path: "invoices", element: <Invoices /> },
+          { path: "portfolio", element: <Portfolio /> },
+          { path: "faq", element: <FAQPage /> },
+          { path: "settings", element: <Setting /> },
+        ],
+      },
+    ],
+  },
+  // Portfolio preview (protected, standalone — no admin layout)
+  {
+    path: "dashboard/portfolio/preview",
+    element: <PrivateRoute />,
+    children: [
+      { index: true, element: <PortfolioPreview /> },
+    ],
+  },
+  // 404
   {
     path: "*",
     element: <NotFound />,

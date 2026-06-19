@@ -2,13 +2,22 @@ import React from 'react';
 import { X, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
+import { useChangePassword } from '@/api/apiHooks/useUser';
+import { PASSWORD_RULES, CONFIRM_PASSWORD_RULES } from '@/utils/validation';
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
+  const changePasswordMutation = useChangePassword();
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
   
   const onSubmit = (data) => {
-    console.log('Password Update Requested:', data);
-    onClose();
+    changePasswordMutation.mutate(
+      { oldPassword: data.oldPassword, newPassword: data.newPassword },
+      {
+        onSuccess: () => {
+          onClose();
+        },
+      }
+    );
   };
 
   const newPassword = watch('newPassword');
@@ -56,12 +65,15 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 placeholder="Enter old password"
                 className="w-full bg-white border border-gray-100 rounded-2xl py-4 px-6 focus:border-Primary focus:outline-none transition-all text-sm"
               />
+              {errors.oldPassword && (
+                <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-2">{errors.oldPassword.message}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-bold text-[#1A1A1A] mb-3">New Password</label>
               <input
-                {...register('newPassword', { required: 'Required', minLength: { value: 8, message: 'Min 8 characters' } })}
+                {...register('newPassword', PASSWORD_RULES)}
                 type="password"
                 placeholder="Enter new password"
                 className="w-full bg-white border border-gray-100 rounded-2xl py-4 px-6 focus:border-Primary focus:outline-none transition-all text-sm"
@@ -72,10 +84,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
             <div>
               <label className="block text-sm font-bold text-[#1A1A1A] mb-3">Confirm Password</label>
               <input
-                {...register('confirmPassword', { 
-                  required: 'Required',
-                  validate: (value) => value === newPassword || "Passwords don't match"
-                })}
+                {...register('confirmPassword', CONFIRM_PASSWORD_RULES(newPassword))}
                 type="password"
                 placeholder="Confirm new password"
                 className="w-full bg-white border border-gray-100 rounded-2xl py-4 px-6 focus:border-Primary focus:outline-none transition-all text-sm"
@@ -85,9 +94,10 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
 
             <button 
               type="submit"
-              className="w-full bg-Primary text-white py-4 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 mt-4"
+              disabled={changePasswordMutation.isPending}
+              className="w-full bg-Primary text-white py-4 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Update Password
+              {changePasswordMutation.isPending ? "Updating..." : "Update Password"}
             </button>
           </form>
         </motion.div>

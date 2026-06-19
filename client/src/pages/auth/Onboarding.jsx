@@ -2,25 +2,28 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Instagram, Youtube, Link as LinkIcon, Upload, User, Globe } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import CommonButton from '@/components/ui/CommonButton';
 import AuthInput from '@/components/ui/AuthInput';
+import { toast } from 'react-toastify';
+import { useCompleteOnboarding } from '@/api/apiHooks/useUser';
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const onboardingMutation = useCompleteOnboarding();
+  
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: {
-      displayName: 'Maya Johnson',
-      bio: 'UGC creator crafting honest, conversion-ready content for lifestyle and beauty brands.',
-      niche: 'Lifestyle, Beauty',
+      displayName: '',
+      bio: '',
       instagram: '',
-      tiktok: '',
       youtube: '',
       otherLink: ''
     }
   });
 
   const [profileImage, setProfileImage] = useState(null);
+  const [profileFile, setProfileFile] = useState(null);
 
   // Watch all fields for live preview
   const formData = watch();
@@ -28,6 +31,7 @@ const Onboarding = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setProfileFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImage(reader.result);
@@ -37,8 +41,29 @@ const Onboarding = () => {
   };
 
   const onSubmit = (data) => {
-    console.log("Onboarding Data:", { ...data, profileImage });
-    navigate('/pricing');
+    // Build FormData for file upload
+    const formPayload = new FormData();
+    formPayload.append('displayName', data.displayName);
+    formPayload.append('shortBio', data.bio);
+
+    // Build socialLinks object (backend schema: { instagram, website, youtube, other })
+    const socialLinks = {};
+    if (data.instagram) socialLinks.instagram = data.instagram;
+    if (data.tiktok) socialLinks.website = data.tiktok; // map tiktok to website field
+    if (data.youtube) socialLinks.youtube = data.youtube;
+    if (data.otherLink) socialLinks.other = data.otherLink;
+    formPayload.append('socialLinks', JSON.stringify(socialLinks));
+
+    if (profileFile) {
+      formPayload.append('avatar', profileFile);
+    }
+
+    onboardingMutation.mutate(formPayload, {
+      onSuccess: () => {
+        toast.success("Profile setup complete! Please log in to continue.");
+        navigate('/login');
+      },
+    });
   };
 
   return (
@@ -134,15 +159,6 @@ const Onboarding = () => {
                   {errors.bio && <p className="mt-1 text-xs text-red-500">{errors.bio.message}</p>}
                 </div>
 
-                <AuthInput 
-                  label="Niche"
-                  name="niche"
-                  placeholder="e.g. Fitness, Beauty, Tech, Lifestyle"
-                  register={register}
-                  error={errors.niche}
-                  required
-                />
-
                 {/* Social Links */}
                 <div className="mb-8">
                   <label className="block text-[#1A1A1A] text-sm font-semibold mb-4">Social Links</label>
@@ -191,9 +207,10 @@ const Onboarding = () => {
                 <div className="mt-12">
                   <CommonButton 
                     type="submit"
-                    className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20"
+                    disabled={onboardingMutation.isPending}
+                    className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Create my Workspace
+                    {onboardingMutation.isPending ? "Creating workspace..." : "Create my Workspace"}
                   </CommonButton>
                 </div>
               </form>
