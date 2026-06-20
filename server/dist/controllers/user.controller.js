@@ -141,6 +141,7 @@ export const updateProfile = catchAsync(async (req, res, next) => {
             brandLogos: true,
             email: true,
             avatar: true,
+            role: true,
         },
     });
     res.status(200).json({
@@ -184,6 +185,7 @@ export const completeOnboarding = catchAsync(async (req, res, next) => {
             shortBio: true,
             socialLinks: true,
             avatar: true,
+            role: true,
         },
     });
     res.status(200).json({

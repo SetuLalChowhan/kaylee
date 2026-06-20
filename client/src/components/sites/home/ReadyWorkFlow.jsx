@@ -55,7 +55,7 @@ const ReadyWorkFlow = ({ cms }) => {
               className="absolute top-10 lg:top-16 left-0 lg:left-10 w-[150%] lg:w-[130%]"
             >
               <img
-                src={cms?.ready_image ? (cms.ready_image.startsWith("http") || cms.ready_image.startsWith("data:") ? cms.ready_image : `http://localhost:3000/${cms.ready_image}`) : ImageDash}
+                src={cms?.ready_image ? (cms.ready_image.startsWith("http") || cms.ready_image.startsWith("data:") ? cms.ready_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.ready_image}`) : ImageDash}
                 alt="Dashboard Preview"
                 className="w-full h-auto rounded-2xl shadow-2xl object-cover"
               />

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentToken, clearAuth, setToken } from "../redux/slices/authSlice";
+import { setUser } from "../redux/slices/uiSlice";
 import { useMemo, useRef } from "react";
 
 let isRefreshing = false;
@@ -90,6 +91,7 @@ const useAxiosSecure = () => {
             processQueue(refreshError, null);
             isRefreshing = false;
             dispatch(clearAuth());
+            dispatch(setUser(null));
             window.location.href = "/";
             return Promise.reject(refreshError);
           }

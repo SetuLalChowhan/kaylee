@@ -167,6 +167,7 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
       brandLogos: true,
       email: true,
       avatar: true,
+      role: true,
     },
   });
 
@@ -221,6 +222,7 @@ export const completeOnboarding = catchAsync(async (req: Request, res: Response,
       shortBio: true,
       socialLinks: true,
       avatar: true,
+      role: true,
     },
   });
 

@@ -243,6 +243,66 @@ const CmsEditor = () => {
     saveCmsMutation.mutate(payload);
   };
 
+  const handleAutoSave = async (fieldKey, newValue) => {
+    const payload = {
+      banner_title: bannerTitle,
+      banner_subtext: bannerSubtext,
+      banner_cta: bannerCta,
+      banner_image: fieldKey === "banner_image" ? newValue : bannerImage,
+      features_title: featuresTitle,
+      features_subtext: featuresSubtext,
+      feature1_title: f1Title,
+      feature1_desc: f1Desc,
+      feature1_image: fieldKey === "feature1_image" ? newValue : f1Image,
+      feature2_title: f2Title,
+      feature2_desc: f2Desc,
+      feature2_image: fieldKey === "feature2_image" ? newValue : f2Image,
+      feature3_title: f3Title,
+      feature3_desc: f3Desc,
+      feature3_image: fieldKey === "feature3_image" ? newValue : f3Image,
+      feature4_title: f4Title,
+      feature4_desc: f4Desc,
+      feature4_image: fieldKey === "feature4_image" ? newValue : f4Image,
+      workflow_title: wTitle,
+      workflow_subtext: wSubtext,
+      workflow_step1_title: s1Title,
+      workflow_step1_desc: s1Desc,
+      workflow_step1_image: fieldKey === "workflow_step1_image" ? newValue : s1Image,
+      workflow_step2_title: s2Title,
+      workflow_step2_desc: s2Desc,
+      workflow_step2_image: fieldKey === "workflow_step2_image" ? newValue : s2Image,
+      workflow_step3_title: s3Title,
+      workflow_step3_desc: s3Desc,
+      workflow_step3_image: fieldKey === "workflow_step3_image" ? newValue : s3Image,
+      ready_title: rTitle,
+      ready_subtext: rSubtext,
+      ready_cta: rCta,
+      ready_image: fieldKey === "ready_image" ? newValue : rImage,
+      testimonials: JSON.stringify(
+        fieldKey === "testimonials" ? newValue : testimonials
+      ),
+    };
+
+    try {
+      await axiosSecure.put("/cms", payload);
+      queryClient.invalidateQueries({ queryKey: ["cmsContent"] });
+    } catch (err) {
+      toast.error("Failed to sync CMS configurations on upload");
+    }
+  };
+
+  const handleImageChange = (fieldKey, setter) => (newValue) => {
+    setter(newValue);
+    handleAutoSave(fieldKey, newValue);
+  };
+
+  const handleTestimonialAvatarChange = (index) => (val) => {
+    const updated = [...testimonials];
+    updated[index] = { ...updated[index], "avatar": val };
+    setTestimonials(updated);
+    handleAutoSave("testimonials", updated);
+  };
+
   const handleTestimonialChange = (index, field, val) => {
     const updated = [...testimonials];
     updated[index] = { ...updated[index], [field]: val };
@@ -339,7 +399,7 @@ const CmsEditor = () => {
             <ImageUploadField
               label="Dashboard Preview Image"
               value={bannerImage}
-              onChange={setBannerImage}
+              onChange={handleImageChange("banner_image", setBannerImage)}
               axiosSecure={axiosSecure}
             />
           </div>
@@ -400,7 +460,7 @@ const CmsEditor = () => {
                 <ImageUploadField
                   label="Card Image"
                   value={f1Image}
-                  onChange={setF1Image}
+                  onChange={handleImageChange("feature1_image", setF1Image)}
                   axiosSecure={axiosSecure}
                 />
               </div>
@@ -431,7 +491,7 @@ const CmsEditor = () => {
                 <ImageUploadField
                   label="Card Image"
                   value={f2Image}
-                  onChange={setF2Image}
+                  onChange={handleImageChange("feature2_image", setF2Image)}
                   axiosSecure={axiosSecure}
                 />
               </div>
@@ -462,7 +522,7 @@ const CmsEditor = () => {
                 <ImageUploadField
                   label="Card Image"
                   value={f3Image}
-                  onChange={setF3Image}
+                  onChange={handleImageChange("feature3_image", setF3Image)}
                   axiosSecure={axiosSecure}
                 />
               </div>
@@ -493,7 +553,7 @@ const CmsEditor = () => {
                 <ImageUploadField
                   label="Card Image"
                   value={f4Image}
-                  onChange={setF4Image}
+                  onChange={handleImageChange("feature4_image", setF4Image)}
                   axiosSecure={axiosSecure}
                 />
               </div>
@@ -555,7 +615,7 @@ const CmsEditor = () => {
                 <ImageUploadField
                   label="Step Image"
                   value={s1Image}
-                  onChange={setS1Image}
+                  onChange={handleImageChange("workflow_step1_image", setS1Image)}
                   axiosSecure={axiosSecure}
                 />
               </div>
@@ -586,7 +646,7 @@ const CmsEditor = () => {
                 <ImageUploadField
                   label="Step Image"
                   value={s2Image}
-                  onChange={setS2Image}
+                  onChange={handleImageChange("workflow_step2_image", setS2Image)}
                   axiosSecure={axiosSecure}
                 />
               </div>
@@ -617,7 +677,7 @@ const CmsEditor = () => {
                 <ImageUploadField
                   label="Step Image"
                   value={s3Image}
-                  onChange={setS3Image}
+                  onChange={handleImageChange("workflow_step3_image", setS3Image)}
                   axiosSecure={axiosSecure}
                 />
               </div>
@@ -665,7 +725,7 @@ const CmsEditor = () => {
             <ImageUploadField
               label="Ready Section Background Image"
               value={rImage}
-              onChange={setRImage}
+              onChange={handleImageChange("ready_image", setRImage)}
               axiosSecure={axiosSecure}
             />
           </div>
@@ -728,7 +788,7 @@ const CmsEditor = () => {
                   <ImageUploadField
                     label="Creator Avatar"
                     value={test.avatar || ""}
-                    onChange={(val) => handleTestimonialChange(index, "avatar", val)}
+                    onChange={handleTestimonialAvatarChange(index)}
                     axiosSecure={axiosSecure}
                   />
                   <div>

@@ -39,7 +39,7 @@ const ManageAndDeliver = ({ cms }) => {
     const getFullImageUrl = (url, fallback) => {
         if (!url) return fallback;
         if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("/src/") || url.startsWith("/assets/")) return url;
-        return `http://localhost:3000/${url}`;
+        return `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${url}`;
     };
 
     return (

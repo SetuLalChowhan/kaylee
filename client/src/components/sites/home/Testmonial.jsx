@@ -76,7 +76,11 @@ const Testmonial = ({ cms }) => {
                     quote: item.text || item.quote || "",
                     author: item.name || item.author || "",
                     role: item.role || "",
-                    avatar: item.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(item.name || "avatar")}`
+                    avatar: item.avatar
+                      ? (item.avatar.startsWith("http") || item.avatar.startsWith("data:")
+                        ? item.avatar
+                        : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${item.avatar}`)
+                      : `https://i.pravatar.cc/150?u=${encodeURIComponent(item.name || "avatar")}`
                 }));
             }
         } catch (e) {
