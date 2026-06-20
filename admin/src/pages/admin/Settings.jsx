@@ -93,7 +93,7 @@ const AdminProfileTab = ({ user, axiosSecure, dispatch }) => {
       setDisplayName(user.displayName || "");
       setShortBio(user.shortBio || "");
       if (user.avatar) {
-        setAvatarPreview(user.avatar.startsWith("http") ? user.avatar : `http://localhost:3000/${user.avatar}`);
+        setAvatarPreview(user.avatar.startsWith("http") ? user.avatar : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${user.avatar}`);
       }
     }
   }, [user]);

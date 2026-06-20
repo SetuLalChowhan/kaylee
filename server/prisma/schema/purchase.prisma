@@ -1,0 +1,14 @@
+model Purchase {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId          String
+  plan            Plan     @relation(fields: [planId], references: [id])
+  amount          Float
+  stripeSessionId String   @unique
+  status          String   // e.g. "completed"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("purchases")
+}

@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SectionHeader, Subtext, Label } from '@/components/ui/Typography';
 import PricingCard from './cards/PricingCard';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated } from '@/redux/slices/authSlice';
+import useAxiosSecure from '@/hooks/useAxiosSecure';
+import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 const PlanSection = () => {
-  const plans = [
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const axiosSecure = useAxiosSecure();
+  const navigate = useNavigate();
+
+  const fallbackPlans = [
     {
       title: "STATER",
       description: "Try STAKD risk-free for a short sprint.",
@@ -51,11 +63,59 @@ const PlanSection = () => {
     },
   ];
 
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const res = await axios.get(`${apiUrl}/plans`);
+        if (res.data?.status === "success" && res.data?.data?.length > 0) {
+          const parsed = res.data.data.map(p => ({
+            ...p,
+            features: typeof p.features === 'string' ? JSON.parse(p.features) : p.features
+          }));
+          setPlans(parsed);
+        }
+      } catch (err) {
+        console.error("Failed to fetch plans:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+  const handleCheckout = async (plan) => {
+    if (!isAuthenticated) {
+      navigate('/signup');
+      return;
+    }
+
+    try {
+      const res = await axiosSecure.post('/subscriptions/checkout', { planId: plan.id });
+      if (res.data?.url) {
+        // Redirection either directly to Stripe Checkout or local success page for free tier
+        window.location.href = res.data.url;
+      }
+    } catch (err) {
+      console.error("Checkout session creation failed:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="py-20 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-Primary animate-spin" />
+      </div>
+    );
+  }
+
+  const displayPlans = plans.length > 0 ? plans : fallbackPlans;
+
   return (
     <section id="pricing" className="section-padding bg-white overflow-hidden">
       <div className="">
         {/* Header Content */}
-        <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16 lg:mb-24">
+        <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16 lg:mb-24 font-outfit">
           <Label>Pricing</Label>
           <SectionHeader className="mb-4">
             Choose your plan
@@ -67,11 +127,12 @@ const PlanSection = () => {
 
         {/* Pricing Cards Grid - 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-8 max-w-[1300px] mx-auto">
-          {plans.map((plan, index) => (
+          {displayPlans.map((plan, index) => (
             <PricingCard
-              key={index}
+              key={plan.id || index}
               index={index}
               {...plan}
+              onSelect={() => handleCheckout(plan)}
             />
           ))}
         </div>

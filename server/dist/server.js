@@ -14,6 +14,8 @@ import ugcCampaignRoutes from "./routers/ugc_campaign.route.js";
 import faqRoutes from "./routers/faq.route.js";
 import notificationRoutes from "./routers/notification.route.js";
 import cmsRoutes from "./routers/cms.route.js";
+import planRoutes from "./routers/plan.route.js";
+import subscriptionRoutes from "./routers/subscription.route.js";
 import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import { AppError } from "./utils/AppError.js";
 import prisma from "./config/db.js";
@@ -36,8 +38,23 @@ app.use(cors({
     },
     credentials: true,
 }));
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+// Bypasses global parsing for Stripe webhook to preserve raw body signature
+app.use((req, res, next) => {
+    if (req.originalUrl === "/api/subscriptions/webhook") {
+        next();
+    }
+    else {
+        express.json({ limit: "10kb" })(req, res, next);
+    }
+});
+app.use((req, res, next) => {
+    if (req.originalUrl === "/api/subscriptions/webhook") {
+        next();
+    }
+    else {
+        express.urlencoded({ extended: true, limit: "10kb" })(req, res, next);
+    }
+});
 app.use(cookieParser());
 // ── Static Files (uploaded avatars) ──────────────────────────────────────────
 app.use("/uploads", express.static("uploads"));
@@ -57,6 +74,8 @@ app.use("/api/ugc-campaigns", ugcCampaignRoutes);
 app.use("/api/faq", faqRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/cms", cmsRoutes);
+app.use("/api/plans", planRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, _res, next) => {
     next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404));

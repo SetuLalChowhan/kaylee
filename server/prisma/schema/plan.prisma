@@ -1,0 +1,19 @@
+model Plan {
+  id            String     @id @default(uuid())
+  title         String
+  description   String
+  price         Float
+  priceSuffix   String
+  features      Json       // e.g. ["Up to 2 active campaigns", "Limited brand review links"]
+  buttonText    String     @default("Select Plan")
+  isRecommended Boolean    @default(false)
+  isDark        Boolean    @default(false)
+  stripePriceId String?    // Stripe Price ID
+  campaignLimit Int        @default(2) // Campaign creation limit (e.g. 2, 20, 999999)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  users         User[]
+  purchases     Purchase[]
+
+  @@map("plans")
+}

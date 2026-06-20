@@ -4,7 +4,7 @@ import SideBar from "@/pages/admin/SideBar";
 import React, { useEffect, useState } from "react";
 import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import { MdDashboard } from "react-icons/md";
-import { FaUsers, FaBullhorn, FaListCheck, FaFileInvoiceDollar } from "react-icons/fa6";
+import { FaUsers, FaBullhorn, FaListCheck, FaFileInvoiceDollar, FaCreditCard } from "react-icons/fa6";
 import { FaRegEdit } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useUserProfile } from "@/hooks/fetchUserProfile";
@@ -68,6 +68,14 @@ const AdminLayout = () => {
       text: "Settings",
       path: "/dashboard/settings",
       activePaths: ["/dashboard/settings"],
+      sublink: false,
+    },
+    {
+      id: 8,
+      icon: <FaCreditCard />,
+      text: "Plans",
+      path: "/dashboard/plans",
+      activePaths: ["/dashboard/plans"],
       sublink: false,
     },
   ];

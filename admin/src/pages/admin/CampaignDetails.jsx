@@ -283,12 +283,12 @@ const CampaignDetails = () => {
   const allMediaApproved =
     campaign.media && campaign.media.length > 0 && campaign.media.every((m) => m.status === "approved");
 
-  const shareLink = `http://localhost:5173/brand-view/${campaign.slug}`;
+  const shareLink = `${import.meta.env.VITE_CLIENT_URL || "http://localhost:5173"}/brand-view/${campaign.slug}`;
 
   const getMediaUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `http://localhost:3000/${url}`;
+    return `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${url}`;
   };
 
   return (

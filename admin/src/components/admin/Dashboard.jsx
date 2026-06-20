@@ -13,7 +13,8 @@ import {
   Circle,
   FolderOpen,
   Calendar,
-  Users
+  Users,
+  FileText
 } from "lucide-react";
 import { motion } from "motion/react";
 import {
@@ -286,8 +287,8 @@ const Dashboard = () => {
 
   const activeCampaignsVal = String(stats.activeCampaigns ?? 0).padStart(2, "0");
   const awaitingReviewVal = String(stats.awaitingReview ?? 0).padStart(2, "0");
-  const completedVal = String(stats.completedCampaigns ?? 0).padStart(2, "0");
-  const totalEarnedVal = "$" + parseFloat(stats.totalEarned ?? 0).toLocaleString("en-US", {
+  const totalInvoicesVal = String(stats.totalInvoices ?? 0).padStart(2, "0");
+  const stripeIncomeVal = "$" + parseFloat(stats.stripeIncome ?? 0).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -295,8 +296,8 @@ const Dashboard = () => {
   const statsList = [
     { title: "Active Campaigns", value: activeCampaignsVal, label: "System Campaigns", icon: FolderOpen, isPrimary: true },
     { title: "Awaiting Review", value: awaitingReviewVal, label: "Awaiting Approval", icon: Clock, isPrimary: false },
-    { title: "Completed Campaigns", value: completedVal, label: "Completed Projects", icon: CheckCircle, isPrimary: false },
-    { title: "Total Value", value: totalEarnedVal, label: "Cumulative Budget", icon: DollarSign, isPrimary: false },
+    { title: "Total Invoices", value: totalInvoicesVal, label: "Total Platform Invoices", icon: FileText, isPrimary: false },
+    { title: "Stripe Revenue", value: stripeIncomeVal, label: "Platform Earnings", icon: DollarSign, isPrimary: false },
   ];
 
   const getProgress = (status) => {

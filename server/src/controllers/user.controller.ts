@@ -391,6 +391,18 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
 
   const totalEarnedValue = invoiceEarned + completedCampaignsEarned;
 
+  const totalInvoicesCount = await prisma.invoice.count({
+    where: isAdmin ? {} : { userId }
+  });
+
+  const stripeIncomeSum = await prisma.purchase.aggregate({
+    where: isAdmin ? { status: "completed" } : { userId, status: "completed" },
+    _sum: {
+      amount: true
+    }
+  });
+  const stripeIncomeValue = stripeIncomeSum._sum.amount ?? 0;
+
   // 2. Recent Active/Draft campaigns (up to 4)
   const recentCampaigns = await prisma.ugcCampaign.findMany({
     where: isAdmin ? {} : { userId },
@@ -534,7 +546,9 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
         activeCampaigns: activeCampaignsCount,
         awaitingReview: awaitingReviewCount,
         completedCampaigns: completedCampaignsCount,
-        totalEarned: totalEarnedValue
+        totalEarned: totalEarnedValue,
+        totalInvoices: totalInvoicesCount,
+        stripeIncome: stripeIncomeValue
       },
       recentCampaigns,
       deadlines: parsedDeadlines,

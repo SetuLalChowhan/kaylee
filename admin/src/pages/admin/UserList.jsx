@@ -255,7 +255,7 @@ const UserList = () => {
   const getMediaUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `http://localhost:3000/${url}`;
+    return `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${url}`;
   };
 
   // Filter items for viewed user
@@ -532,7 +532,7 @@ const UserList = () => {
               <div className="flex items-center gap-3">
                 {viewedUser.slug && (
                   <a
-                    href={`http://localhost:5173/preview/${viewedUser.slug}`}
+                    href={`${import.meta.env.VITE_CLIENT_URL || "http://localhost:5173"}/preview/${viewedUser.slug}`}
                     target="_blank"
                     rel="noreferrer"
                     className="text-xs font-bold text-Primary border border-Primary/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5 hover:bg-Primary/5"

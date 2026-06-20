@@ -1,8 +1,10 @@
-import React from 'react';
-import { X, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import useAxiosSecure from '@/hooks/useAxiosSecure';
+import axios from 'axios';
 
-const PlanCard = ({ title, price, period, description, features, recommended, buttonText, isDark }) => (
+const PlanCard = ({ title, price, period, description, features, recommended, buttonText, isDark, onSelect }) => (
   <div className={`relative flex-1 p-8 rounded-[32px] border ${isDark ? 'bg-[#0A0A0A] border-[#1A1A1A] text-white' : 'bg-white border-gray-100 text-[#1A1A1A]'} flex flex-col h-full shadow-sm`}>
     {recommended && (
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-Primary text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-20 shadow-lg shadow-Primary/30">
@@ -30,14 +32,103 @@ const PlanCard = ({ title, price, period, description, features, recommended, bu
       ))}
     </div>
 
-    <button className={`w-full py-4 rounded-2xl font-bold transition-all ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-Primary text-white hover:bg-Primary/90 shadow-lg shadow-Primary/10'}`}>
+    <button 
+      onClick={onSelect}
+      className={`w-full py-4 rounded-2xl font-bold transition-all cursor-pointer ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-Primary text-white hover:bg-Primary/90 shadow-lg shadow-Primary/10'}`}
+    >
       {buttonText}
     </button>
   </div>
 );
 
 const PlanModal = ({ isOpen, onClose }) => {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const axiosSecure = useAxiosSecure();
+
+  const fallbackPlans = [
+    {
+      title: "STATER",
+      price: "0",
+      description: "Try STAKD risk-free for a short sprint.",
+      buttonText: "Start Free Trial",
+      features: [
+        "Up to 2 active campaigns",
+        "Limited brand review links",
+        "Watermarked content previews",
+        "Basic campaign planner"
+      ]
+    },
+    {
+      title: "PRO",
+      price: "24",
+      period: "monthly",
+      description: "Built for creators working with brands regularly.",
+      buttonText: "Get Started with Pro",
+      recommended: true,
+      isDark: true,
+      features: [
+        "Up to 20 active campaigns",
+        "Unlimited brand review links",
+        "Full approval & feedback system",
+        "No STAKD branding on deliveries"
+      ]
+    },
+    {
+      title: "GROWTH",
+      price: "100",
+      period: "yearly",
+      description: "Scale your creator business and save more.",
+      buttonText: "Go Yearly & Save",
+      features: [
+        "Unlimited active campaigns",
+        "Unlimited brand review links",
+        "Priority support",
+        "Best value pricing (save 20%)"
+      ]
+    }
+  ];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchPlans = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const res = await axios.get(`${apiUrl}/plans`);
+        if (res.data?.status === "success" && res.data?.data?.length > 0) {
+          const parsed = res.data.data.map(p => ({
+            ...p,
+            features: typeof p.features === 'string' ? JSON.parse(p.features) : p.features,
+            recommended: p.isRecommended,
+            period: p.priceSuffix ? p.priceSuffix.replace("/", "").trim() : ""
+          }));
+          setPlans(parsed);
+        }
+      } catch (err) {
+        console.error("Failed to fetch plans:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, [isOpen]);
+
+  const handleCheckout = async (plan) => {
+    try {
+      const res = await axiosSecure.post('/subscriptions/checkout', { planId: plan.id });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      }
+    } catch (err) {
+      console.error("Checkout session creation failed:", err);
+    }
+  };
+
   if (!isOpen) return null;
+
+  const displayPlans = plans.length > 0 ? plans : fallbackPlans;
 
   return (
     <AnimatePresence>
@@ -64,52 +155,25 @@ const PlanModal = ({ isOpen, onClose }) => {
           </button>
 
           <div className="mb-12">
-            <h2 className="text-3xl font-bold text-[#1A1A1A]">Select Plan</h2>
+            <h2 className="text-3xl font-bold text-[#1A1A1A] font-outfit">Select Plan</h2>
             <div className="w-full border-b border-dashed border-gray-100 mt-6" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-            <PlanCard 
-              title="STATER"
-              price="0"
-              description="Try STAKD risk-free for a short sprint."
-              buttonText="Start Free Trial"
-              features={[
-                "Up to 2 active campaigns",
-                "Limited brand review links",
-                "Watermarked content previews",
-                "Basic campaign planner"
-              ]}
-            />
-            <PlanCard 
-              title="PRO"
-              price="24"
-              period="monthly"
-              description="Built for creators working with brands regularly."
-              buttonText="Get Started with Pro"
-              recommended={true}
-              isDark={true}
-              features={[
-                "Up to 20 active campaigns",
-                "Unlimited brand review links",
-                "Full approval & feedback system",
-                "No STAKD branding on deliveries"
-              ]}
-            />
-            <PlanCard 
-              title="GROWTH"
-              price="100"
-              period="yearly"
-              description="Scale your creator business and save more."
-              buttonText="Go Yearly & Save"
-              features={[
-                "Unlimited active campaigns",
-                "Unlimited brand review links",
-                "Priority support",
-                "Best value pricing (save 20%)"
-              ]}
-            />
-          </div>
+          {loading ? (
+            <div className="py-20 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-Primary animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 font-outfit">
+              {displayPlans.map((plan, index) => (
+                <PlanCard 
+                  key={plan.id || index}
+                  {...plan}
+                  onSelect={() => handleCheckout(plan)}
+                />
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>

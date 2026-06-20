@@ -11,6 +11,7 @@ import TaskList from "@/pages/admin/TaskList";
 import InvoiceList from "@/pages/admin/InvoiceList";
 import CmsEditor from "@/pages/admin/CmsEditor";
 import Settings from "@/pages/admin/Settings";
+import PricingManager from "@/pages/admin/PricingManager";
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,7 @@ const router = createBrowserRouter([
           { path: "invoices", element: <InvoiceList /> },
           { path: "cms", element: <CmsEditor /> },
           { path: "settings", element: <Settings /> },
+          { path: "plans", element: <PricingManager /> },
         ],
       },
     ],

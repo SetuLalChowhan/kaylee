@@ -228,7 +228,7 @@ const CampaignList = () => {
                         <div>
                           <p className="font-bold text-slate-800 line-clamp-1">{c.name}</p>
                           <a
-                            href={`http://localhost:5173/preview/${c.slug}`}
+                            href={`${import.meta.env.VITE_CLIENT_URL || "http://localhost:5173"}/preview/${c.slug}`}
                             target="_blank"
                             rel="noreferrer"
                             className="text-[10px] text-slate-400 font-bold hover:text-[#005BD6] inline-flex items-center gap-1 mt-0.5"

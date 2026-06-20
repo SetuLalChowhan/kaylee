@@ -33,11 +33,17 @@ model User {
   notifyContentApprovals  Boolean @default(false)
   notifyTaskReminders     Boolean @default(false)
 
+  planId            String?
+  plan              Plan?            @relation(fields: [planId], references: [id])
+  stripeCustomerId  String?
+  stripeSubscriptionId String?
+
   portfolioItems    PortfolioItem[]
   invoices          Invoice[]
   tasks             Task[]
   ugcCampaigns      UgcCampaign[]
   notifications     Notification[]
+  purchases         Purchase[]
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

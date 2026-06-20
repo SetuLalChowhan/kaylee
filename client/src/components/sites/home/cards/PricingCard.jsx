@@ -12,7 +12,8 @@ const PricingCard = ({
   isRecommended, 
   isDark, 
   priceSuffix = "/monthly", 
-  index 
+  index,
+  onSelect
 }) => {
   return (
     <motion.div
@@ -62,17 +63,16 @@ const PricingCard = ({
         </ul>
       </div>
 
-      <CommonButton
-        type="link"
-        path="/signup"
-        className={`w-full py-4 lg:py-5 rounded-xl font-bold text-[14px] lg:text-[16px] transition-all ${
+      <button
+        onClick={onSelect}
+        className={`w-full py-4 lg:py-5 rounded-xl font-bold text-[14px] lg:text-[16px] transition-all cursor-pointer text-center ${
           isDark 
             ? 'bg-white text-black hover:bg-gray-100' 
             : 'bg-Primary text-white hover:bg-Primary/90 shadow-lg shadow-Primary/20'
         }`}
       >
         {buttonText}
-      </CommonButton>
+      </button>
     </motion.div>
   );
 };

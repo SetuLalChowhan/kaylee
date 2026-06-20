@@ -10,6 +10,8 @@ import VerifyOTP from "@/pages/auth/VerifyOTP";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import Onboarding from "@/pages/auth/Onboarding";
 import PricingPage from "@/pages/sites/PricingPage";
+import SubscriptionSuccess from "@/pages/sites/SubscriptionSuccess";
+import SubscriptionCancel from "@/pages/sites/SubscriptionCancel";
 import { createBrowserRouter } from "react-router-dom";
 import Planner from "@/components/admin/planner/Planner";
 import Invoices from "@/components/admin/invoices/Invoices";
@@ -50,6 +52,14 @@ const router = createBrowserRouter([
   {
     path: "pricing",
     element: <PricingPage />,
+  },
+  {
+    path: "subscription/success",
+    element: <SubscriptionSuccess />,
+  },
+  {
+    path: "subscription/cancel",
+    element: <SubscriptionCancel />,
   },
   // Onboarding (public — user arrives here after email verification, before logging in)
   {

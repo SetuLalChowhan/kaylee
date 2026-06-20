@@ -71,7 +71,7 @@ const Banner = ({ cms }) => {
                     >
                         <div className="relative rounded-xl lg:rounded-[32px] overflow-hidden  border-2 lg:border-8 border-white/40">
                             <img
-                                src={cms?.banner_image ? (cms.banner_image.startsWith("http") || cms.banner_image.startsWith("data:") ? cms.banner_image : `http://localhost:3000/${cms.banner_image}`) : DashLayout}
+                                src={cms?.banner_image ? (cms.banner_image.startsWith("http") || cms.banner_image.startsWith("data:") ? cms.banner_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.banner_image}`) : DashLayout}
                                 alt="STAKD Dashboard Preview"
                                 className="w-full h-auto object-cover transition-transform duration-700"
                             />
