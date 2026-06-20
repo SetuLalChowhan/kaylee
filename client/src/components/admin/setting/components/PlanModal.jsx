@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import useAxiosSecure from '@/hooks/useAxiosSecure';
 import axios from 'axios';
 
-const PlanCard = ({ title, price, period, description, features, recommended, buttonText, isDark, onSelect }) => (
+const PlanCard = ({ title, price, period, description, features, recommended, buttonText, isDark, onSelect, loading }) => (
   <div className={`relative flex-1 p-8 rounded-[32px] border ${isDark ? 'bg-[#0A0A0A] border-[#1A1A1A] text-white' : 'bg-white border-gray-100 text-[#1A1A1A]'} flex flex-col h-full shadow-sm`}>
     {recommended && (
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-Primary text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-20 shadow-lg shadow-Primary/30">
@@ -34,8 +34,10 @@ const PlanCard = ({ title, price, period, description, features, recommended, bu
 
     <button 
       onClick={onSelect}
-      className={`w-full py-4 rounded-2xl font-bold transition-all cursor-pointer ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-Primary text-white hover:bg-Primary/90 shadow-lg shadow-Primary/10'}`}
+      disabled={loading}
+      className={`w-full py-4 rounded-2xl font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-Primary text-white hover:bg-Primary/90 shadow-lg shadow-Primary/10'} ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
     >
+      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
       {buttonText}
     </button>
   </div>
@@ -44,6 +46,7 @@ const PlanCard = ({ title, price, period, description, features, recommended, bu
 const PlanModal = ({ isOpen, onClose }) => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [checkoutLoadingId, setCheckoutLoadingId] = useState(null);
   const axiosSecure = useAxiosSecure();
 
   const fallbackPlans = [
@@ -116,13 +119,20 @@ const PlanModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const handleCheckout = async (plan) => {
+    setCheckoutLoadingId(plan.id || plan.title);
     try {
       const res = await axiosSecure.post('/subscriptions/checkout', { planId: plan.id });
       if (res.data?.url) {
-        window.location.href = res.data.url;
+        if (plan.price === 0) {
+          window.location.href = res.data.url;
+        } else {
+          window.open(res.data.url, '_blank');
+        }
       }
     } catch (err) {
       console.error("Checkout session creation failed:", err);
+    } finally {
+      setCheckoutLoadingId(null);
     }
   };
 
@@ -169,6 +179,7 @@ const PlanModal = ({ isOpen, onClose }) => {
                 <PlanCard 
                   key={plan.id || index}
                   {...plan}
+                  loading={checkoutLoadingId === (plan.id || plan.title)}
                   onSelect={() => handleCheckout(plan)}
                 />
               ))}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import CommonButton from '@/components/ui/CommonButton';
 
 const PricingCard = ({ 
@@ -13,7 +13,8 @@ const PricingCard = ({
   isDark, 
   priceSuffix = "/monthly", 
   index,
-  onSelect
+  onSelect,
+  loading
 }) => {
   return (
     <motion.div
@@ -65,12 +66,14 @@ const PricingCard = ({
 
       <button
         onClick={onSelect}
-        className={`w-full py-4 lg:py-5 rounded-xl font-bold text-[14px] lg:text-[16px] transition-all cursor-pointer text-center ${
+        disabled={loading}
+        className={`w-full py-4 lg:py-5 rounded-xl font-bold text-[14px] lg:text-[16px] transition-all cursor-pointer text-center flex items-center justify-center gap-2 ${
           isDark 
             ? 'bg-white text-black hover:bg-gray-100' 
             : 'bg-Primary text-white hover:bg-Primary/90 shadow-lg shadow-Primary/20'
-        }`}
+        } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
       >
+        {loading && <Loader2 className="w-4 h-4 animate-spin" />}
         {buttonText}
       </button>
     </motion.div>

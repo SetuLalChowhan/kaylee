@@ -15,6 +15,8 @@ const PlanSection = () => {
   const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
 
+  const [checkoutLoadingId, setCheckoutLoadingId] = useState(null);
+
   const fallbackPlans = [
     {
       title: "STATER",
@@ -90,14 +92,20 @@ const PlanSection = () => {
       return;
     }
 
+    setCheckoutLoadingId(plan.id || plan.title);
     try {
       const res = await axiosSecure.post('/subscriptions/checkout', { planId: plan.id });
       if (res.data?.url) {
-        // Redirection either directly to Stripe Checkout or local success page for free tier
-        window.location.href = res.data.url;
+        if (plan.price === 0) {
+          window.location.href = res.data.url;
+        } else {
+          window.open(res.data.url, '_blank');
+        }
       }
     } catch (err) {
       console.error("Checkout session creation failed:", err);
+    } finally {
+      setCheckoutLoadingId(null);
     }
   };
 
@@ -132,6 +140,7 @@ const PlanSection = () => {
               key={plan.id || index}
               index={index}
               {...plan}
+              loading={checkoutLoadingId === (plan.id || plan.title)}
               onSelect={() => handleCheckout(plan)}
             />
           ))}
