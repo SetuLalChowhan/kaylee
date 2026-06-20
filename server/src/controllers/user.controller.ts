@@ -364,13 +364,30 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
     select: { amount: true, status: true, paymentStatus: true }
   });
 
-  const totalEarnedValue = campaigns
-    .filter(c => c.status === "Completed" || c.paymentStatus === "Paid")
+  // Calculate earnings: Paid Invoices + Completed Unpaid Campaigns (to cover both models)
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      ...(isAdmin ? {} : { userId }),
+      status: "Paid"
+    },
+    select: { amount: true }
+  });
+
+  const invoiceEarned = invoices.reduce((sum, inv) => {
+    const cleanAmount = inv.amount.replace(/[^0-9.]/g, "");
+    const amt = parseFloat(cleanAmount) || 0;
+    return sum + amt;
+  }, 0);
+
+  const completedCampaignsEarned = campaigns
+    .filter(c => c.status === "Completed" && c.paymentStatus !== "Paid")
     .reduce((sum, c) => {
       const cleanAmount = c.amount.replace(/[^0-9.]/g, "");
       const amt = parseFloat(cleanAmount) || 0;
       return sum + amt;
     }, 0);
+
+  const totalEarnedValue = invoiceEarned + completedCampaignsEarned;
 
   // 2. Recent Active/Draft campaigns (up to 4)
   const recentCampaigns = await prisma.ugcCampaign.findMany({
@@ -444,6 +461,70 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
     })
     .slice(0, 5);
 
+  // 5. Generate monthly trends data (last 6 months) for stats visualization
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+  sixMonthsAgo.setDate(1);
+  sixMonthsAgo.setHours(0, 0, 0, 0);
+
+  const trendCampaigns = await prisma.ugcCampaign.findMany({
+    where: {
+      ...(isAdmin ? {} : { userId }),
+      createdAt: { gte: sixMonthsAgo }
+    },
+    select: { createdAt: true }
+  });
+
+  const trendInvoices = await prisma.invoice.findMany({
+    where: {
+      ...(isAdmin ? {} : { userId }),
+      createdAt: { gte: sixMonthsAgo }
+    },
+    select: { createdAt: true, amount: true, status: true }
+  });
+
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthlyMap = new Map<string, { month: string; campaigns: number; earnings: number }>();
+
+  // Pre-populate last 6 months in order
+  for (let i = 0; i < 6; i++) {
+    const targetDate = new Date();
+    targetDate.setMonth(targetDate.getMonth() - (5 - i));
+    const mName = months[targetDate.getMonth()];
+    const key = `${targetDate.getFullYear()}-${targetDate.getMonth()}`;
+    monthlyMap.set(key, {
+      month: `${mName} ${targetDate.getFullYear().toString().slice(-2)}`,
+      campaigns: 0,
+      earnings: 0
+    });
+  }
+
+  // Populate campaign counts
+  trendCampaigns.forEach(c => {
+    const d = new Date(c.createdAt);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (monthlyMap.has(key)) {
+      const data = monthlyMap.get(key)!;
+      data.campaigns += 1;
+    }
+  });
+
+  // Populate invoice earnings
+  trendInvoices.forEach(inv => {
+    const d = new Date(inv.createdAt);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (monthlyMap.has(key)) {
+      const data = monthlyMap.get(key)!;
+      if (inv.status === "Paid") {
+        const cleanAmount = inv.amount.replace(/[^0-9.]/g, "");
+        const amt = parseFloat(cleanAmount) || 0;
+        data.earnings += amt;
+      }
+    }
+  });
+
+  const monthlyTrends = Array.from(monthlyMap.values());
+
   res.status(200).json({
     status: "success",
     data: {
@@ -455,7 +536,8 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
       },
       recentCampaigns,
       deadlines: parsedDeadlines,
-      tasks: parsedTasks
+      tasks: parsedTasks,
+      monthlyTrends
     }
   });
 });

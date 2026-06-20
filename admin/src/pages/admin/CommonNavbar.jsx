@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, ChevronDown, Menu, User as UserIcon, LogOut, X } from "lucide-react";
+import { Search, ChevronDown, Menu, User as UserIcon, LogOut, X, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -85,6 +85,26 @@ const CommonNavbar = ({ setOpen }) => {
                   >
                     <UserIcon className="w-4 h-4" />
                     <span>My Dashboard</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate("/dashboard/settings?tab=profile");
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-Primary transition-colors"
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    <span>Admin Settings</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate("/dashboard/settings?tab=system");
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-Primary transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>System Settings</span>
                   </button>
                   <div className="h-px bg-slate-50 my-1 mx-2" />
                   <button

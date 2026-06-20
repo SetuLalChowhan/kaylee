@@ -25,7 +25,31 @@ const workflowData = [
     },
 ];
 
-const SimpleWorkFlow = () => {
+const SimpleWorkFlow = ({ cms }) => {
+    const getFullImageUrl = (url, fallback) => {
+        if (!url) return fallback;
+        if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("/src/") || url.startsWith("/assets/")) return url;
+        return `http://localhost:3000/${url}`;
+    };
+
+    const steps = [
+        {
+            title: cms?.workflow_step1_title || "Create Your Campaign",
+            description: cms?.workflow_step1_desc || "Set up your campaign, add details, and prepare your content for delivery",
+            image: getFullImageUrl(cms?.workflow_step1_image, CampingImage),
+        },
+        {
+            title: cms?.workflow_step2_title || "Upload & Share Content",
+            description: cms?.workflow_step2_desc || "Upload your media and share a secure link with brands for review and feedback",
+            image: getFullImageUrl(cms?.workflow_step2_image, UploadImage),
+        },
+        {
+            title: cms?.workflow_step3_title || "Get Approved & Deliver",
+            description: cms?.workflow_step3_desc || "Receive approval and release your files when you're ready — staying in full control",
+            image: getFullImageUrl(cms?.workflow_step3_image, ApprovedImage),
+        },
+    ];
+
     return (
         <section
             id="how-it-works"
@@ -37,16 +61,16 @@ const SimpleWorkFlow = () => {
                 <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16 lg:mb-24">
                     <Label>How it Works</Label>
                     <SectionHeader className="mb-6">
-                        Simple workflow from start to finish
+                        {cms?.workflow_title || "Simple workflow from start to finish"}
                     </SectionHeader>
                     <Subtext className="max-w-2xl mx-auto">
-                        Manage your campaigns, collaborate with brands, and deliver content in just a few steps
+                        {cms?.workflow_subtext || "Manage your campaigns, collaborate with brands, and deliver content in just a few steps"}
                     </Subtext>
                 </div>
 
                 {/* Workflow Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    {workflowData.map((item, index) => (
+                    {steps.map((item, index) => (
                         <WorkflowCard
                             key={index}
                             index={index}

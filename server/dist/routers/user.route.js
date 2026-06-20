@@ -2,7 +2,7 @@ import express from "express";
 import { getMe, updateProfile, changePassword, completeOnboarding, deleteBrandLogo, updateNotificationSettings, getDashboardStats, adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser } from "../controllers/user.controller.js";
 import { createPortfolioItem, getPortfolioItems, updatePortfolioItem, deletePortfolioItem, getPublicPortfolio, } from "../controllers/portfolio.controller.js";
 import { authGuard, adminGuard } from "../middlewares/auth.middleware.js";
-import { uploadAvatar } from "../middlewares/upload.middleware.js";
+import { uploadAvatar, uploadPortfolio } from "../middlewares/upload.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { updateProfileSchema, changePasswordSchema, onboardingSchema } from "../validations/user.validation.js";
 import { createPortfolioSchema, updatePortfolioSchema } from "../validations/portfolio.validation.js";
@@ -22,9 +22,9 @@ router.put("/onboarding", uploadAvatar.single("avatar"), validate(onboardingSche
 router.delete("/brand-logo", deleteBrandLogo);
 router.patch("/notification-settings", updateNotificationSettings);
 // ── Portfolio CRUD ─────────────────────────────────────────────────────────────
-router.post("/portfolio", uploadAvatar.single("file"), validate(createPortfolioSchema), createPortfolioItem);
+router.post("/portfolio", uploadPortfolio.single("file"), validate(createPortfolioSchema), createPortfolioItem);
 router.get("/portfolio", getPortfolioItems);
-router.patch("/portfolio/:id", uploadAvatar.single("file"), validate(updatePortfolioSchema), updatePortfolioItem);
+router.patch("/portfolio/:id", uploadPortfolio.single("file"), validate(updatePortfolioSchema), updatePortfolioItem);
 router.delete("/portfolio/:id", deletePortfolioItem);
 // ── Admin User CRUD ───────────────────────────────────────────────────────────
 router.get("/admin/users", adminGuard, adminGetAllUsers);

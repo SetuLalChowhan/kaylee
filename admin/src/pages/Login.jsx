@@ -65,7 +65,7 @@ const Login = () => {
                 })}
                 type="email"
                 placeholder="admin@kaylee.com"
-                className={`w-full bg-slate-50 border rounded-xl py-3 px-4 pl-11 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] transition-all text-sm text-slate-800 ${
+                className={`w-full bg-slate-50 border rounded-xl py-3 px-4 pl-11 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] transition-all text-sm text-slate-800 ${
                   errors.email ? "border-red-500" : "border-slate-100"
                 }`}
               />
@@ -83,7 +83,7 @@ const Login = () => {
                 {...register("password", { required: "Password is required" })}
                 type="password"
                 placeholder="••••••••"
-                className={`w-full bg-slate-50 border rounded-xl py-3 px-4 pl-11 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] transition-all text-sm text-slate-800 ${
+                className={`w-full bg-slate-50 border rounded-xl py-3 px-4 pl-11 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] transition-all text-sm text-slate-800 ${
                   errors.password ? "border-red-500" : "border-slate-100"
                 }`}
               />
@@ -97,7 +97,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-[#1F3C37] hover:bg-[#1F3C37]/90 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-[#1F3C37]/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full bg-[#005BD6] hover:bg-[#005BD6]/90 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-[#005BD6]/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />

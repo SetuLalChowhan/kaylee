@@ -1,6 +1,7 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { AppError } from "../utils/AppError.js";
 
 const avatarDir = "uploads/avatars";
 const brandLogoDir = "uploads/brand-logos";
@@ -44,10 +45,20 @@ const brandLogoStorage = multer.diskStorage({
 });
 
 const fileFilter = (req: any, file: any, cb: any) => {
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
+  if (file.fieldname === "file") {
+    // Portfolios can accept both images and videos
+    if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")) {
+      cb(null, true);
+    } else {
+      cb(new AppError("Only images and videos are allowed for portfolio!", 400), false);
+    }
   } else {
-    cb(new Error("Only images are allowed!"), false);
+    // Avatars and brand logos must be images only
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new AppError("Only images are allowed!", 400), false);
+    }
   }
 };
 
@@ -63,6 +74,12 @@ export const uploadBrandLogo = multer({
   storage: brandLogoStorage,
   fileFilter,
   limits,
+});
+
+export const uploadPortfolio = multer({
+  storage: avatarStorage,
+  fileFilter,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit for portfolio items (videos/images)
 });
 
 // Campaign uploads config supporting images, videos, and documents
@@ -84,6 +101,34 @@ const campaignStorage = multer.diskStorage({
 export const uploadCampaignFile = multer({
   storage: campaignStorage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
+});
+
+// CMS uploads config supporting images
+const cmsDir = "uploads/cms";
+if (!fs.existsSync(cmsDir)) {
+  fs.mkdirSync(cmsDir, { recursive: true });
+}
+
+const cmsStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, cmsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+export const uploadCmsFile = multer({
+  storage: cmsStorage,
+  fileFilter: (req: any, file: any, cb: any) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new AppError("Only images are allowed!", 400), false);
+    }
+  },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
 });
 
 // Re-export for backward compatibility (single avatar upload)

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
@@ -16,6 +16,20 @@ import {
   Users
 } from "lucide-react";
 import { motion } from "motion/react";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  AreaChart,
+  BarChart,
+  Area,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend
+} from "recharts";
 
 const StatsCard = ({ title, value, label, icon: Icon, isPrimary, index }) => (
   <motion.div
@@ -24,14 +38,14 @@ const StatsCard = ({ title, value, label, icon: Icon, isPrimary, index }) => (
     transition={{ duration: 0.4, delay: index * 0.1 }}
     className={`p-6 rounded-[32px] flex flex-col justify-between h-48 border transition-all duration-300 ${
       isPrimary
-        ? "bg-[#1F3C37] border-[#1F3C37] text-white shadow-xl shadow-[#1F3C37]/30"
-        : "bg-white border-slate-100 text-[#1A1A1A] hover:border-[#1F3C37]/30"
+        ? "bg-Primary border-Primary text-white shadow-xl shadow-Primary/30"
+        : "bg-white border-slate-100 text-[#1A1A1A] hover:border-Primary/30"
     }`}
   >
     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-      isPrimary ? "bg-white/20" : "bg-[#F8FAFC]"
+      isPrimary ? "bg-white/20" : "bg-Primary/5"
     }`}>
-      <Icon className={`w-6 h-6 ${isPrimary ? "text-white" : "text-[#1F3C37]"}`} />
+      <Icon className={`w-6 h-6 ${isPrimary ? "text-white" : "text-Primary"}`} />
     </div>
     <div>
       <h2 className="text-4xl font-bold mb-1">{value}</h2>
@@ -41,6 +55,194 @@ const StatsCard = ({ title, value, label, icon: Icon, isPrimary, index }) => (
     </div>
   </motion.div>
 );
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white/95 backdrop-blur-md border border-slate-100 p-4 rounded-2xl shadow-xl font-outfit">
+        <p className="text-xs font-bold text-slate-800 mb-2">{label}</p>
+        <div className="space-y-1.5">
+          {payload.map((entry, index) => {
+            const isEarnings = entry.dataKey === "earnings" || entry.name.toLowerCase().includes("earnings");
+            const formattedVal = isEarnings
+              ? `$${parseFloat(entry.value).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+              : entry.value;
+            return (
+              <div key={index} className="flex items-center gap-2.5 text-xs font-semibold">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+                <span className="text-slate-500">{entry.name}:</span>
+                <span className="text-slate-800 font-bold">{formattedVal}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const DashboardChart = ({ trends }) => {
+  const [activeTab, setActiveTab] = useState("overall"); // "overall" | "earnings" | "campaigns"
+
+  if (!trends || trends.length === 0) return null;
+
+  return (
+    <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm mb-10 font-outfit">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h2 className="text-xl font-bold text-[#1A1A1A]">System Performance Analytics</h2>
+          <p className="text-xs text-slate-400 mt-1">Review operational metrics and system earnings trends.</p>
+        </div>
+        
+        {/* Modern Tab Pill Selector */}
+        <div className="flex items-center bg-slate-50 border border-slate-100 p-1.5 rounded-2xl">
+          <button
+            type="button"
+            onClick={() => setActiveTab("overall")}
+            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+              activeTab === "overall" ? "bg-Primary text-white shadow-md shadow-Primary/10" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            Overall Performance
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("earnings")}
+            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+              activeTab === "earnings" ? "bg-Primary text-white shadow-md shadow-Primary/10" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            Earnings Graph
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("campaigns")}
+            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+              activeTab === "campaigns" ? "bg-Primary text-white shadow-md shadow-Primary/10" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            Campaign Volume
+          </button>
+        </div>
+      </div>
+
+      <div className="w-full h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          {activeTab === "overall" ? (
+            <ComposedChart data={trends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorEarningsOverall" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#005BD6" stopOpacity={0.15}/>
+                  <stop offset="95%" stopColor="#005BD6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 500 }}
+              />
+              <YAxis
+                yAxisId="left"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#94A3B8", fontSize: 11 }}
+                tickFormatter={(val) => `$${val}`}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#94A3B8", fontSize: 11 }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend verticalAlign="top" height={36} iconType="circle" />
+              <Area
+                yAxisId="left"
+                type="monotone"
+                dataKey="earnings"
+                name="Earnings"
+                stroke="#005BD6"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorEarningsOverall)"
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="campaigns"
+                name="Campaigns"
+                stroke="#10B981"
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2, fill: "#ffffff" }}
+                activeDot={{ r: 6 }}
+              />
+            </ComposedChart>
+          ) : activeTab === "earnings" ? (
+            <AreaChart data={trends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorEarningsTab" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#005BD6" stopOpacity="0.3"/>
+                  <stop offset="95%" stopColor="#005BD6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 500 }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#94A3B8", fontSize: 11 }}
+                tickFormatter={(val) => `$${val}`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="earnings"
+                name="Earnings"
+                stroke="#005BD6"
+                strokeWidth={3}
+                fillOpacity={1}
+                fill="url(#colorEarningsTab)"
+              />
+            </AreaChart>
+          ) : (
+            <BarChart data={trends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 500 }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#94A3B8", fontSize: 11 }}
+                allowDecimals={false}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar
+                dataKey="campaigns"
+                name="Campaigns"
+                fill="#10B981"
+                radius={[8, 8, 0, 0]}
+                maxBarSize={50}
+              />
+            </BarChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -71,7 +273,7 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1F3C37]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-Primary"></div>
       </div>
     );
   }
@@ -80,6 +282,7 @@ const Dashboard = () => {
   const recentCampaigns = data?.data?.recentCampaigns || data?.recentCampaigns || [];
   const deadlines = data?.data?.deadlines || data?.deadlines || [];
   const tasks = data?.data?.tasks || data?.tasks || [];
+  const monthlyTrends = data?.data?.monthlyTrends || data?.monthlyTrends || [];
 
   const activeCampaignsVal = String(stats.activeCampaigns ?? 0).padStart(2, "0");
   const awaitingReviewVal = String(stats.awaitingReview ?? 0).padStart(2, "0");
@@ -126,6 +329,9 @@ const Dashboard = () => {
         ))}
       </div>
 
+      {/* Historical Growth Chart */}
+      <DashboardChart trends={monthlyTrends} />
+
       {/* Main Content Layout */}
       <div className="flex flex-col lg:flex-row gap-10 items-start">
         {/* Left Column: Campaigns */}
@@ -134,7 +340,7 @@ const Dashboard = () => {
             <h2 className="text-xl font-bold text-[#1A1A1A]">Recent Campaigns</h2>
             <Link
               to="/dashboard/campaigns"
-              className="text-[#1F3C37] text-sm font-bold flex items-center gap-1 hover:underline"
+              className="text-Primary text-sm font-bold flex items-center gap-1 hover:underline"
             >
               See all <span className="text-lg">→</span>
             </Link>
@@ -146,12 +352,12 @@ const Dashboard = () => {
                 return (
                   <Link
                     key={campaign.id}
-                    to={`/dashboard/campaigns`}
+                    to={`/dashboard/campaigns/${campaign.id}`}
                     className="block bg-slate-50/50 border border-slate-100/80 rounded-2xl p-5 hover:shadow-md transition-all duration-300"
                   >
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-10 h-10 bg-[#1F3C37]/5 rounded-xl flex items-center justify-center">
-                        <Folder className="w-5 h-5 text-[#1F3C37]" />
+                      <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center">
+                        <Folder className="w-5 h-5 text-Primary" />
                       </div>
                       <div>
                         <h3 className="text-sm font-bold text-[#1A1A1A] line-clamp-1">{campaign.name}</h3>
@@ -163,7 +369,7 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="h-1 flex-1 bg-slate-200 rounded-full overflow-hidden mr-3">
                           <div
-                            className="h-full bg-[#1F3C37] rounded-full transition-all duration-500"
+                            className="h-full bg-Primary rounded-full transition-all duration-500"
                             style={{ width: `${prog}%` }}
                           />
                         </div>
@@ -184,7 +390,7 @@ const Dashboard = () => {
                           campaign.status === "Draft" ? "bg-slate-100 text-slate-500" :
                           campaign.status === "Under Review" ? "bg-orange-50 text-orange-500" :
                           campaign.status === "Approved" ? "bg-green-50 text-green-500" :
-                          campaign.status === "Completed" ? "bg-blue-50 text-[#1F3C37]" :
+                          campaign.status === "Completed" ? "bg-blue-50 text-Primary" :
                           "bg-slate-100 text-slate-500"
                         }`}>
                           {campaign.status}
@@ -210,7 +416,7 @@ const Dashboard = () => {
               <h2 className="text-lg font-bold text-[#1A1A1A]">System Deadlines</h2>
               <Link
                 to="/dashboard/campaigns"
-                className="text-[#1F3C37] text-xs font-bold hover:underline"
+                className="text-Primary text-xs font-bold hover:underline"
               >
                 All Campaigns
               </Link>
@@ -241,7 +447,7 @@ const Dashboard = () => {
               <h2 className="text-lg font-bold text-[#1A1A1A]">Pending Tasks</h2>
               <Link
                 to="/dashboard/tasks"
-                className="text-[#1F3C37] text-xs font-bold hover:underline"
+                className="text-Primary text-xs font-bold hover:underline"
               >
                 Planner
               </Link>
@@ -258,14 +464,14 @@ const Dashboard = () => {
                       {task.completed ? (
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
                       ) : (
-                        <Circle className="w-4 h-4 text-slate-200 group-hover:text-[#1F3C37] transition-colors" />
+                        <Circle className="w-4 h-4 text-slate-200 group-hover:text-Primary transition-colors" />
                       )}
                     </div>
                     <div className="flex-1">
                       <h4 className={`text-xs font-bold ${task.completed ? "text-slate-400 line-through" : "text-[#1A1A1A]"} leading-tight`}>
                         {task.title}
                       </h4>
-                      <p className="text-[10px] text-[#1F3C37] font-semibold">{task.sub}</p>
+                      <p className="text-[10px] text-Primary font-semibold">{task.sub}</p>
                     </div>
                     <span className="text-[11px] font-medium text-slate-400 whitespace-nowrap">{task.date}</span>
                   </div>
@@ -282,3 +488,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

@@ -8,34 +8,40 @@ import TaskTraking from "@/assets/images/taskTraking.png";
 import InvoiceTraking from "@/assets/images/InvoiceImage.png";
 import UploadImage from "@/assets/images/upload.png";
 
-const features = [
-    {
-        title: "Campaign Management",
-        description: "Create campaigns, manage details, and track progress from draft to final delivery",
-        image: CampingManagement,
-        className: "lg:col-span-5",
-    },
-    {
-        title: "Planner & Task Tracking",
-        description: "Organize your tasks, set priorities, and stay on top of deadlines",
-        image: TaskTraking,
-        className: "lg:col-span-7",
-    },
-    {
-        title: "Invoice & Payments",
-        description: "Organize your tasks, set priorities, and stay on top of deadlines",
-        image: InvoiceTraking,
-        className: "lg:col-span-7",
-    },
-    {
-        title: "Media Upload & Delivery",
-        description: "Upload photos and videos, share with brands, and control when files are released",
-        image: UploadImage,
-        className: "lg:col-span-5",
-    },
-];
-
 const ManageAndDeliver = ({ cms }) => {
+    const dynamicFeatures = [
+        {
+            title: cms?.feature1_title || "Campaign Management",
+            description: cms?.feature1_desc || "Create campaigns, manage details, and track progress from draft to final delivery",
+            image: cms?.feature1_image || CampingManagement,
+            className: "lg:col-span-5",
+        },
+        {
+            title: cms?.feature2_title || "Planner & Task Tracking",
+            description: cms?.feature2_desc || "Organize your tasks, set priorities, and stay on top of deadlines",
+            image: cms?.feature2_image || TaskTraking,
+            className: "lg:col-span-7",
+        },
+        {
+            title: cms?.feature3_title || "Invoice & Payments",
+            description: cms?.feature3_desc || "Organize your tasks, set priorities, and stay on top of deadlines",
+            image: cms?.feature3_image || InvoiceTraking,
+            className: "lg:col-span-7",
+        },
+        {
+            title: cms?.feature4_title || "Media Upload & Delivery",
+            description: cms?.feature4_desc || "Upload photos and videos, share with brands, and control when files are released",
+            image: cms?.feature4_image || UploadImage,
+            className: "lg:col-span-5",
+        },
+    ];
+
+    const getFullImageUrl = (url, fallback) => {
+        if (!url) return fallback;
+        if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("/src/") || url.startsWith("/assets/")) return url;
+        return `http://localhost:3000/${url}`;
+    };
+
     return (
         <section id="features" className="section-padding bg-white overflow-hidden">
             <div className="">
@@ -56,11 +62,14 @@ const ManageAndDeliver = ({ cms }) => {
 
                 {/* Bento Grid */}
                 <div className="grid grid-cols-12 gap-6 lg:gap-8">
-                    {features.map((feature, index) => (
+                    {dynamicFeatures.map((feature, index) => (
                         <FeatureCard
                             key={index}
                             index={index}
-                            {...feature}
+                            title={feature.title}
+                            description={feature.description}
+                            className={feature.className}
+                            image={getFullImageUrl(feature.image, feature.image)}
                         />
                     ))}
                 </div>

@@ -173,7 +173,7 @@ const CampaignList = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-[#1F3C37] hover:bg-[#1F3C37]/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-[#1F3C37]/10"
+          className="bg-[#005BD6] hover:bg-[#005BD6]/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-[#005BD6]/10"
         >
           <Plus className="w-5 h-5" />
           Add Campaign
@@ -188,7 +188,7 @@ const CampaignList = () => {
             placeholder="Search campaigns, brands, or creators..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 pl-11 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 pl-11 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
           />
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         </div>
@@ -201,7 +201,7 @@ const CampaignList = () => {
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         {campaignsLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-[#1F3C37] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#005BD6] animate-spin" />
           </div>
         ) : filteredCampaigns.length > 0 ? (
           <div className="overflow-x-auto">
@@ -222,7 +222,7 @@ const CampaignList = () => {
                   <tr key={c.id} className="hover:bg-slate-50/30 transition-colors">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[#1F3C37]/5 flex items-center justify-center text-[#1F3C37]">
+                        <div className="w-9 h-9 rounded-xl bg-[#005BD6]/5 flex items-center justify-center text-[#005BD6]">
                           <Folder className="w-5 h-5" />
                         </div>
                         <div>
@@ -231,7 +231,7 @@ const CampaignList = () => {
                             href={`http://localhost:5173/preview/${c.slug}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[10px] text-slate-400 font-bold hover:text-[#1F3C37] inline-flex items-center gap-1 mt-0.5"
+                            className="text-[10px] text-slate-400 font-bold hover:text-[#005BD6] inline-flex items-center gap-1 mt-0.5"
                           >
                             Live Link <ExternalLink className="w-2.5 h-2.5" />
                           </a>
@@ -267,7 +267,7 @@ const CampaignList = () => {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => openEditModal(c)}
-                          className="p-2 text-slate-500 hover:text-[#1F3C37] hover:bg-slate-100 rounded-xl transition-all"
+                          className="p-2 text-slate-500 hover:text-[#005BD6] hover:bg-slate-100 rounded-xl transition-all"
                           title="Edit Campaign"
                         >
                           <Edit3 className="w-4 h-4" />
@@ -318,7 +318,7 @@ const CampaignList = () => {
                     required
                     value={targetUserId}
                     onChange={(e) => setTargetUserId(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                   >
                     <option value="">Select a creator...</option>
                     {users.map((u) => (
@@ -338,7 +338,7 @@ const CampaignList = () => {
                   value={campaignName}
                   onChange={(e) => setCampaignName(e.target.value)}
                   placeholder="Winter Product Review"
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                 />
               </div>
 
@@ -350,7 +350,7 @@ const CampaignList = () => {
                   value={brandName}
                   onChange={(e) => setBrandName(e.target.value)}
                   placeholder="Brand Inc."
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                 />
               </div>
 
@@ -363,7 +363,7 @@ const CampaignList = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="$350"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                   />
                 </div>
                 <div>
@@ -373,7 +373,7 @@ const CampaignList = () => {
                     required
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                   />
                 </div>
               </div>
@@ -384,7 +384,7 @@ const CampaignList = () => {
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                   >
                     <option value="Draft">Draft</option>
                     <option value="Pending">Pending</option>
@@ -399,7 +399,7 @@ const CampaignList = () => {
                   <select
                     value={paymentStatus}
                     onChange={(e) => setPaymentStatus(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                   >
                     <option value="Unpaid">Unpaid</option>
                     <option value="Paid">Paid</option>
@@ -414,7 +414,7 @@ const CampaignList = () => {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Additional campaign parameters..."
                   rows={3}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all resize-none"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all resize-none"
                 />
               </div>
 
@@ -429,7 +429,7 @@ const CampaignList = () => {
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="flex-1 bg-[#1F3C37] hover:bg-[#1F3C37]/90 text-white font-bold py-3.5 rounded-xl text-center transition-all text-sm flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#005BD6] hover:bg-[#005BD6]/90 text-white font-bold py-3.5 rounded-xl text-center transition-all text-sm flex items-center justify-center gap-2"
                 >
                   {(createMutation.isPending || updateMutation.isPending) ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

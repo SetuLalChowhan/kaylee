@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import CommonButton from '@/components/ui/CommonButton';
 import ImageDash from "@/assets/images/dashImage.png";
 
-const ReadyWorkFlow = () => {
+const ReadyWorkFlow = ({ cms }) => {
   return (
     <section className="section-padding lg:pb-[120px] pb-10">
       <div className="bg-Primary rounded-[32px] lg:rounded-[48px] overflow-hidden relative">
@@ -17,7 +17,7 @@ const ReadyWorkFlow = () => {
               viewport={{ once: true }}
               className="text-[32px] lg:text-[56px] font-bold leading-tight mb-6"
             >
-              Ready to simplify your workflow?
+              {cms?.ready_title || "Ready to simplify your workflow?"}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -26,7 +26,7 @@ const ReadyWorkFlow = () => {
               transition={{ delay: 0.1 }}
               className="text-base lg:text-[18px] opacity-90 mb-10 max-w-lg leading-relaxed"
             >
-              Start managing your campaigns, collaborating with brands, and delivering content seamlessly — all in one simple platform built for creators
+              {cms?.ready_subtext || "Start managing your campaigns, collaborating with brands, and delivering content seamlessly — all in one simple platform built for creators"}
             </motion.p>
 
             <motion.div
@@ -40,7 +40,7 @@ const ReadyWorkFlow = () => {
                 path="/signup"
                 className="bg-white text-Primary font-bold px-8 py-4 rounded-xl hover:bg-gray-50 transition-all shadow-xl shadow-black/10"
               >
-                Start for Free
+                {cms?.ready_cta || "Start for Free"}
               </CommonButton>
             </motion.div>
           </div>
@@ -55,7 +55,7 @@ const ReadyWorkFlow = () => {
               className="absolute top-10 lg:top-16 left-0 lg:left-10 w-[150%] lg:w-[130%]"
             >
               <img
-                src={ImageDash}
+                src={cms?.ready_image ? (cms.ready_image.startsWith("http") || cms.ready_image.startsWith("data:") ? cms.ready_image : `http://localhost:3000/${cms.ready_image}`) : ImageDash}
                 alt="Dashboard Preview"
                 className="w-full h-auto rounded-2xl shadow-2xl object-cover"
               />

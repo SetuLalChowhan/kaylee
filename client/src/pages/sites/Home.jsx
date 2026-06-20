@@ -20,11 +20,11 @@ const Home = () => {
     <div className=" flex flex-col lg:gap-[120px] gap-10 ">
       <Banner cms={cms} />
       <ManageAndDeliver cms={cms} />
-      <SimpleWorkFlow />
+      <SimpleWorkFlow cms={cms} />
       <PlanSection />
       <Testmonial cms={cms} />
       <FAQ />
-      <ReadyWorkFlow />
+      <ReadyWorkFlow cms={cms} />
     </div>
   );
 };

@@ -187,7 +187,7 @@ const TaskList = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-[#1F3C37] hover:bg-[#1F3C37]/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-[#1F3C37]/10"
+          className="bg-[#005BD6] hover:bg-[#005BD6]/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-[#005BD6]/10"
         >
           <Plus className="w-5 h-5" />
           Add Task
@@ -202,7 +202,7 @@ const TaskList = () => {
             placeholder="Search tasks, campaigns, or creators..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 pl-11 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 pl-11 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
           />
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         </div>
@@ -215,7 +215,7 @@ const TaskList = () => {
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         {tasksLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-[#1F3C37] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#005BD6] animate-spin" />
           </div>
         ) : filteredTasks.length > 0 ? (
           <div className="overflow-x-auto">
@@ -236,7 +236,7 @@ const TaskList = () => {
                     <td className="py-4 px-6 text-center">
                       <button
                         onClick={() => handleToggleCompleted(t)}
-                        className="text-slate-400 hover:text-[#1F3C37] transition-all"
+                        className="text-slate-400 hover:text-[#005BD6] transition-all"
                         title={t.completed ? "Mark as Pending" : "Mark as Completed"}
                       >
                         {t.completed ? (
@@ -268,7 +268,7 @@ const TaskList = () => {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => openEditModal(t)}
-                          className="p-2 text-slate-500 hover:text-[#1F3C37] hover:bg-slate-100 rounded-xl transition-all"
+                          className="p-2 text-slate-500 hover:text-[#005BD6] hover:bg-slate-100 rounded-xl transition-all"
                           title="Edit Task"
                         >
                           <Edit3 className="w-4 h-4" />
@@ -319,7 +319,7 @@ const TaskList = () => {
                     required
                     value={targetUserId}
                     onChange={(e) => setTargetUserId(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                   >
                     <option value="">Select a creator...</option>
                     {users.map((u) => (
@@ -339,7 +339,7 @@ const TaskList = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Record UGC Video A"
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                 />
               </div>
 
@@ -351,7 +351,7 @@ const TaskList = () => {
                   value={campaign}
                   onChange={(e) => setCampaign(e.target.value)}
                   placeholder="Active Campaign Name"
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                 />
               </div>
 
@@ -363,7 +363,7 @@ const TaskList = () => {
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                   />
                 </div>
                 <div>
@@ -371,7 +371,7 @@ const TaskList = () => {
                   <select
                     value={completed ? "true" : "false"}
                     onChange={(e) => setCompleted(e.target.value === "true")}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#1F3C37]/20 focus:border-[#1F3C37] text-sm transition-all"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
                   >
                     <option value="false">Pending</option>
                     <option value="true">Completed</option>
@@ -390,7 +390,7 @@ const TaskList = () => {
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="flex-1 bg-[#1F3C37] hover:bg-[#1F3C37]/90 text-white font-bold py-3.5 rounded-xl text-center transition-all text-sm flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#005BD6] hover:bg-[#005BD6]/90 text-white font-bold py-3.5 rounded-xl text-center transition-all text-sm flex items-center justify-center gap-2"
                 >
                   {(createMutation.isPending || updateMutation.isPending) ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

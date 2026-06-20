@@ -6,16 +6,17 @@ import fs from "fs";
  * POST /api/user/portfolio — Create a new portfolio item
  */
 export const createPortfolioItem = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
-    const { title } = req.body;
+    const { userId, role } = req.user;
+    const { title, targetUserId } = req.body;
     if (!req.file) {
         return next(new AppError("Media file is required", 400));
     }
     const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
     const url = req.file.path.replace(/\\/g, "/");
+    const finalUserId = (role === "admin" && targetUserId) ? targetUserId : userId;
     const newItem = await prisma.portfolioItem.create({
         data: {
-            userId,
+            userId: finalUserId,
             title,
             type,
             url,
@@ -54,7 +55,7 @@ export const updatePortfolioItem = catchAsync(async (req, res, next) => {
     if (!existingItem) {
         return next(new AppError("Portfolio item not found", 404));
     }
-    if (existingItem.userId !== userId) {
+    if (existingItem.userId !== userId && req.user.role !== "admin") {
         return next(new AppError("You do not have permission to modify this item", 403));
     }
     let url = existingItem.url;
@@ -97,7 +98,7 @@ export const deletePortfolioItem = catchAsync(async (req, res, next) => {
     if (!existingItem) {
         return next(new AppError("Portfolio item not found", 404));
     }
-    if (existingItem.userId !== userId) {
+    if (existingItem.userId !== userId && req.user.role !== "admin") {
         return next(new AppError("You do not have permission to delete this item", 403));
     }
     if (fs.existsSync(existingItem.url)) {

@@ -42,6 +42,58 @@ const UserList = () => {
   const [role, setRole] = useState("user");
   const [isVerified, setIsVerified] = useState(true);
 
+  // Portfolio media CRUD states
+  const [newPortfolioTitle, setNewPortfolioTitle] = useState("");
+  const [newPortfolioFile, setNewPortfolioFile] = useState(null);
+  const [isUploadingPortfolio, setIsUploadingPortfolio] = useState(false);
+
+  const handleUploadPortfolioItem = async (e) => {
+    e.preventDefault();
+    if (!newPortfolioFile || !newPortfolioTitle.trim()) return;
+    setIsUploadingPortfolio(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", newPortfolioTitle);
+      formData.append("file", newPortfolioFile);
+      formData.append("targetUserId", viewedUser.id);
+      await axiosSecure.post("/user/portfolio", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      toast.success("Portfolio item uploaded");
+      setNewPortfolioTitle("");
+      setNewPortfolioFile(null);
+      queryClient.invalidateQueries({ queryKey: ["adminUserPortfolioPreview", viewedUser.slug] });
+    } catch (err) {
+      toast.error("Failed to upload portfolio item");
+    } finally {
+      setIsUploadingPortfolio(false);
+    }
+  };
+
+  const handleEditPortfolioTitle = async (itemId, currentTitle) => {
+    const newTitle = prompt("Enter new title for portfolio item:", currentTitle);
+    if (newTitle !== null && newTitle.trim() !== "") {
+      try {
+        await axiosSecure.patch(`/user/portfolio/${itemId}`, { title: newTitle });
+        toast.success("Portfolio item updated");
+        queryClient.invalidateQueries({ queryKey: ["adminUserPortfolioPreview", viewedUser.slug] });
+      } catch (err) {
+        toast.error("Failed to update portfolio item");
+      }
+    }
+  };
+
+  const handleDeletePortfolioItem = async (itemId) => {
+    if (!window.confirm("Are you sure you want to delete this portfolio item?")) return;
+    try {
+      await axiosSecure.delete(`/user/portfolio/${itemId}`);
+      toast.success("Portfolio item deleted");
+      queryClient.invalidateQueries({ queryKey: ["adminUserPortfolioPreview", viewedUser.slug] });
+    } catch (err) {
+      toast.error("Failed to delete portfolio item");
+    }
+  };
+
   // Fetch Users
   const { data: usersData, isLoading: isUsersLoading } = useQuery({
     queryKey: ["adminUsers"],
@@ -568,7 +620,34 @@ const UserList = () => {
 
                   {/* Portfolio Gallery */}
                   <div>
-                    <h3 className="text-base font-bold text-slate-800 mb-4">Portfolio Media Items</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-2 border-b border-slate-100">
+                      <h3 className="text-base font-bold text-slate-800">Portfolio Media Items</h3>
+                      <form onSubmit={handleUploadPortfolioItem} className="flex flex-wrap items-center gap-2 bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-xs">
+                        <input
+                          type="text"
+                          required
+                          placeholder="Title"
+                          value={newPortfolioTitle}
+                          onChange={(e) => setNewPortfolioTitle(e.target.value)}
+                          className="bg-white border border-slate-100 rounded py-1 px-2 focus:outline-none"
+                        />
+                        <input
+                          type="file"
+                          required
+                          onChange={(e) => setNewPortfolioFile(e.target.files[0])}
+                          className="text-[10px] text-slate-500 w-40"
+                        />
+                        <button
+                          type="submit"
+                          disabled={isUploadingPortfolio || !newPortfolioFile || !newPortfolioTitle.trim()}
+                          className="bg-Primary hover:bg-Primary/90 text-white font-bold py-1.5 px-3 rounded flex items-center gap-1 disabled:opacity-50"
+                        >
+                          {isUploadingPortfolio ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                          Add Media
+                        </button>
+                      </form>
+                    </div>
+
                     {isPortfolioLoading ? (
                       <div className="flex items-center justify-center py-10">
                         <Loader2 className="w-6 h-6 text-Primary animate-spin" />
@@ -594,9 +673,27 @@ const UserList = () => {
                                 </>
                               )}
                             </div>
-                            <div className="p-4">
-                              <h4 className="font-bold text-slate-800 text-sm truncate">{item.title}</h4>
-                              <p className="text-[10px] text-slate-400 mt-0.5">{new Date(item.createdAt).toLocaleDateString()}</p>
+                            <div className="p-4 flex items-center justify-between gap-2">
+                              <div>
+                                <h4 className="font-bold text-slate-800 text-sm truncate max-w-[130px]">{item.title}</h4>
+                                <p className="text-[10px] text-slate-400 mt-0.5">{new Date(item.createdAt).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleEditPortfolioTitle(item.id, item.title)}
+                                  className="p-1 text-slate-400 hover:text-Primary hover:bg-slate-100 rounded"
+                                  title="Edit Title"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeletePortfolioItem(item.id)}
+                                  className="p-1 text-red-400 hover:text-red-650 hover:bg-red-50 rounded"
+                                  title="Delete Media"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))}
