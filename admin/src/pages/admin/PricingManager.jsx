@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Shield, DollarSign, ListCheck, X, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Plus, Edit2, Trash2, Shield, DollarSign, ListCheck, X, Loader2, Check, ArrowUp, ArrowDown } from "lucide-react";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { toast } from "react-toastify";
 
@@ -9,13 +9,18 @@ const PricingManager = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
+  const isMountedRef = useRef(true);
 
   // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
   const [priceSuffix, setPriceSuffix] = useState("");
-  const [features, setFeatures] = useState("");
+  const [selectedSuffixType, setSelectedSuffixType] = useState("/ monthly");
+  const [featuresList, setFeaturesList] = useState([]);
+  const [newFeatureText, setNewFeatureText] = useState("");
+  const [editingFeatureIndex, setEditingFeatureIndex] = useState(null);
+  const [editingFeatureText, setEditingFeatureText] = useState("");
   const [buttonText, setButtonText] = useState("Select Plan");
   const [isRecommended, setIsRecommended] = useState(false);
   const [isDark, setIsDark] = useState(false);
@@ -26,18 +31,26 @@ const PricingManager = () => {
   const fetchPlans = async () => {
     try {
       const res = await axiosSecure.get("/plans");
-      if (res.data?.status === "success") {
+      if (isMountedRef.current && res.data?.status === "success") {
         setPlans(res.data.data);
       }
     } catch (err) {
-      toast.error("Failed to load plans");
+      if (isMountedRef.current && err.response?.status !== 401 && err.response?.status !== 403) {
+        toast.error("Failed to load plans");
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchPlans();
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   const openCreateModal = () => {
@@ -45,8 +58,12 @@ const PricingManager = () => {
     setTitle("");
     setDescription("");
     setPrice(0);
-    setPriceSuffix("");
-    setFeatures("");
+    setPriceSuffix("/ monthly");
+    setSelectedSuffixType("/ monthly");
+    setFeaturesList([]);
+    setNewFeatureText("");
+    setEditingFeatureIndex(null);
+    setEditingFeatureText("");
     setButtonText("Select Plan");
     setIsRecommended(false);
     setIsDark(false);
@@ -60,14 +77,25 @@ const PricingManager = () => {
     setTitle(plan.title);
     setDescription(plan.description);
     setPrice(plan.price);
-    setPriceSuffix(plan.priceSuffix);
-    setFeatures(
-      Array.isArray(plan.features)
-        ? plan.features.join("\n")
-        : typeof plan.features === "string"
-        ? JSON.parse(plan.features).join("\n")
-        : ""
-    );
+    
+    const suffix = plan.priceSuffix || "";
+    setPriceSuffix(suffix);
+    if (suffix === "/ monthly" || suffix === "/ yearly" || suffix === "") {
+      setSelectedSuffixType(suffix);
+    } else {
+      setSelectedSuffixType("custom");
+    }
+
+    const parsedFeatures = Array.isArray(plan.features)
+      ? plan.features
+      : typeof plan.features === "string"
+      ? JSON.parse(plan.features)
+      : [];
+    setFeaturesList(parsedFeatures);
+    setNewFeatureText("");
+    setEditingFeatureIndex(null);
+    setEditingFeatureText("");
+
     setButtonText(plan.buttonText || "Select Plan");
     setIsRecommended(plan.isRecommended);
     setIsDark(plan.isDark);
@@ -76,21 +104,61 @@ const PricingManager = () => {
     setIsModalOpen(true);
   };
 
+  const handleAddFeature = () => {
+    if (!newFeatureText.trim()) return;
+    setFeaturesList((prev) => [...prev, newFeatureText.trim()]);
+    setNewFeatureText("");
+  };
+
+  const handleDeleteFeature = (index) => {
+    setFeaturesList((prev) => prev.filter((_, idx) => idx !== index));
+    if (editingFeatureIndex === index) {
+      setEditingFeatureIndex(null);
+    } else if (editingFeatureIndex > index) {
+      setEditingFeatureIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleStartEditFeature = (index, text) => {
+    setEditingFeatureIndex(index);
+    setEditingFeatureText(text);
+  };
+
+  const handleSaveEditFeature = (index) => {
+    if (!editingFeatureText.trim()) return;
+    setFeaturesList((prev) =>
+      prev.map((item, idx) => (idx === index ? editingFeatureText.trim() : item))
+    );
+    setEditingFeatureIndex(null);
+  };
+
+  const handleMoveFeature = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= featuresList.length) return;
+    setFeaturesList((prev) => {
+      const newList = [...prev];
+      const temp = newList[index];
+      newList[index] = newList[targetIndex];
+      newList[targetIndex] = temp;
+      return newList;
+    });
+    if (editingFeatureIndex === index) {
+      setEditingFeatureIndex(targetIndex);
+    } else if (editingFeatureIndex === targetIndex) {
+      setEditingFeatureIndex(index);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-
-    const featureList = features
-      .split("\n")
-      .map((f) => f.trim())
-      .filter((f) => f.length > 0);
 
     const payload = {
       title,
       description,
       price: Number(price),
       priceSuffix,
-      features: featureList,
+      features: featuresList.map((f) => f.trim()).filter((f) => f.length > 0),
       buttonText,
       isRecommended,
       isDark,
@@ -275,14 +343,23 @@ const PricingManager = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Price Suffix</label>
-                  <input
-                    type="text"
-                    value={priceSuffix}
-                    onChange={(e) => setPriceSuffix(e.target.value)}
-                    placeholder="e.g. / monthly"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold"
-                  />
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Billing Interval</label>
+                  <select
+                    value={selectedSuffixType}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedSuffixType(val);
+                      if (val !== "custom") {
+                        setPriceSuffix(val);
+                      }
+                    }}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold cursor-pointer"
+                  >
+                    <option value="/ monthly">Monthly billing</option>
+                    <option value="/ yearly">Yearly billing</option>
+                    <option value="">Free / One-time</option>
+                    <option value="custom">Custom Suffix...</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Campaign Limit</label>
@@ -295,6 +372,20 @@ const PricingManager = () => {
                   />
                 </div>
               </div>
+
+              {selectedSuffixType === "custom" && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Custom Price Suffix</label>
+                  <input
+                    type="text"
+                    required
+                    value={priceSuffix}
+                    onChange={(e) => setPriceSuffix(e.target.value)}
+                    placeholder="e.g. / week"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Stripe Price ID</label>
@@ -320,15 +411,116 @@ const PricingManager = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                  Features (One per line)
+                  Plan Features
                 </label>
-                <textarea
-                  value={features}
-                  onChange={(e) => setFeatures(e.target.value)}
-                  placeholder="Up to 20 campaigns&#10;Unlimited reviews&#10;No branding"
-                  rows={4}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold resize-none"
-                />
+                
+                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 mb-3 custom-scrollbar border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                  {featuresList.length === 0 ? (
+                    <p className="text-slate-400 text-xs italic py-2 text-center">No features added yet. Add some below.</p>
+                  ) : (
+                    featuresList.map((feature, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm transition-all hover:border-slate-200">
+                        {editingFeatureIndex === idx ? (
+                          <div className="flex items-center gap-2 w-full">
+                            <input
+                              type="text"
+                              value={editingFeatureText}
+                              onChange={(e) => setEditingFeatureText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleSaveEditFeature(idx);
+                                }
+                              }}
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-Primary"
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSaveEditFeature(idx)}
+                              className="p-1 hover:bg-emerald-50 text-emerald-600 rounded-md transition-colors cursor-pointer"
+                              title="Save change"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingFeatureIndex(null)}
+                              className="p-1 hover:bg-slate-100 text-slate-400 rounded-md transition-colors cursor-pointer"
+                              title="Cancel"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="text-xs font-semibold text-slate-700 break-all">{feature}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditFeature(idx, feature)}
+                                className="p-1 hover:bg-slate-100 text-slate-400 hover:text-Primary rounded-md transition-colors cursor-pointer"
+                                title="Edit feature"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveFeature(idx, -1)}
+                                disabled={idx === 0}
+                                className="p-1 hover:bg-slate-100 text-slate-400 disabled:opacity-30 rounded-md transition-colors cursor-pointer"
+                                title="Move up"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveFeature(idx, 1)}
+                                disabled={idx === featuresList.length - 1}
+                                className="p-1 hover:bg-slate-100 text-slate-400 disabled:opacity-30 rounded-md transition-colors cursor-pointer"
+                                title="Move down"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteFeature(idx)}
+                                className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                                title="Delete feature"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newFeatureText}
+                    onChange={(e) => setNewFeatureText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddFeature();
+                      }
+                    }}
+                    placeholder="e.g. 24/7 dedicated support"
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 focus:border-Primary focus:outline-none transition-all text-xs font-semibold"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddFeature}
+                    className="bg-Primary/10 hover:bg-Primary/20 text-Primary font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-all text-xs cursor-pointer shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Feature
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { Plus, Search, Edit3, Trash2, X, Loader2, Folder, ExternalLink } from "lucide-react";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const CampaignList = () => {
   const axiosSecure = useAxiosSecure();
@@ -226,15 +227,18 @@ const CampaignList = () => {
                           <Folder className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="font-bold text-slate-800 line-clamp-1">{c.name}</p>
-                          <a
-                            href={`${import.meta.env.VITE_CLIENT_URL || "http://localhost:5173"}/preview/${c.slug}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[10px] text-slate-400 font-bold hover:text-[#005BD6] inline-flex items-center gap-1 mt-0.5"
+                          <Link
+                            to={`/dashboard/campaigns/${c.id}`}
+                            className="font-bold text-slate-800 hover:text-Primary transition-colors line-clamp-1"
                           >
-                            Live Link <ExternalLink className="w-2.5 h-2.5" />
-                          </a>
+                            {c.name}
+                          </Link>
+                          <Link
+                            to={`/dashboard/campaigns/${c.id}`}
+                            className="text-[10px] text-slate-400 font-bold hover:text-Primary inline-flex items-center gap-1 mt-0.5"
+                          >
+                            Campaign Details
+                          </Link>
                         </div>
                       </div>
                     </td>

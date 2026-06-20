@@ -138,7 +138,7 @@ const DashboardChart = ({ trends }) => {
                   <stop offset="95%" stopColor="#005BD6" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
               <XAxis
                 dataKey="month"
                 tickLine={false}
@@ -167,7 +167,7 @@ const DashboardChart = ({ trends }) => {
                 dataKey="earnings"
                 name="Earnings"
                 stroke="#005BD6"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 fillOpacity={1}
                 fill="url(#colorEarningsOverall)"
               />
@@ -176,21 +176,21 @@ const DashboardChart = ({ trends }) => {
                 type="monotone"
                 dataKey="campaigns"
                 name="Campaigns"
-                stroke="#10B981"
+                stroke="#6366F1"
                 strokeWidth={3}
-                dot={{ r: 4, strokeWidth: 2, fill: "#ffffff" }}
-                activeDot={{ r: 6 }}
+                dot={{ r: 4, strokeWidth: 2, fill: "#ffffff", stroke: "#6366F1" }}
+                activeDot={{ r: 6, strokeWidth: 2, fill: "#6366F1", stroke: "#ffffff" }}
               />
             </ComposedChart>
           ) : activeTab === "earnings" ? (
             <AreaChart data={trends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorEarningsTab" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#005BD6" stopOpacity="0.3"/>
+                  <stop offset="5%" stopColor="#005BD6" stopOpacity="0.25"/>
                   <stop offset="95%" stopColor="#005BD6" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
               <XAxis
                 dataKey="month"
                 tickLine={false}
@@ -216,7 +216,7 @@ const DashboardChart = ({ trends }) => {
             </AreaChart>
           ) : (
             <BarChart data={trends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
               <XAxis
                 dataKey="month"
                 tickLine={false}
@@ -233,8 +233,8 @@ const DashboardChart = ({ trends }) => {
               <Bar
                 dataKey="campaigns"
                 name="Campaigns"
-                fill="#10B981"
-                radius={[8, 8, 0, 0]}
+                fill="#6366F1"
+                radius={[10, 10, 0, 0]}
                 maxBarSize={50}
               />
             </BarChart>
@@ -247,8 +247,6 @@ const DashboardChart = ({ trends }) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const axiosSecure = useAxiosSecure();
   const user = useSelector((state) => state.ui.user);
 
   const { data, isLoading } = useClient({
@@ -256,20 +254,6 @@ const Dashboard = () => {
     url: "/user/dashboard-stats",
     isPrivate: true,
   });
-
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ taskId, completed }) => {
-      const res = await axiosSecure.patch(`/planner/${taskId}`, { completed });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
-    },
-  });
-
-  const handleToggleTask = (taskId, currentCompleted) => {
-    updateTaskMutation.mutate({ taskId, completed: !currentCompleted });
-  };
 
   if (isLoading) {
     return (
@@ -281,8 +265,6 @@ const Dashboard = () => {
 
   const stats = data?.data?.stats || data?.stats || {};
   const recentCampaigns = data?.data?.recentCampaigns || data?.recentCampaigns || [];
-  const deadlines = data?.data?.deadlines || data?.deadlines || [];
-  const tasks = data?.data?.tasks || data?.tasks || [];
   const monthlyTrends = data?.data?.monthlyTrends || data?.monthlyTrends || [];
 
   const activeCampaignsVal = String(stats.activeCampaigns ?? 0).padStart(2, "0");
@@ -334,154 +316,76 @@ const Dashboard = () => {
       <DashboardChart trends={monthlyTrends} />
 
       {/* Main Content Layout */}
-      <div className="flex flex-col lg:flex-row gap-10 items-start">
-        {/* Left Column: Campaigns */}
-        <div className="flex-1 bg-white rounded-[32px] p-8 w-full border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-bold text-[#1A1A1A]">Recent Campaigns</h2>
-            <Link
-              to="/dashboard/campaigns"
-              className="text-Primary text-sm font-bold flex items-center gap-1 hover:underline"
-            >
-              See all <span className="text-lg">→</span>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {recentCampaigns.length > 0 ? (
-              recentCampaigns.map((campaign) => {
-                const prog = getProgress(campaign.status);
-                return (
-                  <Link
-                    key={campaign.id}
-                    to={`/dashboard/campaigns/${campaign.id}`}
-                    className="block bg-slate-50/50 border border-slate-100/80 rounded-2xl p-5 hover:shadow-md transition-all duration-300"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center">
-                        <Folder className="w-5 h-5 text-Primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-[#1A1A1A] line-clamp-1">{campaign.name}</h3>
-                        <p className="text-[11px] text-slate-400 font-medium">{campaign.brandName}</p>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="h-1 flex-1 bg-slate-200 rounded-full overflow-hidden mr-3">
-                          <div
-                            className="h-full bg-Primary rounded-full transition-all duration-500"
-                            style={{ width: `${prog}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-400">
-                          {prog}%
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <div>
-                        <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Amount</p>
-                        <p className="text-xs font-bold text-[#1A1A1A]">{campaign.amount}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                          campaign.status === "Pending" ? "bg-yellow-50 text-yellow-600" :
-                          campaign.status === "Draft" ? "bg-slate-100 text-slate-500" :
-                          campaign.status === "Under Review" ? "bg-orange-50 text-orange-500" :
-                          campaign.status === "Approved" ? "bg-green-50 text-green-500" :
-                          campaign.status === "Completed" ? "bg-blue-50 text-Primary" :
-                          "bg-slate-100 text-slate-500"
-                        }`}>
-                          {campaign.status}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })
-            ) : (
-              <div className="col-span-1 xl:col-span-2 text-center py-12 border border-dashed border-slate-200 rounded-2xl">
-                <p className="text-slate-400 font-medium text-sm">No campaigns found in the system.</p>
-              </div>
-            )}
-          </div>
+      <div className="bg-white rounded-[32px] p-8 w-full border border-slate-100 shadow-sm">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-xl font-bold text-[#1A1A1A]">Recent Campaigns</h2>
+          <Link
+            to="/dashboard/campaigns"
+            className="text-Primary text-sm font-bold flex items-center gap-1 hover:underline"
+          >
+            See all <span className="text-lg">→</span>
+          </Link>
         </div>
-
-        {/* Right Column: Deadlines & Tasks */}
-        <div className="w-full lg:w-[350px] space-y-10">
-          {/* Upcoming Deadlines */}
-          <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-[#1A1A1A]">System Deadlines</h2>
-              <Link
-                to="/dashboard/campaigns"
-                className="text-Primary text-xs font-bold hover:underline"
-              >
-                All Campaigns
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {deadlines.length > 0 ? (
-                deadlines.map((item, index) => (
-                  <div key={item.id || index} className="flex items-center gap-3 group">
-                    <div className="flex flex-col items-center justify-center min-w-[32px] border-r border-slate-100 pr-3">
-                      <span className="text-xs font-bold text-red-500 leading-none mb-0.5">{item.day}</span>
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase leading-none">{item.month}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {recentCampaigns.length > 0 ? (
+            recentCampaigns.map((campaign) => {
+              const prog = getProgress(campaign.status);
+              return (
+                <Link
+                  key={campaign.id}
+                  to={`/dashboard/campaigns/${campaign.id}`}
+                  className="block bg-slate-50/50 border border-slate-100/80 rounded-2xl p-5 hover:shadow-md transition-all duration-300"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center">
+                      <Folder className="w-5 h-5 text-Primary" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-[#1A1A1A] leading-tight line-clamp-1">{item.title}</h4>
-                      <p className="text-[10px] text-slate-400 font-medium line-clamp-1">{item.sub}</p>
+                      <h3 className="text-sm font-bold text-[#1A1A1A] line-clamp-1">{campaign.name}</h3>
+                      <p className="text-[11px] text-slate-400 font-medium">{campaign.brandName}</p>
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-slate-400 text-xs text-center py-4">No upcoming deadlines.</p>
-              )}
-            </div>
-          </div>
 
-          {/* Pending Tasks */}
-          <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-[#1A1A1A]">Pending Tasks</h2>
-              <Link
-                to="/dashboard/tasks"
-                className="text-Primary text-xs font-bold hover:underline"
-              >
-                Planner
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {tasks.length > 0 ? (
-                tasks.map((task, index) => (
-                  <div
-                    key={task.id || index}
-                    onClick={() => handleToggleTask(task.id, task.completed)}
-                    className="flex items-center gap-3 group cursor-pointer"
-                  >
-                    <div className="mt-0.5">
-                      {task.completed ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <Circle className="w-4 h-4 text-slate-200 group-hover:text-Primary transition-colors" />
-                      )}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="h-1 flex-1 bg-slate-200 rounded-full overflow-hidden mr-3">
+                        <div
+                          className="h-full bg-Primary rounded-full transition-all duration-500"
+                          style={{ width: `${prog}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {prog}%
+                      </span>
                     </div>
-                    <div className="flex-1">
-                      <h4 className={`text-xs font-bold ${task.completed ? "text-slate-400 line-through" : "text-[#1A1A1A]"} leading-tight`}>
-                        {task.title}
-                      </h4>
-                      <p className="text-[10px] text-Primary font-semibold">{task.sub}</p>
-                    </div>
-                    <span className="text-[11px] font-medium text-slate-400 whitespace-nowrap">{task.date}</span>
                   </div>
-                ))
-              ) : (
-                <p className="text-slate-400 text-xs text-center py-4">No pending tasks.</p>
-              )}
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Amount</p>
+                      <p className="text-xs font-bold text-[#1A1A1A]">{campaign.amount}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                        campaign.status === "Pending" ? "bg-yellow-50 text-yellow-600" :
+                        campaign.status === "Draft" ? "bg-slate-100 text-slate-500" :
+                        campaign.status === "Under Review" ? "bg-orange-50 text-orange-500" :
+                        campaign.status === "Approved" ? "bg-green-50 text-green-500" :
+                        campaign.status === "Completed" ? "bg-blue-50 text-Primary" :
+                        "bg-slate-100 text-slate-500"
+                      }`}>
+                        {campaign.status}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })
+          ) : (
+            <div className="col-span-1 md:col-span-2 xl:col-span-3 text-center py-12 border border-dashed border-slate-200 rounded-2xl">
+              <p className="text-slate-400 font-medium text-sm">No campaigns found in the system.</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

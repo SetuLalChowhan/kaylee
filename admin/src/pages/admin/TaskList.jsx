@@ -127,7 +127,7 @@ const TaskList = () => {
     if (selectedTask) {
       updateMutation.mutate({
         id: selectedTask.id,
-        taskData: { name, campaign, date, completed }
+        taskData: { name, campaign, date }
       }, {
         onSuccess: () => {
           toast.success("Task updated successfully");
@@ -139,7 +139,6 @@ const TaskList = () => {
         name,
         campaign,
         date,
-        completed,
         targetUserId
       });
     }
@@ -234,17 +233,16 @@ const TaskList = () => {
                 {filteredTasks.map((t) => (
                   <tr key={t.id} className="hover:bg-slate-50/30 transition-colors">
                     <td className="py-4 px-6 text-center">
-                      <button
-                        onClick={() => handleToggleCompleted(t)}
-                        className="text-slate-400 hover:text-[#005BD6] transition-all"
-                        title={t.completed ? "Mark as Pending" : "Mark as Completed"}
+                      <div
+                        className="text-slate-400 flex items-center justify-center cursor-default"
+                        title={t.completed ? "Completed" : "Pending"}
                       >
                         {t.completed ? (
                           <CheckSquare className="w-5 h-5 text-green-500" />
                         ) : (
                           <Square className="w-5 h-5 text-slate-300" />
                         )}
-                      </button>
+                      </div>
                     </td>
                     <td className="py-4 px-6">
                       <p className={`font-bold text-slate-800 ${t.completed ? "line-through text-slate-400" : ""}`}>
@@ -369,9 +367,9 @@ const TaskList = () => {
                 <div>
                   <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Status</label>
                   <select
+                    disabled
                     value={completed ? "true" : "false"}
-                    onChange={(e) => setCompleted(e.target.value === "true")}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#005BD6]/20 focus:border-[#005BD6] text-sm transition-all"
+                    className="w-full bg-slate-100 border border-slate-150 rounded-xl py-3 px-4 text-sm text-slate-500 cursor-not-allowed opacity-75"
                   >
                     <option value="false">Pending</option>
                     <option value="true">Completed</option>

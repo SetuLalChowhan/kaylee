@@ -75,8 +75,8 @@ export const verifyEmail = catchAsync(
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -114,8 +114,8 @@ export const login = catchAsync(
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -194,8 +194,8 @@ export const googleLogin = async (
     // Set Refresh Token in Cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -332,27 +332,38 @@ export const resetPassword = catchAsync(
 export const refreshTokenHandler = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken)
+    if (!refreshToken) {
       return next(new AppError("Refresh Token not found!", 401));
+    }
 
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET as string,
-      (err: any, decoded: any) => {
-        if (err)
-          return next(new AppError("Invalid or Expired Refresh Token", 403));
-        const accessToken = generateAccessToken({ userId: decoded.userId, role: decoded.role });
-        res.status(200).json({ status: "success", accessToken });
-      },
-    );
+    try {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET as string
+      ) as { userId: string; role: string };
+
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: { role: true },
+      });
+
+      if (!user) {
+        return next(new AppError("User not found", 404));
+      }
+
+      const accessToken = generateAccessToken({ userId: decoded.userId, role: user.role });
+      res.status(200).json({ status: "success", accessToken });
+    } catch (err) {
+      return next(new AppError("Invalid or Expired Refresh Token", 403));
+    }
   },
 );
 
 export const logout = catchAsync(async (req: Request, res: Response) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
   res
     .status(200)

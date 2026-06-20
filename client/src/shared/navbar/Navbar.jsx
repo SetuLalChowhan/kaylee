@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { selectIsAuthenticated, selectCurrentUser } from "@/redux/slices/authSlice";
 import { getImgUrl } from "@/utils/image";
 import Logo from "@/assets/images/logo.png";
+import useClient from "@/hooks/useClient";
 import NavLinks from "./NavLinks";
 import MobileNavbar from "./MobileNavbar";
 import { motion } from "motion/react";
@@ -15,6 +16,16 @@ const Navbar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const { data: cmsData } = useClient({
+    queryKey: ["publicCms"],
+    url: "/cms",
+    isPrivate: false,
+  });
+
+  const cms = cmsData?.data || {};
+  const dynamicLogo = cms.system_logo_image ? getImgUrl(cms.system_logo_image) : Logo;
+  const logoText = cms.system_logo_text || "STAKD";
   
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
@@ -78,7 +89,9 @@ const Navbar = () => {
               }
             }}
           >
-            <img src={Logo} alt="STAKD Logo" className="h-7 lg:h-9 w-auto" />
+            <div className="h-7 lg:h-9 flex items-center justify-center">
+              <img src={dynamicLogo} alt={logoText} className="max-h-full w-auto object-contain" />
+            </div>
           </motion.div>
 
           {/* Desktop Nav Links */}

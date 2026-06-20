@@ -6,12 +6,37 @@ import { useDispatch } from "react-redux";
 import { clearAuth } from "@/redux/slices/authSlice";
 import { setUser } from "@/redux/slices/uiSlice";
 import Logo from "@/assets/images/logo.png";
+import { useQuery } from "@tanstack/react-query";
+import useAxiosPublic from "@/hooks/useAxiosPublic";
 
 const SideBar = ({ sidebar, open, setOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [activeParentIndex, setActiveParentIndex] = useState(null);
+
+  const axiosPublic = useAxiosPublic();
+
+  // Fetch CMS
+  const { data: cmsData } = useQuery({
+    queryKey: ["cmsContent"],
+    queryFn: async () => {
+      const res = await axiosPublic.get("/cms");
+      return res.data?.data || {};
+    },
+  });
+
+  const getImgUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    const base = import.meta.env.VITE_IMG_URL || "http://localhost:3000/";
+    const normalizedBase = base.endsWith("/") ? base : base + "/";
+    const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+    return normalizedBase + normalizedPath;
+  };
+
+  const dynamicLogo = cmsData?.system_logo_image ? getImgUrl(cmsData.system_logo_image) : Logo;
+  const logoText = cmsData?.system_logo_text || "STAKD";
 
   useEffect(() => {
     sidebar.forEach((item, index) => {
@@ -61,8 +86,10 @@ const SideBar = ({ sidebar, open, setOpen }) => {
       >
         {/* Logo Section */}
         <Link to="/dashboard" className="p-8 mb-4 flex items-center gap-2" onClick={handleNavClick}>
-          <img src={Logo} alt="STAKD Logo" className="h-10 w-auto" />
-          <span className="text-[10px] font-extrabold uppercase bg-Primary/10 text-Primary px-2 py-0.5 rounded-md tracking-wider">
+          <div className="h-10 flex items-center justify-center p-1 bg-white rounded-lg">
+            <img src={dynamicLogo} alt={logoText} className="max-h-full max-w-[120px] object-contain" />
+          </div>
+          <span className="text-[10px] font-extrabold uppercase bg-Primary/10 text-Primary px-2 py-0.5 rounded-md tracking-wider shrink-0">
             Admin
           </span>
         </Link>
