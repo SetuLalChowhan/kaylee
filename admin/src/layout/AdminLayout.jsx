@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import { MdDashboard } from "react-icons/md";
 import { FaUsers, FaBullhorn, FaListCheck, FaFileInvoiceDollar, FaCreditCard } from "react-icons/fa6";
-import { FaRegEdit, FaHistory } from "react-icons/fa";
+import { FaRegEdit, FaHistory, FaQuestionCircle } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useUserProfile } from "@/hooks/fetchUserProfile";
 
@@ -64,6 +64,14 @@ const AdminLayout = () => {
     },
     {
       id: 7,
+      icon: <FaQuestionCircle />,
+      text: "FAQ Control",
+      path: "/dashboard/faq",
+      activePaths: ["/dashboard/faq"],
+      sublink: false,
+    },
+    {
+      id: 8,
       icon: <IoSettingsOutline />,
       text: "Settings",
       path: "/dashboard/settings",
@@ -71,7 +79,7 @@ const AdminLayout = () => {
       sublink: false,
     },
     {
-      id: 8,
+      id: 9,
       icon: <FaCreditCard />,
       text: "Plans",
       path: "/dashboard/plans",
@@ -79,7 +87,7 @@ const AdminLayout = () => {
       sublink: false,
     },
     {
-      id: 9,
+      id: 10,
       icon: <FaHistory />,
       text: "Payment History",
       path: "/dashboard/payments",

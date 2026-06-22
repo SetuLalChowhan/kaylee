@@ -53,17 +53,62 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
 export const getInvoices = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { userId, role } = (req as AuthRequest).user;
   const isAdmin = role === "admin";
-  const { status } = req.query as { status?: string };
+  const { status, includeStats } = req.query as { status?: string; includeStats?: string };
  
-  const where = {
+  const where: any = {
     ...(isAdmin ? {} : { userId }),
-    ...(status && status !== "All" && { status }),
+    ...(status && status !== "All" && (
+      status === "Outstanding"
+        ? { status: { in: ["Pending", "Overdue"] } }
+        : { status }
+    )),
   };
 
   const invoices = await prisma.invoice.findMany({
     where,
     orderBy: { createdAt: "desc" },
   });
+
+  if (includeStats === "true") {
+    // Get all invoices to compute stats
+    const allInvoices = await prisma.invoice.findMany({
+      where: isAdmin ? {} : { userId },
+    });
+
+    let totalAmount = 0;
+    const totalCount = allInvoices.length;
+    let paidAmount = 0;
+    let paidCount = 0;
+    let outstandingAmount = 0;
+    let outstandingCount = 0;
+
+    for (const inv of allInvoices) {
+      const amt = parseFloat(inv.amount.replace(/[^0-9.]/g, "")) || 0;
+      totalAmount += amt;
+      if (inv.status === "Paid") {
+        paidCount++;
+        paidAmount += amt;
+      } else if (inv.status === "Pending" || inv.status === "Overdue") {
+        outstandingCount++;
+        outstandingAmount += amt;
+      }
+    }
+
+    return res.status(200).json({
+      status: "success",
+      data: {
+        invoices,
+        stats: {
+          totalCount,
+          totalAmount,
+          paidCount,
+          paidAmount,
+          outstandingCount,
+          outstandingAmount,
+        }
+      },
+    });
+  }
 
   res.status(200).json({
     status: "success",
