@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import { MdDashboard } from "react-icons/md";
 import { FaUsers, FaBullhorn, FaListCheck, FaFileInvoiceDollar, FaCreditCard } from "react-icons/fa6";
-import { FaRegEdit } from "react-icons/fa";
+import { FaRegEdit, FaHistory } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useUserProfile } from "@/hooks/fetchUserProfile";
 
@@ -76,6 +76,14 @@ const AdminLayout = () => {
       text: "Plans",
       path: "/dashboard/plans",
       activePaths: ["/dashboard/plans"],
+      sublink: false,
+    },
+    {
+      id: 9,
+      icon: <FaHistory />,
+      text: "Payment History",
+      path: "/dashboard/payments",
+      activePaths: ["/dashboard/payments"],
       sublink: false,
     },
   ];

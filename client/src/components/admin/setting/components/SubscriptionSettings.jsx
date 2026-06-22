@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Crown, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Crown, Check, AlertCircle, Loader2, Receipt } from 'lucide-react';
 import PlanModal from './PlanModal';
 import useAxiosSecure from '@/hooks/useAxiosSecure';
 
@@ -7,6 +7,8 @@ const SubscriptionSettings = () => {
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [payments, setPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
   const axiosSecure = useAxiosSecure();
 
   const fetchPlanDetails = async () => {
@@ -26,12 +28,42 @@ const SubscriptionSettings = () => {
     }
   };
 
+  const fetchPayments = async () => {
+    try {
+      setPaymentsLoading(true);
+      const res = await axiosSecure.get('/subscriptions/my-payments');
+      if (res.data?.status === 'success') {
+        setPayments(res.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to load payment history:", err);
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchPlanDetails();
+    fetchPayments();
   }, []);
 
   const handleCancelSubscription = async () => {
-    alert("To cancel or update your subscription, please contact support or update via your Stripe Customer Portal.");
+    if (window.confirm("Are you sure you want to cancel your subscription? You will lose access to premium features immediately.")) {
+      try {
+        setLoading(true);
+        const res = await axiosSecure.post('/subscriptions/cancel');
+        if (res.data?.status === 'success') {
+          alert("Your subscription has been cancelled successfully.");
+          await fetchPlanDetails();
+          await fetchPayments();
+        }
+      } catch (err) {
+        console.error("Failed to cancel subscription:", err);
+        alert(err.response?.data?.message || "Failed to cancel subscription.");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   if (loading) {
@@ -131,13 +163,13 @@ const SubscriptionSettings = () => {
 
       {/* Cancel Section */}
       {plan.price > 0 && (
-        <div className="pt-8 space-y-4">
+        <div className="pt-8 space-y-4 border-t border-gray-100">
           <div className="flex items-center gap-2 text-red-500">
             <AlertCircle className="w-5 h-5" />
             <h3 className="text-base font-bold">Manage Subscription</h3>
           </div>
           <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-xl">
-            You are currently on a paid subscription. You can upgrade, downgrade, or manage billing from Stripe.
+            You are currently on a paid subscription. You can upgrade, downgrade, or cancel your subscription here.
           </p>
           <button 
             onClick={handleCancelSubscription}
@@ -147,6 +179,78 @@ const SubscriptionSettings = () => {
           </button>
         </div>
       )}
+
+      {/* Payment History Section */}
+      <div className="pt-8 border-t border-gray-100 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+            <Receipt className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-[#1A1A1A]">Payment History</h3>
+            <p className="text-xs text-gray-400 font-medium">View your past transactions and billing history</p>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-[32px] overflow-hidden shadow-sm">
+          {paymentsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 text-Primary animate-spin" />
+            </div>
+          ) : payments.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-50 bg-slate-50/50">
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400">Date</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400">Plan</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400">Amount</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400">Transaction ID</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {payments.map((payment) => (
+                    <tr key={payment.id} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="py-4 px-6 text-sm font-semibold text-gray-600">
+                        {new Date(payment.createdAt).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="font-bold text-gray-800 text-sm">
+                          {payment.plan?.title || 'Starter'}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 font-bold text-gray-800 text-sm">
+                        ${payment.amount}
+                      </td>
+                      <td className="py-4 px-6 text-xs font-mono text-gray-400">
+                        {payment.stripeSessionId ? `${payment.stripeSessionId.slice(0, 15)}...` : 'N/A'}
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          payment.status === 'completed' 
+                            ? 'bg-green-50 text-green-600 border border-green-100' 
+                            : 'bg-red-50 text-red-600 border border-red-100'
+                        }`}>
+                          {payment.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-sm font-medium">No payment records found.</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       <PlanModal 
         isOpen={isPlanModalOpen} 

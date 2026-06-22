@@ -229,4 +229,199 @@ export const handleWebhook = catchAsync(async (req, res, next) => {
     }
     res.status(200).json({ received: true });
 });
+/**
+ * POST /api/subscriptions/cancel — Cancel user's subscription
+ */
+export const cancelSubscription = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+    });
+    if (!user) {
+        return next(new AppError("User not found", 404));
+    }
+    if (user.stripeSubscriptionId) {
+        try {
+            await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+        }
+        catch (err) {
+            console.error("[Cancel Error] Failed to cancel subscription on Stripe:", err.message);
+        }
+    }
+    // Find the user's latest completed purchase for their current plan and mark it as cancelled
+    if (user.planId) {
+        const latestPurchase = await prisma.purchase.findFirst({
+            where: {
+                userId,
+                planId: user.planId,
+                status: "completed",
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+        if (latestPurchase) {
+            await prisma.purchase.update({
+                where: { id: latestPurchase.id },
+                data: { status: "cancelled" },
+            });
+        }
+    }
+    // Downgrade user's plan in DB to null (starter/free plan)
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            planId: null,
+            stripeSubscriptionId: null,
+        },
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            plan: true,
+        },
+    });
+    res.status(200).json({
+        status: "success",
+        message: "Subscription cancelled successfully",
+        data: updatedUser,
+    });
+});
+/**
+ * GET /api/subscriptions/my-payments — Fetch authenticated user's payment history
+ */
+export const getMyPayments = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const payments = await prisma.purchase.findMany({
+        where: { userId },
+        include: {
+            plan: {
+                select: {
+                    title: true,
+                    price: true,
+                },
+            },
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+    res.status(200).json({
+        status: "success",
+        data: payments,
+    });
+});
+/**
+ * GET /api/subscriptions/admin/payments — Fetch all payments with aggregates (Admin only)
+ */
+export const adminGetPayments = catchAsync(async (req, res, next) => {
+    // Fetch all payment transactions
+    const payments = await prisma.purchase.findMany({
+        include: {
+            user: {
+                select: {
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                },
+            },
+            plan: {
+                select: {
+                    title: true,
+                    price: true,
+                },
+            },
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+    // Calculate aggregates per plan
+    const plans = await prisma.plan.findMany({
+        include: {
+            purchases: {
+                where: {
+                    status: "completed",
+                },
+            },
+        },
+    });
+    const aggregates = plans.map((p) => ({
+        planId: p.id,
+        title: p.title,
+        price: p.price,
+        totalEarnings: p.purchases.reduce((sum, pr) => sum + pr.amount, 0),
+        totalSales: p.purchases.length,
+    }));
+    res.status(200).json({
+        status: "success",
+        data: {
+            payments,
+            aggregates,
+        },
+    });
+});
+/**
+ * POST /api/subscriptions/admin/cancel — Admin cancels a user's purchase/subscription (Admin only)
+ */
+export const adminCancelPurchase = catchAsync(async (req, res, next) => {
+    const { purchaseId } = req.body;
+    if (!purchaseId) {
+        return next(new AppError("Purchase ID is required", 400));
+    }
+    const purchase = await prisma.purchase.findUnique({
+        where: { id: purchaseId },
+        include: { user: true },
+    });
+    if (!purchase) {
+        return next(new AppError("Purchase record not found", 404));
+    }
+    // Cancel Stripe subscription if active
+    if (purchase.user.stripeSubscriptionId) {
+        try {
+            await stripe.subscriptions.cancel(purchase.user.stripeSubscriptionId);
+        }
+        catch (err) {
+            console.error("[Admin Cancel Error] Failed to cancel subscription on Stripe:", err.message);
+        }
+    }
+    // Reset user's plan if they are currently on the plan corresponding to the purchase
+    if (purchase.user.planId === purchase.planId) {
+        await prisma.user.update({
+            where: { id: purchase.userId },
+            data: {
+                planId: null,
+                stripeSubscriptionId: null,
+            },
+        });
+    }
+    // Update purchase record status
+    const updatedPurchase = await prisma.purchase.update({
+        where: { id: purchaseId },
+        data: {
+            status: "cancelled",
+        },
+        include: {
+            user: {
+                select: {
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                },
+            },
+            plan: {
+                select: {
+                    title: true,
+                    price: true,
+                },
+            },
+        },
+    });
+    res.status(200).json({
+        status: "success",
+        message: "Purchase and subscription cancelled successfully",
+        data: updatedPurchase,
+    });
+});
 //# sourceMappingURL=subscription.controller.js.map
