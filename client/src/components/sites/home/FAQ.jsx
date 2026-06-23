@@ -32,7 +32,7 @@ const FAQ = () => {
     return (
         <section id="faq" className="section-padding bg-white ">
             <div className="">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24">
 
                     {/* Left Column - Header & CTA */}
                     <div className="flex flex-col items-start text-left">

@@ -10,12 +10,12 @@ const ReadyWorkFlow = ({ cms }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
 
           {/* Left Content */}
-          <div className="lg:col-span-6 p-8 lg:p-20 relative z-10 text-white">
+          <div className="lg:col-span-6 p-6 sm:p-12 lg:p-20 relative z-10 text-white">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-[32px] lg:text-[56px] font-bold leading-tight mb-6"
+              className="text-3xl md:text-4xl lg:text-[56px] font-bold leading-tight mb-6"
             >
               {cms?.ready_title || "Ready to simplify your workflow?"}
             </motion.h2>
@@ -24,7 +24,7 @@ const ReadyWorkFlow = ({ cms }) => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-base lg:text-[18px] opacity-90 mb-10 max-w-lg leading-relaxed"
+              className="text-base lg:text-[18px] opacity-90 mb-6 sm:mb-10 max-w-lg leading-relaxed"
             >
               {cms?.ready_subtext || "Start managing your campaigns, collaborating with brands, and delivering content seamlessly — all in one simple platform built for creators"}
             </motion.p>
@@ -52,13 +52,12 @@ const ReadyWorkFlow = ({ cms }) => {
               whileInView={{ opacity: 1, x: 0, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="absolute top-10 lg:top-16 left-0 lg:left-10 w-[150%] lg:w-[130%]"
+              className="absolute top-10 lg:top-16 left-0 lg:left-10 w-[120%] sm:w-[110%] lg:w-[130%]"
             >
-              <img
-                src={cms?.ready_image ? (cms.ready_image.startsWith("http") || cms.ready_image.startsWith("data:") ? cms.ready_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.ready_image}`) : ImageDash}
+              <img src={cms?.ready_image ? (cms.ready_image.startsWith("http") || cms.ready_image.startsWith("data:") ? cms.ready_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.ready_image}`) : ImageDash}
                 alt="Dashboard Preview"
                 className="w-full h-auto rounded-2xl shadow-2xl object-cover"
-              />
+              loading="lazy" />
             </motion.div>
           </div>
 

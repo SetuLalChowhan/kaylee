@@ -11,10 +11,22 @@ import {
   SettingsIcon
 } from '@/components/icons/CustomIcon';
 import Logo from "@/assets/images/logo.png";
+import useClient from "@/hooks/useClient";
+import { getImgUrl } from "@/utils/image";
 
 const SideBar = ({ open, setOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { data: cmsData } = useClient({
+    queryKey: ["publicCms"],
+    url: "/cms",
+    isPrivate: false,
+  });
+
+  const cms = cmsData?.data || {};
+  const dynamicLogo = cms.system_logo_image ? getImgUrl(cms.system_logo_image) : Logo;
+  const logoText = cms.system_logo_text || "STAKD";
 
   const menuItems = [
     { name: 'Dashboard', icon: DashboardIcon, path: '/dashboard' },
@@ -64,7 +76,7 @@ const SideBar = ({ open, setOpen }) => {
     <aside className={`fixed lg:sticky top-0 left-0 z-50 w-72 bg-white border-r border-gray-100 transition-transform duration-300 transform ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} flex flex-col h-screen`}>
       {/* Logo Section */}
       <Link to="/" className="p-8 mb-4" onClick={handleNavClick}>
-        <img src={Logo} alt="STAKD Logo" className="h-10 w-auto" />
+        <img src={dynamicLogo} alt={logoText} className="h-10 w-auto object-contain" loading="lazy" />
       </Link>
 
       {/* Main Navigation */}

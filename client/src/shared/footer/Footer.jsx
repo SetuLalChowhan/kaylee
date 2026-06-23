@@ -100,11 +100,10 @@ const Footer = () => {
             {cms.system_logo_text}
           </h2>
         ) : (
-          <img
-            src={FooterText}
+          <img src={FooterText}
             alt="STAKD"
             className="w-full h-auto object-contain select-none pointer-events-none"
-          />
+          loading="lazy" />
         )}
       </div>
     </footer>

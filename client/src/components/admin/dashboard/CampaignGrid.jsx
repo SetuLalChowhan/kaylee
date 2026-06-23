@@ -35,8 +35,8 @@ const CampaignGrid = ({ campaigns = [] }) => {
   };
 
   return (
-    <div className="flex-1 bg-white rounded-xl p-6 w-full">
-      <div className="flex items-center justify-between mb-8">
+    <div className="flex-1 bg-white border border-gray-100 rounded-2xl p-4 md:p-6 w-full shadow-sm">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
         <h2 className="text-xl font-bold text-[#1A1A1A]">Active Campaigns</h2>
         <button 
           onClick={() => navigate('/dashboard/campaigns')}

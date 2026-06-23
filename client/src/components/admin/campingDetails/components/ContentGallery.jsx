@@ -154,7 +154,7 @@ const ContentGallery = ({ campaign }) => {
                     </div>
                   </>
                 ) : (
-                  <img src={getMediaSrc(item)} alt={item.name} className="w-full h-full object-cover" />
+                  <img src={getMediaSrc(item)} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                 )}
 
                 {/* Hover overlay */}
@@ -242,7 +242,7 @@ const ContentGallery = ({ campaign }) => {
                       {file.type === 'video' ? (
                         <video src={file.url} className="w-full h-full object-cover" muted preload="metadata" />
                       ) : (
-                        <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                        <img src={file.url} alt={file.name} className="w-full h-full object-cover" loading="lazy" />
                       )}
                     </div>
                     <div className="flex-1">
@@ -302,7 +302,7 @@ const ContentGallery = ({ campaign }) => {
                   {replaceModal.type === 'video' ? (
                     <video src={replaceModal.url} className="w-full h-full object-cover" muted preload="metadata" />
                   ) : (
-                    <img src={replaceModal.url} alt="replacement preview" className="w-full h-full object-cover" />
+                    <img src={replaceModal.url} alt="replacement preview" className="w-full h-full object-cover" loading="lazy" />
                   )}
                 </div>
                 <div className="flex-1">
@@ -362,7 +362,7 @@ const ContentGallery = ({ campaign }) => {
                 {previewItem.type === 'video' ? (
                   <video src={getMediaSrc(previewItem)} className="w-full max-h-[80vh]" controls autoPlay />
                 ) : (
-                  <img src={getMediaSrc(previewItem)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" />
+                  <img src={getMediaSrc(previewItem)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" loading="lazy" />
                 )}
               </div>
               <div className="mt-3 text-center">

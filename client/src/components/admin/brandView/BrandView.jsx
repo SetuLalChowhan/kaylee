@@ -208,7 +208,7 @@ const BrandView = () => {
                                 {previewItem.type === 'video' ? (
                                     <video src={getImgUrl(previewItem.url)} className="w-full max-h-[75vh]" controls autoPlay />
                                 ) : (
-                                    <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[75vh] object-contain" />
+                                    <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[75vh] object-contain" loading="lazy" />
                                 )}
                             </div>
                             <div className="mt-3 text-center text-white">

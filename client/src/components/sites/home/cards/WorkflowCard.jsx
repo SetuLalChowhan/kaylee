@@ -13,15 +13,14 @@ const WorkflowCard = ({ image, title, description, index }) => {
     >
       <div className="p-4 lg:p-5 pb-0 flex-1">
         <div className="relative overflow-hidden rounded-2xl h-full">
-          <img 
-            src={image} 
+          <img src={image} 
             alt={title} 
             className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700"
-          />
+          loading="lazy" />
         </div>
       </div>
       
-      <div className="p-6 lg:p-10 pt-4 lg:pt-6">
+      <div className="p-5 lg:p-10 pt-4 lg:pt-6">
         <CardTitle>{title}</CardTitle>
         <CardPara>{description}</CardPara>
       </div>

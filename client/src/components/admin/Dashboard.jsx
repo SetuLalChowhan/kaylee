@@ -25,16 +25,16 @@ const Dashboard = () => {
   return (
     <div className="py-2">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">Welcome back, {welcomeName}</h1>
-          <p className="text-gray-500 text-sm">Here's what's happening with your campaigns.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Welcome back, {welcomeName}</h1>
+          <p className="text-gray-500 text-xs md:text-sm">Here's what's happening with your campaigns.</p>
         </div>
         <CommonButton 
           onClick={() => setIsModalOpen(true)}
-          className="bg-Primary text-white px-6 py-3.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all"
+          className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full md:w-auto"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 md:w-5 md:h-5" />
           Create Campaigns
         </CommonButton>
       </div>
@@ -43,7 +43,7 @@ const Dashboard = () => {
       <StatsSection stats={dashboardData?.stats} />
 
       {/* Main Content Layout */}
-      <div className="flex flex-col lg:flex-row gap-10 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start w-full">
         {/* Left Column: Campaigns */}
         <CampaignGrid campaigns={dashboardData?.recentCampaigns} />
 

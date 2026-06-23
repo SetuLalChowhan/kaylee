@@ -98,7 +98,7 @@ const PreviewInfoSection = ({ profile }) => {
           <div className="flex flex-wrap gap-3">
             {profile.brands.map((brand, idx) => (
               <div key={idx} className="w-12 h-12 rounded-full border border-gray-50 p-2 bg-white flex items-center justify-center shadow-sm">
-                <img src={brand} alt="Brand" className="max-w-full h-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" />
+                <img src={brand} alt="Brand" className="max-w-full h-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" loading="lazy" />
               </div>
             ))}
           </div>

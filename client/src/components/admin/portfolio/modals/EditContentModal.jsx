@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import natureVideo from '@/assets/videos/nature.mp4';
 
-const EditContentModal = ({ isOpen, onClose, content, onUpdate }) => {
+const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => {
   const [previewUrl, setPreviewUrl] = React.useState(content?.url);
   const [previewType, setPreviewType] = React.useState(content?.type || 'image');
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
@@ -51,7 +51,7 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate }) => {
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-lg bg-white rounded-3xl md:rounded-[40px] shadow-2xl p-6 md:p-10"
+          className="relative w-full max-w-lg bg-white rounded-3xl md:rounded-[40px] shadow-2xl p-4 md:p-10"
         >
           <div className="flex items-center justify-between mb-6 md:mb-8">
             <h2 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">Edit Content</h2>
@@ -75,11 +75,10 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate }) => {
                   loop
                 />
               ) : (
-                <img 
-                  src={previewUrl} 
+                <img src={previewUrl} 
                   alt="Content Preview" 
                   className="w-full h-full object-cover"
-                />
+                loading="lazy" />
               )}
               <input 
                 type="file" 
@@ -110,9 +109,10 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate }) => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-Primary text-white py-3 md:py-5 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm"
+              disabled={isPending}
+              className="w-full bg-Primary text-white py-3 md:py-5 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Update
+              {isPending ? "Updating..." : "Update"}
             </button>
           </form>
         </motion.div>

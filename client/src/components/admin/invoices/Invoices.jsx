@@ -111,7 +111,7 @@ const Invoices = () => {
 
         <button
           onClick={handleCreateInvoice}
-          className="flex items-center gap-2 bg-Primary text-white px-6 py-3.5 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20"
+          className="flex items-center justify-center gap-2 bg-Primary text-white px-6 py-3.5 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 w-full md:w-auto"
         >
           <div className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
             <Plus className="w-3 h-3" />
@@ -121,47 +121,47 @@ const Invoices = () => {
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
         {/* Card 1: Paid Invoices (Blue Card) */}
-        <div className="bg-Primary text-white rounded-[32px] p-8 shadow-xl shadow-Primary/20 relative overflow-hidden flex flex-col justify-between min-h-[180px]">
-          <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center">
-            <DollarSign className="w-6 h-6 text-white" />
+        <div className="bg-Primary text-white rounded-2xl md:rounded-[32px] p-5 md:p-6 lg:p-8 shadow-xl shadow-Primary/20 relative overflow-hidden flex flex-col justify-between min-h-[140px] md:min-h-[170px]">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-white/15 rounded-xl md:rounded-2xl flex items-center justify-center">
+            <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </div>
           <div className="mt-4">
-            <h2 className="text-3xl font-bold tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
               {formatCurrency(stats.paidAmount)}
             </h2>
-            <p className="text-white/80 text-sm font-semibold mt-1">
+            <p className="text-white/80 text-xs md:text-sm font-semibold mt-1">
               {stats.paidCount || 0} Paid invoice{stats.paidCount !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
         {/* Card 2: Outstanding Invoices (White Card) */}
-        <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[180px]">
-          <div className="w-12 h-12 bg-Primary/5 rounded-2xl flex items-center justify-center">
-            <Clock className="w-6 h-6 text-Primary" />
+        <div className="bg-white border border-gray-100 rounded-2xl md:rounded-[32px] p-5 md:p-6 lg:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[140px] md:min-h-[170px]">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-Primary/5 rounded-xl md:rounded-2xl flex items-center justify-center">
+            <Clock className="w-5 h-5 md:w-6 md:h-6 text-Primary" />
           </div>
           <div className="mt-4">
-            <h2 className="text-3xl font-bold tracking-tight text-[#1A1A1A]">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1A1A1A]">
               {formatCurrency(stats.outstandingAmount)}
             </h2>
-            <p className="text-gray-400 text-sm font-semibold mt-1">
+            <p className="text-gray-400 text-xs md:text-sm font-semibold mt-1">
               {stats.outstandingCount || 0} Outstanding invoice{stats.outstandingCount !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
         {/* Card 3: Total Invoices (White Card) */}
-        <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[180px]">
-          <div className="w-12 h-12 bg-Primary/5 rounded-2xl flex items-center justify-center">
-            <Receipt className="w-6 h-6 text-Primary" />
+        <div className="bg-white border border-gray-100 rounded-2xl md:rounded-[32px] p-5 md:p-6 lg:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[140px] md:min-h-[170px]">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-Primary/5 rounded-xl md:rounded-2xl flex items-center justify-center">
+            <Receipt className="w-5 h-5 md:w-6 md:h-6 text-Primary" />
           </div>
           <div className="mt-4">
-            <h2 className="text-3xl font-bold tracking-tight text-[#1A1A1A]">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1A1A1A]">
               {formatCurrency(stats.totalAmount)}
             </h2>
-            <p className="text-gray-400 text-sm font-semibold mt-1">
+            <p className="text-gray-400 text-xs md:text-sm font-semibold mt-1">
               {stats.totalCount || 0} Total invoice{stats.totalCount !== 1 ? 's' : ''}
             </p>
           </div>
@@ -220,6 +220,7 @@ const Invoices = () => {
         onSubmit={handleInvoiceSubmit}
         type={modalType}
         invoice={selectedInvoice}
+        isPending={createMutation.isPending || updateMutation.isPending}
       />
 
       <DeleteInvoiceModal

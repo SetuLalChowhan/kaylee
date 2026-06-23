@@ -46,6 +46,7 @@ const CampaignDetails = () => {
 
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackMediaId, setFeedbackMediaId] = useState("");
+  const [loadingApproveId, setLoadingApproveId] = useState(null);
 
   // Fetch campaign
   const { data: campaign, isLoading, refetch } = useQuery({
@@ -151,11 +152,14 @@ const CampaignDetails = () => {
   // Media approvals operations
   const approveMedia = async (mediaId) => {
     try {
+      setLoadingApproveId(mediaId);
       await axiosSecure.patch(`/ugc-campaigns/public/${campaign.slug}/media/${mediaId}/status`);
       toast.success("File status set to approved!");
       refetch();
     } catch (err) {
       toast.error("Failed to approve media");
+    } finally {
+      setLoadingApproveId(null);
     }
   };
 
@@ -291,6 +295,31 @@ const CampaignDetails = () => {
     return `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${url}`;
   };
 
+  const getProgress = (campaign) => {
+    const totalTasks = campaign.tasks?.length || 0;
+    if (totalTasks === 0) {
+      switch (campaign.status) {
+        case "Completed": return 100;
+        case "Approved": return 90;
+        case "Under Review": return 75;
+        case "Active": return 50;
+        case "Draft": return 25;
+        default: return 10;
+      }
+    }
+    const completedTasks = campaign.tasks.filter(t => t.completed).length;
+    return Math.round((completedTasks / totalTasks) * 100);
+  };
+
+  const getProgressLabel = (campaign) => {
+    const totalTasks = campaign.tasks?.length || 0;
+    if (totalTasks === 0) {
+      return `${getProgress(campaign)}%`;
+    }
+    const completedTasks = campaign.tasks?.filter(t => t.completed).length || 0;
+    return `${completedTasks}/${totalTasks}`;
+  };
+
   return (
     <div className="font-outfit text-slate-800 pb-16">
       {/* Back Button */}
@@ -338,7 +367,7 @@ const CampaignDetails = () => {
 
       {/* Top Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
-        <div>
+        <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-extrabold text-[#1A1A1A]">{campaign.name}</h1>
             <select
@@ -354,9 +383,16 @@ const CampaignDetails = () => {
               <option value="Completed">Completed</option>
             </select>
           </div>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-400 mt-1 mb-3">
             UGC Campaign by Brand: <strong className="text-slate-600">{campaign.brandName}</strong> | Due date: {campaign.deadline}
           </p>
+          {/* Progress Bar */}
+          <div className="w-full md:w-64 flex items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+            <div className="h-2 bg-slate-200 rounded-full overflow-hidden flex-1">
+              <div className="h-full bg-Primary rounded-full transition-all duration-500" style={{ width: `${getProgress(campaign)}%` }} />
+            </div>
+            <span className="text-[10px] font-extrabold text-slate-400 shrink-0">{getProgressLabel(campaign)}</span>
+          </div>
         </div>
 
         {/* Public Sharing link */}
@@ -393,17 +429,17 @@ const CampaignDetails = () => {
             </div>
 
             {/* Media Upload form for admin */}
-            <form onSubmit={handleMediaUpload} className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4">
+            <form onSubmit={handleMediaUpload} className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
               <input
                 type="file"
                 accept="image/*,video/*"
                 onChange={(e) => setMediaFile(e.target.files[0])}
-                className="text-xs text-slate-600 flex-1"
+                className="text-xs text-slate-600 flex-1 min-w-0"
               />
               <button
                 type="submit"
                 disabled={mediaLoading || !mediaFile}
-                className="bg-Primary text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-1.5 hover:bg-Primary/90 transition-all disabled:opacity-50"
+                className="bg-Primary text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-1.5 hover:bg-Primary/90 transition-all disabled:opacity-50 shrink-0"
               >
                 {mediaLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                 Upload Media
@@ -417,7 +453,7 @@ const CampaignDetails = () => {
                     {item.type === "video" ? (
                       <video src={getMediaUrl(item.url)} className="w-full h-full object-cover" controls />
                     ) : (
-                      <img src={getMediaUrl(item.url)} alt={item.name} className="w-full h-full object-contain" />
+                      <img src={getMediaUrl(item.url)} alt={item.name} className="w-full h-full object-contain" loading="lazy" />
                     )}
                     <span className={`absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full text-white shadow ${
                       item.status === "approved" ? "bg-green-600" :
@@ -447,9 +483,15 @@ const CampaignDetails = () => {
                       {item.status !== "approved" && (
                         <button
                           onClick={() => approveMedia(item.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm"
+                          disabled={loadingApproveId === item.id}
+                          className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <CheckCircle className="w-3 h-3" /> Approve
+                          {loadingApproveId === item.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-3 h-3" />
+                          )}
+                          {loadingApproveId === item.id ? "Approving..." : "Approve"}
                         </button>
                       )}
 
@@ -607,16 +649,16 @@ const CampaignDetails = () => {
           {/* Deliverables Checklist */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
             <h3 className="text-sm font-bold text-[#1A1A1A] mb-4 pb-2 border-b border-slate-50">Deliverables</h3>
-            <form onSubmit={addDeliverable} className="flex gap-2 mb-4">
+            <form onSubmit={addDeliverable} className="flex gap-2 mb-4 w-full">
               <input
                 type="text"
                 required
                 value={newDeliverableText}
                 onChange={(e) => setNewDeliverableText(e.target.value)}
                 placeholder="e.g. 1x TikTok Video"
-                className="flex-1 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
+                className="flex-1 min-w-0 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
               />
-              <button type="submit" className="bg-Primary hover:bg-Primary/90 text-white rounded-xl px-3 font-bold text-xs">
+              <button type="submit" className="bg-Primary hover:bg-Primary/90 text-white rounded-xl px-3 font-bold text-xs shrink-0">
                 Add
               </button>
             </form>
@@ -638,7 +680,7 @@ const CampaignDetails = () => {
           {/* Tasks & Milestones */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
             <h3 className="text-sm font-bold text-[#1A1A1A] mb-4 pb-2 border-b border-slate-50">Campaign Tasks</h3>
-            <form onSubmit={addTask} className="space-y-2 mb-4">
+            <form onSubmit={addTask} className="space-y-2 mb-4 w-full">
               <input
                 type="text"
                 required
@@ -647,15 +689,15 @@ const CampaignDetails = () => {
                 placeholder="Task description"
                 className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full">
                 <input
                   type="date"
                   required
                   value={newTaskDate}
                   onChange={(e) => setNewTaskDate(e.target.value)}
-                  className="flex-1 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
+                  className="flex-1 min-w-0 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
                 />
-                <button type="submit" className="bg-Primary hover:bg-Primary/90 text-white rounded-xl px-4 font-bold text-xs">
+                <button type="submit" className="bg-Primary hover:bg-Primary/90 text-white rounded-xl px-4 font-bold text-xs shrink-0">
                   Create Task
                 </button>
               </div>
@@ -688,17 +730,17 @@ const CampaignDetails = () => {
           {/* Reference Documents */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
             <h3 className="text-sm font-bold text-[#1A1A1A] mb-4 pb-2 border-b border-slate-50">Reference Documents</h3>
-            <form onSubmit={handleDocumentUpload} className="flex gap-2 mb-4">
+            <form onSubmit={handleDocumentUpload} className="mb-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
               <input
                 type="file"
                 required
                 onChange={(e) => setDocumentFile(e.target.files[0])}
-                className="text-xs text-slate-500 flex-1"
+                className="text-xs text-slate-500 flex-1 min-w-0"
               />
               <button
                 type="submit"
                 disabled={documentLoading || !documentFile}
-                className="bg-Primary text-white text-xs font-bold py-1.5 px-3 rounded-xl disabled:opacity-50 flex items-center gap-1"
+                className="bg-Primary text-white text-xs font-bold py-1.5 px-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-1 shrink-0"
               >
                 {documentLoading ? <Loader2 className="w-3 animate-spin" /> : <Upload className="w-3 h-3" />}
                 Add
@@ -732,16 +774,16 @@ const CampaignDetails = () => {
           {/* Internal Notes / Comments */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
             <h3 className="text-sm font-bold text-[#1A1A1A] mb-4 pb-2 border-b border-slate-50">Internal Admin Notes</h3>
-            <form onSubmit={addNote} className="flex gap-2 mb-4">
+            <form onSubmit={addNote} className="flex gap-2 mb-4 w-full">
               <input
                 type="text"
                 required
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Write a private note..."
-                className="flex-1 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
+                className="flex-1 min-w-0 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
               />
-              <button type="submit" className="bg-Primary hover:bg-Primary/90 text-white rounded-xl px-3 font-bold text-xs">
+              <button type="submit" className="bg-Primary hover:bg-Primary/90 text-white rounded-xl px-3 font-bold text-xs shrink-0">
                 Save
               </button>
             </form>

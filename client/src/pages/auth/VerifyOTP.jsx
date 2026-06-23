@@ -14,7 +14,7 @@ const VerifyOTP = () => {
 
   const emailFromState = location.state?.email || '';
   const otpType = location.state?.type || 'VERIFICATION';
-  const [countdown, setCountdown] = useState(25);
+  const [countdown, setCountdown] = useState(emailFromState ? 25 : 0);
 
   const verifyEmailMutation = useVerifyEmail();
   const verifyResetOtpMutation = useVerifyResetOtp();
@@ -154,7 +154,7 @@ const VerifyOTP = () => {
             disabled={countdown > 0 || resendOtpMutation.isPending || !effectiveEmail}
             className="text-Primary font-bold hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
           >
-            {resendOtpMutation.isPending ? "Sending..." : "Resend"}
+            {resendOtpMutation.isPending ? "Sending..." : (emailFromState ? "Resend" : "Send OTP")}
           </button>
           {countdown > 0 && (
             <span className="text-[#666]"> in {countdown} second{countdown !== 1 ? 's' : ''}</span>

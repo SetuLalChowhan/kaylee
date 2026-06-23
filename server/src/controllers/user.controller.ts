@@ -342,6 +342,7 @@ export const updateNotificationSettings = catchAsync(async (req: Request, res: R
 export const getDashboardStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { userId, role } = (req as AuthRequest).user;
   const isAdmin = role === "admin";
+  const totalUsersCount = isAdmin ? await prisma.user.count() : null;
 
   // 1. Stats Card calculations
   const activeCampaignsCount = await prisma.ugcCampaign.count({
@@ -552,7 +553,8 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
         completedCampaigns: completedCampaignsCount,
         totalEarned: totalEarnedValue,
         totalInvoices: totalInvoicesCount,
-        stripeIncome: stripeIncomeValue
+        stripeIncome: stripeIncomeValue,
+        totalUsers: totalUsersCount
       },
       recentCampaigns,
       deadlines: parsedDeadlines,

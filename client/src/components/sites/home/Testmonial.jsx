@@ -92,7 +92,7 @@ const Testmonial = ({ cms }) => {
         <section id="customers" className="section-padding bg-white overflow-hidden">
             <div className="">
                 {/* Header Content */}
-                <div className="flex flex-col items-center text-center  mb-16 lg:mb-24">
+                <div className="flex flex-col items-center text-center mb-10 lg:mb-24">
                     <Label>Testimonial</Label>
                     <SectionHeader className="mb-6">
                         Loved by creators worldwide

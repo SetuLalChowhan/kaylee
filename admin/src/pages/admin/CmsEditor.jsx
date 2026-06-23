@@ -41,10 +41,10 @@ const ImageUploadField = ({ label, value, onChange, axiosSecure }) => {
   return (
     <div className="space-y-2">
       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
-      <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl">
         {value ? (
-          <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 group">
-            <img src={getFullImageUrl(value)} alt={label} className="w-full h-full object-cover" />
+          <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 group shrink-0 mx-auto sm:mx-0">
+            <img src={getFullImageUrl(value)} alt={label} className="w-full h-full object-cover" loading="lazy" />
             <button
               type="button"
               onClick={() => onChange("")}
@@ -54,22 +54,22 @@ const ImageUploadField = ({ label, value, onChange, axiosSecure }) => {
             </button>
           </div>
         ) : (
-          <div className="w-16 h-16 rounded-lg bg-slate-200 border border-dashed border-slate-350 flex items-center justify-center text-slate-400 text-[10px] text-center p-1">
+          <div className="w-16 h-16 rounded-lg bg-slate-200 border border-dashed border-slate-350 flex items-center justify-center text-slate-400 text-[10px] text-center p-1 shrink-0 mx-auto sm:mx-0">
             No Image
           </div>
         )}
-        <div className="flex-1">
+        <div className="flex-1 w-full text-center sm:text-left">
           {uploading ? (
-            <div className="flex items-center gap-2 text-xs font-semibold text-Primary">
+            <div className="flex items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-Primary">
               <Loader2 className="w-4 h-4 animate-spin" /> Uploading...
             </div>
           ) : (
-            <div className="flex flex-col gap-1.5">
-              <label className="inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg text-xs font-bold bg-white text-slate-650 hover:bg-slate-50 cursor-pointer shadow-sm w-fit">
+            <div className="flex flex-col items-center sm:items-start gap-1.5 w-full">
+              <label className="inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg text-xs font-bold bg-white text-slate-650 hover:bg-slate-50 cursor-pointer shadow-sm w-full sm:w-fit">
                 {value ? "Change Image" : "Upload Image"}
                 <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               </label>
-              {value && <p className="text-[10px] text-slate-400 font-medium truncate max-w-xs">{value}</p>}
+              {value && <p className="text-[10px] text-slate-400 font-medium truncate w-full max-w-[250px] sm:max-w-xs">{value}</p>}
             </div>
           )}
         </div>
@@ -359,7 +359,7 @@ const CmsEditor = () => {
       ) : (
         <form onSubmit={handleSave} className="space-y-8 pb-16">
           {/* SECTION 1: HERO BANNER */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl md:rounded-[32px] p-5 md:p-8 border border-slate-100 shadow-sm space-y-6">
             <h2 className="text-lg font-bold text-[#1A1A1A] pb-2 border-b border-slate-100">1. Hero Banner Configuration</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -405,7 +405,7 @@ const CmsEditor = () => {
           </div>
 
           {/* SECTION 2: BENTO FEATURES */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl md:rounded-[32px] p-5 md:p-8 border border-slate-100 shadow-sm space-y-6">
             <h2 className="text-lg font-bold text-[#1A1A1A] pb-2 border-b border-slate-100">2. Bento Grid Features Section</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -435,7 +435,7 @@ const CmsEditor = () => {
             {/* Bento Cards (1-4) details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-50">
               {/* Feature 1 */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+              <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100 space-y-4">
                 <span className="text-[10px] font-extrabold text-Primary bg-Primary/5 px-2 py-0.5 rounded">Bento Card 1</span>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Title</label>
@@ -466,7 +466,7 @@ const CmsEditor = () => {
               </div>
 
               {/* Feature 2 */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+              <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100 space-y-4">
                 <span className="text-[10px] font-extrabold text-Primary bg-Primary/5 px-2 py-0.5 rounded">Bento Card 2</span>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Title</label>
@@ -497,7 +497,7 @@ const CmsEditor = () => {
               </div>
 
               {/* Feature 3 */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+              <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100 space-y-4">
                 <span className="text-[10px] font-extrabold text-Primary bg-Primary/5 px-2 py-0.5 rounded">Bento Card 3</span>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Title</label>
@@ -528,7 +528,7 @@ const CmsEditor = () => {
               </div>
 
               {/* Feature 4 */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+              <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100 space-y-4">
                 <span className="text-[10px] font-extrabold text-Primary bg-Primary/5 px-2 py-0.5 rounded">Bento Card 4</span>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Title</label>
@@ -561,7 +561,7 @@ const CmsEditor = () => {
           </div>
 
           {/* SECTION 3: SIMPLE WORKFLOW (HOW IT WORKS) */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl md:rounded-[32px] p-5 md:p-8 border border-slate-100 shadow-sm space-y-6">
             <h2 className="text-lg font-bold text-[#1A1A1A] pb-2 border-b border-slate-100">3. "How it Works" Workflow Configuration</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -590,7 +590,7 @@ const CmsEditor = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-50">
               {/* Step 1 */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+              <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100 space-y-4">
                 <span className="text-[10px] font-extrabold text-Primary bg-Primary/5 px-2 py-0.5 rounded">Workflow Step 1</span>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Title</label>
@@ -621,7 +621,7 @@ const CmsEditor = () => {
               </div>
 
               {/* Step 2 */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+              <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100 space-y-4">
                 <span className="text-[10px] font-extrabold text-Primary bg-Primary/5 px-2 py-0.5 rounded">Workflow Step 2</span>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Title</label>
@@ -652,7 +652,7 @@ const CmsEditor = () => {
               </div>
 
               {/* Step 3 */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+              <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100 space-y-4">
                 <span className="text-[10px] font-extrabold text-Primary bg-Primary/5 px-2 py-0.5 rounded">Workflow Step 3</span>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Title</label>
@@ -685,7 +685,7 @@ const CmsEditor = () => {
           </div>
 
           {/* SECTION 4: READY WORKFLOW BANNER */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl md:rounded-[32px] p-5 md:p-8 border border-slate-100 shadow-sm space-y-6">
             <h2 className="text-lg font-bold text-[#1A1A1A] pb-2 border-b border-slate-100">4. CTA Ready Section (Bottom Banner)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -731,7 +731,7 @@ const CmsEditor = () => {
           </div>
 
           {/* SECTION 5: CREATOR TESTIMONIALS */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl md:rounded-[32px] p-5 md:p-8 border border-slate-100 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-6">
               <h2 className="text-lg font-bold text-[#1A1A1A]">5. Landing Page Testimonials</h2>
               <button
@@ -746,7 +746,7 @@ const CmsEditor = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {testimonials.map((test, index) => (
-                <div key={index} className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 relative group space-y-4">
+                <div key={index} className="bg-slate-50/50 rounded-2xl p-4 md:p-5 border border-slate-100 relative group space-y-4">
                   <button
                     type="button"
                     onClick={() => removeTestimonial(index)}

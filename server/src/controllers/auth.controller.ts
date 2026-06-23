@@ -277,6 +277,60 @@ export const resendOtp = catchAsync(
   },
 );
 
+export const resendVerificationOtp = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return next(new AppError("User not found!", 404));
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { email },
+      data: { verificationOtp: otp, otpExpires },
+    });
+
+    await sendEmail(
+      email,
+      "Account Verification OTP",
+      `<h1>Your OTP is: ${otp}</h1><p>This code will expire in 10 minutes.</p>`,
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: "A new verification OTP has been sent.",
+    });
+  },
+);
+
+export const resendForgotOtp = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return next(new AppError("User not found!", 404));
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { email },
+      data: { verificationOtp: otp, otpExpires },
+    });
+
+    await sendEmail(
+      email,
+      "Password Reset OTP",
+      `<h1>Your Reset OTP is: ${otp}</h1><p>This code will expire in 10 minutes.</p>`,
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: "A new password reset OTP has been sent.",
+    });
+  },
+);
+
 export const verifyResetOtp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, otp } = req.body;

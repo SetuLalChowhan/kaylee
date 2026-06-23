@@ -26,19 +26,19 @@ const InvoiceCard = ({ invoice, onEdit, onDelete }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-100 rounded-[32px] p-8 hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 relative group">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-Primary/5 rounded-2xl flex items-center justify-center">
+    <div className="bg-white border border-gray-100 rounded-[32px] p-6 sm:p-8 hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 relative group">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-12 h-12 bg-Primary/5 rounded-2xl flex items-center justify-center shrink-0">
             <Receipt className="w-6 h-6 text-Primary" />
           </div>
-          <div>
-            <h3 className="text-base font-bold text-[#1A1A1A]">{invoice.invoiceNo}</h3>
-            <p className="text-xs text-Primary font-semibold">{invoice.campaign}</p>
+          <div className="min-w-0">
+            <h3 className="text-base font-bold text-[#1A1A1A] truncate">{invoice.invoiceNo}</h3>
+            <p className="text-xs text-Primary font-semibold truncate">{invoice.campaign}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
           <span className="text-lg font-black text-[#1A1A1A]">
             {(invoice.amount || '').startsWith('$') ? invoice.amount : `$${invoice.amount || '0.00'}`}
           </span>

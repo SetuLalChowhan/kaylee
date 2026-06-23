@@ -8,7 +8,7 @@ import { BannerTitle, Subtext } from '@/components/ui/Typography';
 const Banner = ({ cms }) => {
     return (
         <section
-            className="relative w-full overflow-hidden bg-white   pt-20 md:pt-[130px] "
+            className="relative w-full overflow-hidden bg-white pt-12 md:pt-[130px]"
             style={{
                 background: 'linear-gradient(180deg, rgba(51, 124, 222, 0.00) -3.32%, rgba(153, 189, 239, 0.50) 23.85%, #FFF 100%)'
             }}
@@ -24,16 +24,16 @@ const Banner = ({ cms }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="flex items-center gap-3 bg-white border border-gray-100 rounded-full py-2 px-4 shadow-sm mb-8 lg:mb-10"
+                        className="flex items-center gap-3 bg-white border border-gray-100 rounded-full py-2 px-4 shadow-sm mb-6 lg:mb-10"
                     >
-                        <img src={UsersImage} alt="Creators" className="h-5 lg:h-6 w-auto" />
+                        <img src={UsersImage} alt="Creators" className="h-5 lg:h-6 w-auto" loading="lazy" />
                         <span className="text-[#1A1A1A] font-semibold text-xs lg:text-base">
                             +5,000 <span className="font-medium text-gray-500">Creators using STAKD</span>
                         </span>
                     </motion.div>
 
                     {/* Heading - Using Common Component */}
-                    <BannerTitle className="mb-6 lg:mb-8">
+                    <BannerTitle className="mb-4 sm:mb-6 lg:mb-8">
                         {cms?.banner_title || (
                             <>
                                 Manage your campaigns. Deliver <br className="hidden md:block" />
@@ -43,7 +43,7 @@ const Banner = ({ cms }) => {
                     </BannerTitle>
 
                     {/* Subheading - Using Common Component */}
-                    <Subtext className="mb-10 lg:mb-12 max-w-2xl px-4">
+                    <Subtext className="mb-6 sm:mb-10 lg:mb-12 max-w-2xl px-4">
                         {cms?.banner_subtext || "Upload, share, and get approvals from brands - all in one simple workflow built for creators"}
                     </Subtext>
 
@@ -67,14 +67,13 @@ const Banner = ({ cms }) => {
                         initial={{ opacity: 0, y: 80 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-                        className="mt-16 lg:mt-24 w-full relative group"
+                        className="mt-10 sm:mt-16 lg:mt-24 w-full relative group"
                     >
                         <div className="relative rounded-xl lg:rounded-[32px] overflow-hidden  border-2 lg:border-8 border-white/40">
-                            <img
-                                src={cms?.banner_image ? (cms.banner_image.startsWith("http") || cms.banner_image.startsWith("data:") ? cms.banner_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.banner_image}`) : DashLayout}
+                            <img src={cms?.banner_image ? (cms.banner_image.startsWith("http") || cms.banner_image.startsWith("data:") ? cms.banner_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.banner_image}`) : DashLayout}
                                 alt="STAKD Dashboard Preview"
                                 className="w-full h-auto object-cover transition-transform duration-700"
-                            />
+                            loading="lazy" />
 
                             {/* Bottom White Overlay to match image pixel-perfectly */}
                             <div className="absolute bottom-0 left-0 w-full h-[100px] sm:h-[150px] lg:h-[300px] bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" />

@@ -31,7 +31,7 @@ const MobileNavbar = ({ isOpen, onClose, isAuthenticated = false, user = null })
             className="fixed top-0 right-0 h-full w-[85%] max-w-[400px] bg-white z-[999] p-6 shadow-2xl flex flex-col backdrop-blur-none"
           >
             <div className="flex items-center justify-between mb-10">
-              <img src={Logo} alt="STAKD Logo" className="h-8 w-auto" />
+              <img src={Logo} alt="STAKD Logo" className="h-8 w-auto" loading="lazy" />
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"

@@ -134,7 +134,7 @@ const BrandFeedback = ({ campaign }) => {
                           </div>
                         </div>
                       ) : (
-                        <img src={getImgUrl(msg.media.url)} alt="" className="w-full h-full object-cover" />
+                        <img src={getImgUrl(msg.media.url)} alt="" className="w-full h-full object-cover" loading="lazy" />
                       )}
                     </div>
                   </div>
@@ -180,7 +180,7 @@ const BrandFeedback = ({ campaign }) => {
             <button onClick={() => setSelectedFile(null)} className="text-red-500 text-xs font-bold hover:underline">Remove</button>
           </div>
         )}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 w-full">
           <input
             type="file"
             ref={fileInputRef}
@@ -190,11 +190,11 @@ const BrandFeedback = ({ campaign }) => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all ${
+            className={`p-2.5 md:p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all shrink-0 ${
               selectedFile ? 'text-Primary bg-Primary/5' : 'text-gray-400'
             }`}
           >
-            <Paperclip className="w-5 h-5" />
+            <Paperclip className="w-4.5 h-4.5 md:w-5 md:h-5" />
           </button>
           <input
             type="text"
@@ -202,12 +202,12 @@ const BrandFeedback = ({ campaign }) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+            className="flex-1 min-w-0 bg-white border border-gray-100 rounded-xl py-2 px-3 md:py-3 md:px-4 text-xs md:text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
           />
           <button
             onClick={handleSend}
             disabled={createFeedbackMutation.isPending}
-            className="bg-Primary text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all disabled:opacity-50"
+            className="bg-Primary text-white px-4 md:px-5 py-2 md:py-3 rounded-xl text-xs md:text-sm font-bold hover:bg-Primary/90 transition-all disabled:opacity-50 shrink-0"
           >
             Send
           </button>

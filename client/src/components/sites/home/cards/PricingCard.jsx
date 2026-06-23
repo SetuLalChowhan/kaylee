@@ -22,7 +22,7 @@ const PricingCard = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
-      className={`relative p-6 lg:p-10 rounded-[24px] border transition-all duration-500 h-full flex flex-col ${
+      className={`relative p-5 lg:p-10 rounded-[24px] border transition-all duration-500 h-full flex flex-col ${
         isDark 
           ? 'bg-[#010101] border-[#010101] text-white shadow-2xl' 
           : 'bg-white border-[#F2F2F2] text-[#1A1A1A] shadow-sm'

@@ -82,7 +82,7 @@ const CommonNavbar = ({ setOpen }) => {
           <Menu className="w-6 h-6 text-gray-600" />
         </button>
 
-        <div className="relative w-full group">
+        <div className="hidden md:block relative w-full group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-Primary transition-colors" />
           <input
             type="text"
@@ -121,11 +121,10 @@ const CommonNavbar = ({ setOpen }) => {
             }}
           >
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-white">
-              <img
-                src={avatarUrl}
+              <img src={avatarUrl}
                 alt="User Profile"
                 className="w-full h-full object-cover"
-              />
+              loading="lazy" />
             </div>
             <div className="hidden md:flex items-center gap-1.5">
               <span className="text-sm font-bold text-[#1A1A1A]">{displayName}</span>

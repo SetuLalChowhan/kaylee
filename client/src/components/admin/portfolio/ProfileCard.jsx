@@ -51,7 +51,7 @@ const ProfileCard = ({ profile }) => {
       {/* Profile Header */}
       <div className="flex flex-col items-center text-center mb-8">
         <div className="w-28 h-28 rounded-full overflow-hidden shadow-xl ring-4 ring-gray-50 mb-6">
-          <img src={getImgUrl(profile.image) || profile.image} alt="Profile" className="w-full h-full object-cover" />
+          <img src={getImgUrl(profile.image) || profile.image} alt="Profile" className="w-full h-full object-cover" loading="lazy" />
         </div>
         <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1">{profile.name}</h2>
         <p className="text-sm font-bold text-Primary mb-4">@{profile.slug}</p>
@@ -65,19 +65,19 @@ const ProfileCard = ({ profile }) => {
           <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-Primary transition-colors" />
         </a>
 
-        <div className="flex items-center gap-3 w-full">
+        <div className="flex items-center gap-2 w-full">
           <button 
             onClick={handleShare}
-            className="flex-1 bg-Primary text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-Primary/90 transition-all shadow-md shadow-Primary/10"
+            className="flex-1 bg-Primary text-white py-2 md:py-2.5 rounded-lg md:rounded-xl font-bold flex items-center justify-center gap-1.5 hover:bg-Primary/90 transition-all shadow-md shadow-Primary/10 text-xs"
           >
-            <Send className="w-4 h-4" />
-            Share you portfolio
+            <Send className="w-3.5 h-3.5" />
+            Share Portfolio
           </button>
           <button 
             onClick={handleCopy}
-            className="p-3.5 bg-gray-50 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
+            className="p-2 md:p-2.5 bg-gray-50 text-gray-400 hover:bg-gray-100 rounded-lg md:rounded-xl transition-all shrink-0"
           >
-            <Copy className="w-5 h-5" />
+            <Copy className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -106,7 +106,7 @@ const ProfileCard = ({ profile }) => {
         <div className="flex flex-wrap gap-3">
           {profile.brands.map((brand, idx) => (
             <div key={idx} className="w-12 h-12 rounded-full border border-gray-50 p-2 bg-white flex items-center justify-center">
-              <img src={getImgUrl(brand) || brand} alt="Brand" className="max-w-full h-auto grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all" />
+              <img src={getImgUrl(brand) || brand} alt="Brand" className="max-w-full h-auto grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all" loading="lazy" />
             </div>
           ))}
         </div>

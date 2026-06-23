@@ -174,7 +174,7 @@ const CampaignList = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-[#005BD6] hover:bg-[#005BD6]/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-[#005BD6]/10"
+          className="w-full sm:w-auto bg-[#005BD6] hover:bg-[#005BD6]/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#005BD6]/10 cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           Add Campaign
@@ -205,58 +205,58 @@ const CampaignList = () => {
             <Loader2 className="w-8 h-8 text-[#005BD6] animate-spin" />
           </div>
         ) : filteredCampaigns.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Campaign</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Brand</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Creator</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Budget</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Deadline</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Campaign</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Brand</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Creator</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Budget</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Deadline</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredCampaigns.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[#005BD6]/5 flex items-center justify-center text-[#005BD6]">
-                          <Folder className="w-5 h-5" />
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#005BD6]/5 flex items-center justify-center text-[#005BD6]">
+                          <Folder className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                         <div>
                           <Link
                             to={`/dashboard/campaigns/${c.id}`}
-                            className="font-bold text-slate-800 hover:text-Primary transition-colors line-clamp-1"
+                            className="font-bold text-slate-800 hover:text-Primary transition-colors line-clamp-1 text-xs md:text-sm"
                           >
                             {c.name}
                           </Link>
                           <Link
                             to={`/dashboard/campaigns/${c.id}`}
-                            className="text-[10px] text-slate-400 font-bold hover:text-Primary inline-flex items-center gap-1 mt-0.5"
+                            className="text-[9px] md:text-[10px] text-slate-400 font-bold hover:text-Primary inline-flex items-center gap-1 mt-0.5"
                           >
                             Campaign Details
                           </Link>
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-6 font-semibold text-slate-600">{c.brandName}</td>
-                    <td className="py-4 px-6 font-semibold text-slate-600">{getUserName(c.userId)}</td>
-                    <td className="py-4 px-6">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-semibold text-slate-600">{c.brandName}</td>
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-semibold text-slate-600">{getUserName(c.userId)}</td>
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
                       <p className="font-bold text-slate-800">{c.amount}</p>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[8px] md:text-[9px] font-bold px-1.5 md:py-0.5 rounded-full ${
                         c.paymentStatus === "Paid" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
                       }`}>
                         {c.paymentStatus || "Unpaid"}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-slate-500 font-medium text-sm">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-slate-500 font-medium">
                       {c.deadline}
                     </td>
-                    <td className="py-4 px-6">
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
+                      <span className={`text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full ${
                         c.status === "Pending" ? "bg-yellow-50 text-yellow-600" :
                         c.status === "Draft" ? "bg-slate-100 text-slate-500" :
                         c.status === "Under Review" ? "bg-orange-50 text-orange-500" :
@@ -267,21 +267,21 @@ const CampaignList = () => {
                         {c.status}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-center">
+                      <div className="flex items-center justify-center gap-1.5 md:gap-2">
                         <button
                           onClick={() => openEditModal(c)}
-                          className="p-2 text-slate-500 hover:text-[#005BD6] hover:bg-slate-100 rounded-xl transition-all"
+                          className="p-1.5 text-slate-500 hover:text-[#005BD6] hover:bg-slate-100 rounded-xl transition-all"
                           title="Edit Campaign"
                         >
-                          <Edit3 className="w-4 h-4" />
+                          <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(c.id, c.name)}
-                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                           title="Delete Campaign"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -300,12 +300,12 @@ const CampaignList = () => {
       {/* Modal Dialog */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4">
-          <div className="bg-white rounded-[32px] w-full max-w-md p-8 border border-slate-100 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <div className="bg-white rounded-2xl md:rounded-[32px] w-full max-w-md p-5 md:p-8 border border-slate-100 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button
               onClick={closeModal}
-              className="absolute right-6 top-6 p-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
+              className="absolute right-4 top-4 md:right-6 md:top-6 p-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 md:w-5 md:h-5" />
             </button>
             <h2 className="text-2xl font-extrabold text-[#1A1A1A] mb-2">
               {selectedCampaign ? "Edit Campaign" : "Create Campaign"}

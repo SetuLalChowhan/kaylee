@@ -124,7 +124,7 @@ const BrandContentGallery = ({
                   </div>
                 </>
               ) : (
-                <img src={getImgUrl(item.url)} alt={item.name} className="w-full h-full object-cover" />
+                <img src={getImgUrl(item.url)} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
               )}
 
               {/* Hover overlay with description */}
@@ -225,7 +225,7 @@ const BrandContentGallery = ({
                 {previewItem.type === 'video' ? (
                   <video src={getImgUrl(previewItem.url)} className="w-full max-h-[80vh]" controls autoPlay />
                 ) : (
-                  <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" />
+                  <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" loading="lazy" />
                 )}
               </div>
               <div className="mt-3 text-center">

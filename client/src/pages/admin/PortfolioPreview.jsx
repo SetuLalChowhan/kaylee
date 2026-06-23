@@ -39,7 +39,16 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Portfolio Not Found</h2>
         <p className="text-gray-500 mb-6">The requested portfolio does not exist or has not been set up yet.</p>
-        <button onClick={() => navigate(-1)} className="px-6 py-3 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 transition-all shadow-md">
+        <button 
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate(isPublic ? '/' : '/dashboard/portfolio');
+            }
+          }}
+          className="px-6 py-3 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 transition-all shadow-md"
+        >
           Go Back
         </button>
       </div>
@@ -89,7 +98,13 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
         </button>
       ) : (
         <button 
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate(isPublic ? '/' : '/dashboard/portfolio');
+            }
+          }}
           className="fixed top-6 left-6 md:top-8 md:left-8 z-[100] bg-white border border-gray-100 text-[#1A1A1A] p-2 md:p-3 rounded-full hover:bg-Primary hover:text-white transition-all shadow-xl group backdrop-blur-md"
         >
           <ArrowLeft className="w-5 h-5 md:w-6 md:h-6 group-hover:-translate-x-1 transition-transform" />
@@ -118,7 +133,7 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
                 {previewItem.type === 'video' ? (
                   <video src={previewItem.url} className="w-full max-h-[80vh]" controls autoPlay />
                 ) : (
-                  <img src={previewItem.url} alt={previewItem.title} className="w-full max-h-[80vh] object-contain" />
+                  <img src={previewItem.url} alt={previewItem.title} className="w-full max-h-[80vh] object-contain" loading="lazy" />
                 )}
               </div>
               <div className="mt-3 text-center">

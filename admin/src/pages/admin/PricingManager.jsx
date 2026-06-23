@@ -205,7 +205,7 @@ const PricingManager = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-Primary/20 cursor-pointer"
+          className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           Create Plan
@@ -218,16 +218,16 @@ const PricingManager = () => {
         </div>
       ) : (
         <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Plan Title</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Price</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Limit</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Stripe Price ID</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Status</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Plan Title</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Price</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Limit</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Stripe Price ID</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Status</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -240,30 +240,30 @@ const PricingManager = () => {
 
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/30 transition-colors">
-                      <td className="py-4 px-6">
+                      <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
                         <div>
-                          <p className="font-bold text-slate-800">{p.title}</p>
-                          <p className="text-slate-400 text-xs mt-0.5 line-clamp-1">{p.description}</p>
+                          <p className="font-bold text-slate-800 text-xs md:text-sm">{p.title}</p>
+                          <p className="text-slate-400 text-[10px] md:text-xs mt-0.5 line-clamp-1">{p.description}</p>
                         </div>
                       </td>
-                      <td className="py-4 px-6 font-bold text-slate-700">
-                        ${p.price} <span className="text-[10px] text-slate-400 font-medium">{p.priceSuffix}</span>
+                      <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-bold text-slate-700">
+                        ${p.price} <span className="text-[9px] md:text-[10px] text-slate-400 font-medium">{p.priceSuffix}</span>
                       </td>
-                      <td className="py-4 px-6 font-semibold text-slate-650">
+                      <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-semibold text-slate-650">
                         {p.campaignLimit === 999999 ? "Unlimited" : `${p.campaignLimit} campaigns`}
                       </td>
-                      <td className="py-4 px-6 font-mono text-xs text-slate-500">
+                      <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-mono text-[11px] md:text-xs text-slate-500">
                         {p.stripePriceId || <span className="text-slate-350 italic">None (Free Upgrade)</span>}
                       </td>
-                      <td className="py-4 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-center">
+                        <div className="flex items-center justify-center gap-1 md:gap-2">
                           {p.isRecommended && (
-                            <span className="bg-Primary/10 text-Primary text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                            <span className="bg-Primary/10 text-Primary text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
                               Recommended
                             </span>
                           )}
                           {p.isDark && (
-                            <span className="bg-slate-900 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                            <span className="bg-slate-900 text-white text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
                               Dark Card
                             </span>
                           )}
@@ -272,21 +272,21 @@ const PricingManager = () => {
                           )}
                         </div>
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center justify-center gap-3">
+                      <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
+                        <div className="flex items-center justify-center gap-2 md:gap-3">
                           <button
                             onClick={() => openEditModal(p)}
-                            className="p-2 hover:bg-slate-100 text-slate-500 hover:text-Primary rounded-xl transition-all cursor-pointer"
+                            className="p-1.5 hover:bg-slate-100 text-slate-500 hover:text-Primary rounded-xl transition-all cursor-pointer"
                             title="Edit plan"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(p.id)}
-                            className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl transition-all cursor-pointer"
+                            className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl transition-all cursor-pointer"
                             title="Delete plan"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
@@ -303,12 +303,12 @@ const PricingManager = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="relative w-full max-w-xl bg-white rounded-[32px] shadow-2xl p-8 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-xl bg-white rounded-2xl md:rounded-[32px] shadow-2xl p-5 md:p-8 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+              className="absolute top-4 right-4 md:top-6 md:right-6 p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 md:w-6 md:h-6" />
             </button>
 
             <h3 className="text-xl font-bold text-slate-800 mb-6">
@@ -316,7 +316,7 @@ const PricingManager = () => {
             </h3>
 
             <form onSubmit={handleSave} className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Title</label>
                   <input
@@ -341,7 +341,7 @@ const PricingManager = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Billing Interval</label>
                   <select
@@ -523,7 +523,7 @@ const PricingManager = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Button CTA</label>
                   <input

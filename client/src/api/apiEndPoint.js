@@ -13,6 +13,8 @@ export const AUTH = {
   FORGOT_PASSWORD: `${API_BASE}/auth/forgot-password`,
   VERIFY_RESET_OTP: `${API_BASE}/auth/verify-reset-otp`,
   RESEND_OTP: `${API_BASE}/auth/resend-otp`,
+  RESEND_VERIFICATION_OTP: `${API_BASE}/auth/resend-verification-otp`,
+  RESEND_FORGOT_OTP: `${API_BASE}/auth/resend-forgot-otp`,
   RESET_PASSWORD: `${API_BASE}/auth/reset-password`,
   REFRESH_TOKEN: `${API_BASE}/auth/refresh-token`,
   LOGOUT: `${API_BASE}/auth/logout`,

@@ -93,20 +93,20 @@ const SubscriptionSettings = () => {
   const usagePercentage = Math.min(100, Math.round((campaignCount / campaignLimit) * 100));
 
   return (
-    <div className="space-y-8 font-outfit animate-fade-in">
+    <div className="space-y-6 md:space-y-8 font-outfit animate-fade-in">
       {/* Current Plan Summary */}
-      <div className="bg-white border border-gray-100 rounded-[32px] p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
-        <div className="flex items-center gap-6">
-          <div className="w-16 h-16 bg-Primary/5 rounded-2xl flex items-center justify-center text-Primary">
-            <Crown className="w-8 h-8" />
+      <div className="bg-white border border-gray-100 rounded-2xl md:rounded-[32px] p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 shadow-sm">
+        <div className="flex items-center gap-4 md:gap-6">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-Primary/5 rounded-xl md:rounded-2xl flex items-center justify-center text-Primary shrink-0">
+            <Crown className="w-6 h-6 md:w-8 md:h-8" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-bold text-[#1A1A1A]">{plan.title}</h3>
-              <span className="text-[10px] font-bold text-Primary bg-Primary/5 px-2.5 py-1 rounded-full uppercase">Current plan</span>
+            <div className="flex items-center gap-2 mb-0.5 md:mb-1">
+              <h3 className="text-lg md:text-xl font-bold text-[#1A1A1A]">{plan.title}</h3>
+              <span className="text-[9px] md:text-[10px] font-bold text-Primary bg-Primary/5 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full uppercase">Current plan</span>
             </div>
-            <p className="text-sm font-bold text-[#1A1A1A] mb-0.5">Campaign Usage</p>
-            <p className="text-sm text-gray-400 font-medium tracking-tight">
+            <p className="text-xs md:text-sm font-bold text-[#1A1A1A] mb-0.5">Campaign Usage</p>
+            <p className="text-xs md:text-sm text-gray-400 font-medium tracking-tight">
               {campaignCount} of {campaignLimit === 999999 ? "unlimited" : campaignLimit} campaigns active ({usagePercentage}% used)
             </p>
           </div>
@@ -115,11 +115,11 @@ const SubscriptionSettings = () => {
         {/* Progress Bar */}
         {campaignLimit !== 999999 && (
           <div className="w-full md:w-64">
-            <div className="flex justify-between text-xs font-bold text-[#1A1A1A] mb-2">
+            <div className="flex justify-between text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">
               <span>Usage limit</span>
               <span>{usagePercentage}%</span>
             </div>
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-100 h-1.5 md:h-2 rounded-full overflow-hidden">
               <div 
                 className={`h-full rounded-full transition-all duration-500 ${usagePercentage > 85 ? 'bg-red-500' : 'bg-Primary'}`}
                 style={{ width: `${usagePercentage}%` }}
@@ -131,30 +131,30 @@ const SubscriptionSettings = () => {
 
       {/* Pricing Card (Summary View) */}
       <div className="max-w-sm">
-        <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm">
-          <h4 className="text-sm font-bold text-gray-500 uppercase tracking-tight mb-4">{plan.title}</h4>
-          <div className="flex items-baseline gap-1 mb-4">
-            <span className="text-4xl font-bold text-[#1A1A1A]">${plan.price}</span>
+        <div className="bg-white border border-gray-100 rounded-2xl md:rounded-[32px] p-4 md:p-6 shadow-sm">
+          <h4 className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-tight mb-3 md:mb-4">{plan.title}</h4>
+          <div className="flex items-baseline gap-1 mb-3 md:mb-4">
+            <span className="text-3xl md:text-4xl font-bold text-[#1A1A1A]">${plan.price}</span>
             {plan.priceSuffix && (
-              <span className="text-sm text-gray-400 font-medium">{plan.priceSuffix}</span>
+              <span className="text-xs md:text-sm text-gray-400 font-medium">{plan.priceSuffix}</span>
             )}
           </div>
-          <p className="text-xs text-gray-400 font-medium mb-8 leading-relaxed">{plan.description}</p>
+          <p className="text-xs text-gray-400 font-medium mb-6 md:mb-8 leading-relaxed">{plan.description}</p>
           
-          <div className="space-y-4 mb-10 pt-8 border-t border-gray-50">
+          <div className="space-y-3 mb-6 md:mb-8 pt-6 border-t border-gray-50">
             {plan.features.map((f, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="p-1 bg-[#1A1A1A] text-white rounded-full">
-                  <Check className="w-3 h-3" />
+              <div key={i} className="flex items-center gap-2.5">
+                <div className="p-0.5 md:p-1 bg-[#1A1A1A] text-white rounded-full">
+                  <Check className="w-2.5 h-2.5 md:w-3 md:h-3" />
                 </div>
-                <span className="text-xs font-bold text-[#1A1A1A]">{f}</span>
+                <span className="text-[11px] md:text-xs font-bold text-[#1A1A1A]">{f}</span>
               </div>
             ))}
           </div>
 
           <button 
             onClick={() => setIsPlanModalOpen(true)}
-            className="w-full bg-Primary text-white py-4 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/10 cursor-pointer"
+            className="w-full bg-Primary text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/10 cursor-pointer text-xs md:text-sm"
           >
             Upgrade Plan
           </button>
@@ -192,7 +192,7 @@ const SubscriptionSettings = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-[32px] overflow-hidden shadow-sm">
+        <div className="bg-white border border-gray-100 rounded-xl md:rounded-[24px] overflow-hidden shadow-sm">
           {paymentsLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 text-Primary animate-spin" />
@@ -202,36 +202,36 @@ const SubscriptionSettings = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-50 bg-slate-50/50">
-                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400">Date</th>
-                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400">Plan</th>
-                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400">Amount</th>
-                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400">Transaction ID</th>
-                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Status</th>
+                    <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400">Date</th>
+                    <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400">Plan</th>
+                    <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400">Amount</th>
+                    <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400">Transaction ID</th>
+                    <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {payments.map((payment) => (
                     <tr key={payment.id} className="hover:bg-slate-50/30 transition-colors">
-                      <td className="py-4 px-6 text-sm font-semibold text-gray-600">
+                      <td className="py-2.5 px-3 md:py-3.5 md:px-5 text-[11px] md:text-xs font-semibold text-gray-600">
                         {new Date(payment.createdAt).toLocaleDateString(undefined, {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
                         })}
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="font-bold text-gray-800 text-sm">
+                      <td className="py-2.5 px-3 md:py-3.5 md:px-5">
+                        <div className="font-bold text-gray-800 text-[11px] md:text-xs">
                           {payment.plan?.title || 'Starter'}
                         </div>
                       </td>
-                      <td className="py-4 px-6 font-bold text-gray-800 text-sm">
+                      <td className="py-2.5 px-3 md:py-3.5 md:px-5 font-bold text-gray-800 text-[11px] md:text-xs">
                         ${payment.amount}
                       </td>
-                      <td className="py-4 px-6 text-xs font-mono text-gray-400">
+                      <td className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-[11px] font-mono text-gray-400">
                         {payment.stripeSessionId ? `${payment.stripeSessionId.slice(0, 15)}...` : 'N/A'}
                       </td>
-                      <td className="py-4 px-6 text-center">
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      <td className="py-2.5 px-3 md:py-3.5 md:px-5 text-center">
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider ${
                           payment.status === 'completed' 
                             ? 'bg-green-50 text-green-600 border border-green-100' 
                             : 'bg-red-50 text-red-600 border border-red-100'

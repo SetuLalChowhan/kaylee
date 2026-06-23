@@ -177,7 +177,7 @@ const InvoiceList = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-[#005BD6] hover:bg-[#005BD6]/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-[#005BD6]/10"
+          className="w-full sm:w-auto bg-[#005BD6] hover:bg-[#005BD6]/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#005BD6]/10 cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           Add Invoice
@@ -208,44 +208,44 @@ const InvoiceList = () => {
             <Loader2 className="w-8 h-8 text-[#005BD6] animate-spin" />
           </div>
         ) : filteredInvoices.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Invoice No</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Campaign</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Creator</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Amount</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Issue Date</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Due Date</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Invoice No</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Campaign</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Creator</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Amount</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Issue Date</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Due Date</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[#005BD6]/5 flex items-center justify-center text-[#005BD6]">
-                          <FileText className="w-5 h-5" />
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#005BD6]/5 flex items-center justify-center text-[#005BD6]">
+                          <FileText className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
-                        <span className="font-bold text-slate-800">{inv.invoiceNo}</span>
+                        <span className="font-bold text-slate-800 text-xs md:text-sm">{inv.invoiceNo}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 font-semibold text-slate-600">{inv.campaignName || "General / None"}</td>
-                    <td className="py-4 px-6 font-semibold text-slate-600">{getUserName(inv.userId)}</td>
-                    <td className="py-4 px-6">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-semibold text-slate-605">{inv.campaignName || "General / None"}</td>
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-semibold text-slate-605">{getUserName(inv.userId)}</td>
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
                       <p className="font-bold text-slate-800">{inv.amount}</p>
                     </td>
-                    <td className="py-4 px-6 text-slate-500 font-medium text-sm">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-slate-500 font-medium">
                       {new Date(inv.issueDate).toLocaleDateString()}
                     </td>
-                    <td className="py-4 px-6 text-slate-500 font-medium text-sm">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-slate-500 font-medium">
                       {new Date(inv.dueDate).toLocaleDateString()}
                     </td>
-                    <td className="py-4 px-6">
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
+                      <span className={`text-[10px] md:text-xs font-bold px-2.5 py-0.5 rounded-full ${
                         inv.status === "Paid" ? "bg-green-50 text-green-600" :
                         inv.status === "Overdue" ? "bg-red-50 text-red-600" :
                         "bg-yellow-50 text-yellow-600"
@@ -253,21 +253,21 @@ const InvoiceList = () => {
                         {inv.status}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-center">
+                      <div className="flex items-center justify-center gap-1.5 md:gap-2">
                         <button
                           onClick={() => openEditModal(inv)}
-                          className="p-2 text-slate-500 hover:text-[#005BD6] hover:bg-slate-100 rounded-xl transition-all"
+                          className="p-1.5 text-slate-500 hover:text-[#005BD6] hover:bg-slate-100 rounded-xl transition-all"
                           title="Edit Invoice"
                         >
-                          <Edit3 className="w-4 h-4" />
+                          <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(inv.id, inv.invoiceNo)}
-                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                           title="Delete Invoice"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -286,12 +286,12 @@ const InvoiceList = () => {
       {/* Modal Dialog */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4">
-          <div className="bg-white rounded-[32px] w-full max-w-md p-8 border border-slate-100 shadow-2xl relative">
+          <div className="bg-white rounded-2xl md:rounded-[32px] w-full max-w-md p-5 md:p-8 border border-slate-100 shadow-2xl relative">
             <button
               onClick={closeModal}
-              className="absolute right-6 top-6 p-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
+              className="absolute right-4 top-4 md:right-6 md:top-6 p-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 md:w-5 md:h-5" />
             </button>
             <h2 className="text-2xl font-extrabold text-[#1A1A1A] mb-2">
               {selectedInvoice ? "Edit Invoice" : "Create Invoice"}

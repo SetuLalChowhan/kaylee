@@ -45,7 +45,14 @@ const CampaingDetails = () => {
   const getProgress = (campaign) => {
     const totalTasks = campaign.tasks?.length || 0;
     if (totalTasks === 0) {
-      return campaign.status === 'Completed' || campaign.status === 'Approved' ? 100 : 0;
+      switch (campaign.status) {
+        case "Completed": return 100;
+        case "Approved": return 90;
+        case "Under Review": return 75;
+        case "Active": return 50;
+        case "Draft": return 25;
+        default: return 10;
+      }
     }
     const completedTasks = campaign.tasks.filter(t => t.completed).length;
     return Math.round((completedTasks / totalTasks) * 100);
@@ -53,6 +60,9 @@ const CampaingDetails = () => {
 
   const getProgressLabel = (campaign) => {
     const totalTasks = campaign.tasks?.length || 0;
+    if (totalTasks === 0) {
+      return `${getProgress(campaign)}%`;
+    }
     const completedTasks = campaign.tasks?.filter(t => t.completed).length || 0;
     return `${completedTasks}/${totalTasks}`;
   };

@@ -5,7 +5,7 @@ import { useUpdateNotificationSettings } from '@/api/apiHooks/useNotification';
 
 const Toggle = ({ label, description, checked, onChange, disabled }) => {
   return (
-    <div className="flex items-center justify-between p-6 bg-white/50 border border-gray-50 rounded-2xl hover:bg-white hover:border-gray-100 transition-all shadow-sm">
+    <div className="flex items-center justify-between p-3.5 md:p-5 bg-white/50 border border-gray-50 rounded-2xl hover:bg-white hover:border-gray-100 transition-all shadow-sm">
       <div className="space-y-1">
         <h4 className="text-sm font-bold text-[#1A1A1A]">{label}</h4>
         <p className="text-xs text-gray-400 font-medium">{description}</p>
@@ -34,10 +34,10 @@ const NotificationSettings = () => {
   };
 
   return (
-    <div className="bg-white border border-gray-100 rounded-[32px] p-10">
-      <h2 className="text-xl font-bold text-[#1A1A1A] mb-8">Notification Preferences</h2>
+    <div className="bg-white border border-gray-100 rounded-2xl md:rounded-[32px] p-4 md:p-8">
+      <h2 className="text-lg md:text-xl font-bold text-[#1A1A1A] mb-4 md:mb-6">Notification Preferences</h2>
       
-      <div className="border-t border-dashed border-gray-100 pt-10 space-y-4">
+      <div className="border-t border-dashed border-gray-100 pt-4 md:pt-8 space-y-3">
         <Toggle 
           label="Deadline reminders" 
           description="Get notified 48h before a campaign deadline"

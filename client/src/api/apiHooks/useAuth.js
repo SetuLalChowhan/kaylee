@@ -165,7 +165,8 @@ export const useResendOtp = () => {
 
   return useMutation({
     mutationFn: async ({ email, type = "VERIFICATION" }) => {
-      const res = await axiosPublic.post(AUTH.RESEND_OTP, { email, type });
+      const endpoint = type === "FORGOT_PASSWORD" ? AUTH.RESEND_FORGOT_OTP : AUTH.RESEND_VERIFICATION_OTP;
+      const res = await axiosPublic.post(endpoint, { email });
       return res.data;
     },
     onSuccess: (data) => {

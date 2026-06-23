@@ -203,7 +203,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
           className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl md:rounded-[40px] shadow-2xl overflow-y-auto custom-scrollbar"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 md:p-10 border-b border-gray-50 sticky top-0 bg-white z-10">
+          <div className="flex items-center justify-between p-4 md:p-10 border-b border-gray-50 sticky top-0 bg-white z-10">
             <h2 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">Edit Portfolio</h2>
             <button 
               onClick={onClose}
@@ -213,12 +213,12 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit(onFormSubmit)} className="p-6 md:p-10 space-y-6 md:space-y-8 pb-10">
+          <form onSubmit={handleSubmit(onFormSubmit)} className="p-4 md:p-10 space-y-6 md:space-y-8 pb-10">
             {/* Profile Image */}
             <div className="flex items-center gap-4 md:gap-6">
               <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-lg ring-4 ring-gray-50 bg-gray-50">
                 {previewImage ? (
-                  <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={previewImage} alt="Profile" className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
                     <Upload className="w-8 h-8" />
@@ -303,7 +303,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                 {existingBrandLogos.map((url, idx) => (
                   <div key={`existing-${idx}`} className="relative group">
                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border border-gray-100 p-2 bg-white flex items-center justify-center shadow-sm">
-                      <img src={url} alt="Brand" className="max-w-full h-auto max-h-full object-contain" />
+                      <img src={url} alt="Brand" className="max-w-full h-auto max-h-full object-contain" loading="lazy" />
                     </div>
                     <button
                       type="button"
@@ -323,7 +323,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                 {newBrandUploads.map((brand, idx) => (
                   <div key={`new-${idx}`} className="relative group">
                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border border-gray-100 p-2 bg-white flex items-center justify-center shadow-sm">
-                      <img src={brand.url} alt="Brand" className="max-w-full h-auto max-h-full object-contain" />
+                      <img src={brand.url} alt="Brand" className="max-w-full h-auto max-h-full object-contain" loading="lazy" />
                     </div>
                     <button
                       type="button"

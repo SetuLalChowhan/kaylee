@@ -54,9 +54,9 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
   };
 
   return (
-    <div className="w-full lg:w-[320px] space-y-10">
+    <div className="w-full lg:w-[320px] space-y-6 lg:space-y-10">
       {/* Upcoming Deadlines */}
-      <div className="bg-white p-6 rounded-2xl w-full">
+      <div className="bg-white border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-[#1A1A1A]">Upcoming Deadlines</h2>
           <button 
@@ -78,7 +78,7 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
       </div>
 
       {/* Pending Tasks */}
-      <div className="bg-white p-6 rounded-2xl w-full">
+      <div className="bg-white border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-[#1A1A1A]">Pending Tasks</h2>
           <button 

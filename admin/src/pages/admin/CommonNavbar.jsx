@@ -25,27 +25,16 @@ const CommonNavbar = ({ setOpen }) => {
 
   return (
     <header className="flex items-center justify-between w-full h-20 px-4 md:px-0 font-outfit">
-      {/* Search Bar */}
-      <div className="flex items-center flex-1 max-w-md relative">
-        <button
-          onClick={() => setOpen(true)}
-          className="lg:hidden mr-4 p-2 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <Menu className="w-6 h-6 text-slate-600" />
-        </button>
-
-        <div className="relative w-full group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-Primary transition-colors" />
-          <input
-            type="text"
-            placeholder="Search campaigns, planners, users..."
-            className="w-full bg-[#F8FAFC] border border-transparent focus:border-Primary/30 focus:bg-white focus:outline-none rounded-2xl py-3 pl-11 pr-4 text-sm text-[#1A1A1A] placeholder:text-slate-400 transition-all shadow-sm"
-          />
-        </div>
-      </div>
+      {/* Hamburger Menu Button */}
+      <button
+        onClick={() => setOpen(true)}
+        className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
+      >
+        <Menu className="w-6 h-6 text-slate-600" />
+      </button>
 
       {/* Right Side Icons */}
-      <div className="flex items-center gap-4 lg:gap-6">
+      <div className="flex items-center gap-4 lg:gap-6 ml-auto">
         {/* Profile Dropdown */}
         <div className="relative">
           <div

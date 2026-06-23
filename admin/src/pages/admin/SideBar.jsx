@@ -87,7 +87,7 @@ const SideBar = ({ sidebar, open, setOpen }) => {
         {/* Logo Section */}
         <Link to="/dashboard" className="p-8 mb-4 flex items-center gap-2" onClick={handleNavClick}>
           <div className="h-10 flex items-center justify-center p-1 bg-white rounded-lg">
-            <img src={dynamicLogo} alt={logoText} className="max-h-full max-w-[120px] object-contain" />
+            <img src={dynamicLogo} alt={logoText} className="max-h-full max-w-[120px] object-contain" loading="lazy" />
           </div>
           <span className="text-[10px] font-extrabold uppercase bg-Primary/10 text-Primary px-2 py-0.5 rounded-md tracking-wider shrink-0">
             Admin

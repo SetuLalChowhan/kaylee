@@ -9,7 +9,7 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
   return (
     <Link to={`/dashboard/campaigns/${id || 1}`}
       onMouseLeave={() => setShowOptions(false)}
-      className="block bg-white border border-gray-100 rounded-[32px] p-6 hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 relative group"
+      className="block bg-white border border-gray-100 rounded-[32px] p-5 sm:p-6 hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 relative group"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -38,17 +38,7 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
                 className="absolute right-0 mt-2 w-32 bg-white rounded-2xl shadow-xl z-20 py-2 overflow-hidden border border-gray-50"
               >
-                <button
-                  onClick={(e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    onEdit();
-                    setShowOptions(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-gray-600 hover:bg-gray-50 hover:text-Primary transition-colors font-bold"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  <span>Edit</span>
-                </button>
+                {/* Edit option removed - clicking card goes to details */}
                 <button
                   onClick={(e) => {
                     e.preventDefault(); e.stopPropagation();
@@ -82,18 +72,18 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
       </div>
 
       {/* Footer Info */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex flex-wrap items-center justify-between gap-y-4 gap-x-2 pt-4 border-t border-gray-50 mt-4">
         <div>
           <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Amount</p>
           <p className="text-sm font-bold text-[#1A1A1A]">{amount}</p>
         </div>
-        <div className="text-center">
-          <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Payment Due Date</p>
+        <div className="text-center sm:text-left">
+          <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Due Date</p>
           <p className="text-sm font-bold text-[#1A1A1A]">{dueDate}</p>
         </div>
         <div className="text-right">
           <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Status</p>
-          <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${
+          <span className={`inline-block text-[10px] font-bold px-3 py-1 rounded-full ${
             status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
             status === 'Draft' ? 'bg-gray-100 text-gray-500' :
             status === 'Under Review' ? 'bg-orange-50 text-orange-500' :

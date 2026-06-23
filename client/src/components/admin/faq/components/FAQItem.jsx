@@ -7,7 +7,7 @@ const FAQItem = ({ question, answer, isAdmin, onEdit, onDelete }) => {
 
   return (
     <div className={`mb-4 bg-white border border-gray-100 rounded-2xl overflow-hidden transition-all ${isOpen ? 'shadow-sm' : 'hover:bg-gray-50'}`}>
-      <div className="w-full flex items-center justify-between p-6">
+      <div className="w-full flex items-center justify-between p-4 md:p-6">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="flex-1 flex items-center justify-between focus:outline-none pr-4"
@@ -52,7 +52,7 @@ const FAQItem = ({ question, answer, isAdmin, onEdit, onDelete }) => {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <div className="px-6 pb-6 text-xs text-gray-500 leading-relaxed font-medium">
+            <div className="px-4 pb-4 md:px-6 md:pb-6 text-xs text-gray-500 leading-relaxed font-medium">
               <div className="pt-4 border-t border-gray-50">
                 {answer}
               </div>

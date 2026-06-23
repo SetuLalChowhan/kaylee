@@ -31,11 +31,10 @@ const MediaItem = ({ item, onEdit, onDelete, onPreview }) => {
           </div>
         </>
       ) : item.url ? (
-        <img 
-          src={item.url} 
+        <img src={item.url} 
           alt={item.title} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-        />
+        loading="lazy" />
       ) : (
         <div className="w-full h-full bg-[#E5E9F2]" />
       )}

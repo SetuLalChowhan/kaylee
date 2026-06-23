@@ -5,7 +5,7 @@ import useAxiosSecure from '@/hooks/useAxiosSecure';
 import axios from 'axios';
 
 const PlanCard = ({ title, price, period, description, features, recommended, buttonText, isDark, onSelect, loading }) => (
-  <div className={`relative flex-1 p-8 rounded-[32px] border ${isDark ? 'bg-[#0A0A0A] border-[#1A1A1A] text-white' : 'bg-white border-gray-100 text-[#1A1A1A]'} flex flex-col h-full shadow-sm`}>
+  <div className={`relative flex-1 p-6 sm:p-8 rounded-[32px] border ${isDark ? 'bg-[#0A0A0A] border-[#1A1A1A] text-white' : 'bg-white border-gray-100 text-[#1A1A1A]'} flex flex-col h-full shadow-sm`}>
     {recommended && (
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-Primary text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-20 shadow-lg shadow-Primary/30">
         Recommended
@@ -155,18 +155,18 @@ const PlanModal = ({ isOpen, onClose }) => {
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-5xl bg-white rounded-[40px] shadow-2xl p-10 md:p-14 overflow-hidden"
+          className="relative w-full max-w-5xl bg-white rounded-3xl md:rounded-[40px] shadow-2xl p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar"
         >
           <button 
             onClick={onClose}
-            className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 z-30 bg-white"
+            className="absolute top-4 right-4 md:top-8 md:right-8 p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 z-30 bg-white"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 md:w-6 md:h-6" />
           </button>
 
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-[#1A1A1A] font-outfit">Select Plan</h2>
-            <div className="w-full border-b border-dashed border-gray-100 mt-6" />
+          <div className="mb-6 md:mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] font-outfit">Select Plan</h2>
+            <div className="w-full border-b border-dashed border-gray-100 mt-3 md:mt-6" />
           </div>
 
           {loading ? (

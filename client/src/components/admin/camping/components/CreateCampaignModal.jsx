@@ -36,7 +36,7 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
           className="relative w-full max-w-lg bg-white rounded-3xl md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* Header - Fixed */}
-          <div className="p-6 md:p-10 pb-0 bg-white relative z-20">
+          <div className="p-4 md:p-10 pb-0 bg-white relative z-20">
             <button 
               onClick={onClose}
               className="absolute top-6 right-6 md:top-8 md:right-8 p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 bg-white"
@@ -51,7 +51,7 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-6 md:pb-10 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto px-4 md:px-10 pb-4 md:pb-10 custom-scrollbar">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
               <div>
                 <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2 md:mb-3">Campaign Name</label>
@@ -82,9 +82,8 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
                     {...register('deadline', { required: 'Deadline is required' })}
                     type="date"
                     defaultValue="2026-04-25"
-                    className={`w-full bg-white border rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm pr-12 ${errors.deadline ? 'border-red-500' : 'border-gray-100'}`}
+                    className={`w-full bg-white border rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm ${errors.deadline ? 'border-red-500' : 'border-gray-100'}`}
                   />
-                  <Calendar className="absolute right-4 md:right-5 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400 pointer-events-none" />
                 </div>
                 {errors.deadline && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.deadline.message}</p>}
               </div>

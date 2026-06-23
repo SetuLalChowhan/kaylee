@@ -190,6 +190,7 @@ const Portfolio = () => {
         isOpen={modals.uploadContent}
         onClose={() => toggleModal('uploadContent', false)}
         onUpload={handleUploadContent}
+        isPending={createMutation.isPending}
       />
 
       <EditContentModal
@@ -197,6 +198,7 @@ const Portfolio = () => {
         onClose={() => toggleModal('editContent', false)}
         content={selectedMedia}
         onUpdate={handleUpdateContent}
+        isPending={updateMutation.isPending}
       />
 
       {/* Preview Modal */}
@@ -217,7 +219,7 @@ const Portfolio = () => {
                 {previewItem.type === 'video' ? (
                   <video src={natureVideo} className="w-full max-h-[80vh]" controls autoPlay />
                 ) : (
-                  <img src={previewItem.url} alt={previewItem.title} className="w-full max-h-[80vh] object-contain" />
+                  <img src={previewItem.url} alt={previewItem.title} className="w-full max-h-[80vh] object-contain" loading="lazy" />
                 )}
               </div>
               <div className="mt-3 text-center">

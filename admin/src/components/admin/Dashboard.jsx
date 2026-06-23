@@ -37,20 +37,20 @@ const StatsCard = ({ title, value, label, icon: Icon, isPrimary, index }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, delay: index * 0.1 }}
-    className={`p-6 rounded-[32px] flex flex-col justify-between h-48 border transition-all duration-300 ${
+    className={`p-4 md:p-6 rounded-2xl md:rounded-[32px] flex flex-col justify-between h-36 md:h-44 border transition-all duration-300 ${
       isPrimary
         ? "bg-Primary border-Primary text-white shadow-xl shadow-Primary/30"
         : "bg-white border-slate-100 text-[#1A1A1A] hover:border-Primary/30"
     }`}
   >
-    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center ${
       isPrimary ? "bg-white/20" : "bg-Primary/5"
     }`}>
-      <Icon className={`w-6 h-6 ${isPrimary ? "text-white" : "text-Primary"}`} />
+      <Icon className={`w-5 h-5 md:w-6 md:h-6 ${isPrimary ? "text-white" : "text-Primary"}`} />
     </div>
     <div>
-      <h2 className="text-4xl font-bold mb-1">{value}</h2>
-      <p className={`text-sm font-medium ${isPrimary ? "text-white/80" : "text-slate-500"}`}>
+      <h2 className="text-2xl md:text-3xl xl:text-4xl font-bold mb-0.5 md:mb-1">{value}</h2>
+      <p className={`text-xs md:text-sm font-medium ${isPrimary ? "text-white/80" : "text-slate-500"}`}>
         {label}
       </p>
     </div>
@@ -89,19 +89,19 @@ const DashboardChart = ({ trends }) => {
   if (!trends || trends.length === 0) return null;
 
   return (
-    <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm mb-10 font-outfit">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div className="bg-white border border-slate-100 rounded-2xl md:rounded-[32px] p-5 md:p-8 shadow-sm mb-10 font-outfit">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
         <div>
           <h2 className="text-xl font-bold text-[#1A1A1A]">System Performance Analytics</h2>
           <p className="text-xs text-slate-400 mt-1">Review operational metrics and system earnings trends.</p>
         </div>
         
         {/* Modern Tab Pill Selector */}
-        <div className="flex items-center bg-slate-50 border border-slate-100 p-1.5 rounded-2xl">
+        <div className="flex items-center bg-slate-50 border border-slate-100 p-1.5 rounded-2xl overflow-x-auto w-full lg:w-auto custom-scrollbar whitespace-nowrap">
           <button
             type="button"
             onClick={() => setActiveTab("overall")}
-            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "overall" ? "bg-Primary text-white shadow-md shadow-Primary/10" : "text-slate-400 hover:text-slate-600"
             }`}
           >
@@ -110,7 +110,7 @@ const DashboardChart = ({ trends }) => {
           <button
             type="button"
             onClick={() => setActiveTab("earnings")}
-            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "earnings" ? "bg-Primary text-white shadow-md shadow-Primary/10" : "text-slate-400 hover:text-slate-600"
             }`}
           >
@@ -119,7 +119,7 @@ const DashboardChart = ({ trends }) => {
           <button
             type="button"
             onClick={() => setActiveTab("campaigns")}
-            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "campaigns" ? "bg-Primary text-white shadow-md shadow-Primary/10" : "text-slate-400 hover:text-slate-600"
             }`}
           >
@@ -270,7 +270,8 @@ const Dashboard = () => {
   const activeCampaignsVal = String(stats.activeCampaigns ?? 0).padStart(2, "0");
   const awaitingReviewVal = String(stats.awaitingReview ?? 0).padStart(2, "0");
   const totalInvoicesVal = String(stats.totalInvoices ?? 0).padStart(2, "0");
-  const stripeIncomeVal = "$" + parseFloat(stats.stripeIncome ?? 0).toLocaleString("en-US", {
+  const totalUsersVal = String(stats.totalUsers ?? 0).padStart(2, "0");
+  const campaignPaymentsVal = "$" + parseFloat(stats.totalEarned ?? 0).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -278,8 +279,9 @@ const Dashboard = () => {
   const statsList = [
     { title: "Active Campaigns", value: activeCampaignsVal, label: "System Campaigns", icon: FolderOpen, isPrimary: true },
     { title: "Awaiting Review", value: awaitingReviewVal, label: "Awaiting Approval", icon: Clock, isPrimary: false },
-    { title: "Total Invoices", value: totalInvoicesVal, label: "Total Platform Invoices", icon: FileText, isPrimary: false },
-    { title: "Stripe Revenue", value: stripeIncomeVal, label: "Platform Earnings", icon: DollarSign, isPrimary: false },
+    { title: "Total Users", value: totalUsersVal, label: "Registered Users", icon: Users, isPrimary: false },
+    { title: "Total Invoices", value: totalInvoicesVal, label: "Platform Invoices", icon: FileText, isPrimary: false },
+    { title: "Campaign Payments", value: campaignPaymentsVal, label: "Campaign Payments", icon: DollarSign, isPrimary: false },
   ];
 
   const getProgress = (status) => {
@@ -306,7 +308,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6 mb-10">
         {statsList.map((stat, idx) => (
           <StatsCard key={stat.title} {...stat} index={idx} />
         ))}
@@ -316,7 +318,7 @@ const Dashboard = () => {
       <DashboardChart trends={monthlyTrends} />
 
       {/* Main Content Layout */}
-      <div className="bg-white rounded-[32px] p-8 w-full border border-slate-100 shadow-sm">
+      <div className="bg-white rounded-2xl md:rounded-[32px] p-5 md:p-8 w-full border border-slate-100 shadow-sm">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-bold text-[#1A1A1A]">Recent Campaigns</h2>
           <Link

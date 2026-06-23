@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Menu } from "lucide-react";
+import { Menu, LogOut, User as UserIcon, ChevronDown, LayoutDashboard } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { selectIsAuthenticated, selectCurrentUser } from "@/redux/slices/authSlice";
+import { useLogout } from "@/api/apiHooks/useAuth";
 import { getImgUrl } from "@/utils/image";
 import Logo from "@/assets/images/logo.png";
 import useClient from "@/hooks/useClient";
@@ -30,6 +31,8 @@ const Navbar = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
   const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const logoutMutation = useLogout();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -90,7 +93,7 @@ const Navbar = () => {
             }}
           >
             <div className="h-7 lg:h-9 flex items-center justify-center">
-              <img src={dynamicLogo} alt={logoText} className="max-h-full w-auto object-contain" />
+              <img src={dynamicLogo} alt={logoText} className="max-h-full w-auto object-contain" loading="lazy" />
             </div>
           </motion.div>
 
@@ -112,18 +115,84 @@ const Navbar = () => {
             className="hidden lg:flex items-center gap-3"
           >
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="px-6 xl:px-8 py-2.5 bg-Primary text-white font-semibold rounded-xl hover:bg-Primary/90 shadow-md shadow-Primary/20 text-sm xl:text-base flex items-center gap-2"
+              <div className="relative">
+                <div
+                  className="flex items-center gap-3 pl-2 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 >
-                  <img
-                    src={avatarUrl}
-                    alt="Avatar"
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
-                  Dashboard
-                </button>
+                  {user?.avatar ? (
+                    <img
+                      src={avatarUrl}
+                      alt="User Profile"
+                      className="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-white"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full overflow-hidden shadow-md bg-Primary/10 flex items-center justify-center text-Primary font-extrabold text-sm ring-2 ring-white select-none">
+                      {(user?.displayName || user?.firstName || 'U')[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div className="hidden md:flex items-center gap-1">
+                    <span className="text-sm font-bold text-[#1A1A1A] max-w-[120px] truncate">
+                      {user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  </div>
+                </div>
+
+                {isDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setIsDropdownOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-3 w-64 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 py-2 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-gray-100/50">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Signed in as</p>
+                        <p className="text-sm font-black text-gray-800 truncate">
+                          {user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim()}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          navigate('/dashboard');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-Primary transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                        <span>My Dashboard</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          navigate('/dashboard/portfolio');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-Primary transition-colors"
+                      >
+                        <UserIcon className="w-4 h-4 text-gray-400" />
+                        <span>My Profile</span>
+                      </button>
+
+                      <div className="h-px bg-gray-100 my-1 mx-2" />
+                      
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          logoutMutation.mutate();
+                        }}
+                        disabled={logoutMutation.isPending}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50/50 transition-colors disabled:opacity-50"
+                      >
+                        <LogOut className="w-4 h-4 text-red-400" />
+                        <span>{logoutMutation.isPending ? 'Logging out...' : 'Log Out'}</span>
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <>

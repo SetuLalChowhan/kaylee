@@ -96,8 +96,8 @@ const FAQPage = () => {
           <p className="text-gray-400 text-sm font-medium">Everything you need to know about STAKD and other information.</p>
         </div>
 
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 w-full md:w-80">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -110,7 +110,7 @@ const FAQPage = () => {
           {isAdmin && (
             <button
               onClick={handleAddFaq}
-              className="bg-Primary text-white px-6 py-3.5 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 flex items-center gap-2"
+              className="w-full sm:w-auto bg-Primary text-white px-6 py-3.5 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Plus className="w-5 h-5" />
               Add FAQ

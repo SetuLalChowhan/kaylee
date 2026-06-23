@@ -144,7 +144,7 @@ const AdminProfileTab = ({ user, axiosSecure, dispatch }) => {
         <div className="flex items-center gap-6 mb-8">
           <div className="relative w-28 h-28 rounded-3xl overflow-hidden group border border-slate-100 bg-slate-50 flex items-center justify-center">
             {avatarPreview ? (
-              <img src={avatarPreview} alt="Admin Profile" className="w-full h-full object-cover" />
+              <img src={avatarPreview} alt="Admin Profile" className="w-full h-full object-cover" loading="lazy" />
             ) : (
               <User className="w-12 h-12 text-slate-300" />
             )}
@@ -225,7 +225,7 @@ const AdminProfileTab = ({ user, axiosSecure, dispatch }) => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-8 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50"
+          className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50 cursor-pointer"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Profile Settings
@@ -308,7 +308,7 @@ const SecurityTab = ({ axiosSecure }) => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-8 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50"
+          className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50 cursor-pointer"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Change Password
@@ -470,7 +470,7 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
             type="button"
             onClick={handleSave}
             disabled={isLoading || saveCmsMutation.isPending || logoUploading}
-            className="bg-Primary hover:bg-Primary/90 text-white font-bold py-2.5 px-5 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-Primary/20 text-xs disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 text-xs disabled:opacity-50 cursor-pointer"
           >
             {saveCmsMutation.isPending || logoUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Settings
@@ -488,7 +488,7 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
           <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center gap-6">
             <div className="relative w-36 h-16 rounded-xl overflow-hidden border border-slate-200 bg-white flex items-center justify-center p-2 shadow-sm shrink-0">
               {logoPreviewUrl ? (
-                <img src={logoPreviewUrl} alt="Website Logo" className="max-w-full max-h-full object-contain" />
+                <img src={logoPreviewUrl} alt="Website Logo" className="max-w-full max-h-full object-contain" loading="lazy" />
               ) : (
                 <span className="text-slate-400 text-xs font-bold uppercase italic">No Logo</span>
               )}

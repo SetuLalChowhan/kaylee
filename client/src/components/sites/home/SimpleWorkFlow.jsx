@@ -53,12 +53,12 @@ const SimpleWorkFlow = ({ cms }) => {
     return (
         <section
             id="how-it-works"
-            className="section-padding overflow-hidden lg:py-[120px] py-10"
+            className="section-padding overflow-hidden lg:py-[120px] py-8"
             style={{ background: 'rgba(0, 91, 214, 0.02)' }}
         >
             <div className="">
                 {/* Header Content */}
-                <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16 lg:mb-24">
+                <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-10 lg:mb-24">
                     <Label>How it Works</Label>
                     <SectionHeader className="mb-6">
                         {cms?.workflow_title || "Simple workflow from start to finish"}

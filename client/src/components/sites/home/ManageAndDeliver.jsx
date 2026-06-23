@@ -14,25 +14,25 @@ const ManageAndDeliver = ({ cms }) => {
             title: cms?.feature1_title || "Campaign Management",
             description: cms?.feature1_desc || "Create campaigns, manage details, and track progress from draft to final delivery",
             image: cms?.feature1_image || CampingManagement,
-            className: "lg:col-span-5",
+            className: "col-span-12 lg:col-span-5",
         },
         {
             title: cms?.feature2_title || "Planner & Task Tracking",
             description: cms?.feature2_desc || "Organize your tasks, set priorities, and stay on top of deadlines",
             image: cms?.feature2_image || TaskTraking,
-            className: "lg:col-span-7",
+            className: "col-span-12 lg:col-span-7",
         },
         {
             title: cms?.feature3_title || "Invoice & Payments",
             description: cms?.feature3_desc || "Organize your tasks, set priorities, and stay on top of deadlines",
             image: cms?.feature3_image || InvoiceTraking,
-            className: "lg:col-span-7",
+            className: "col-span-12 lg:col-span-7",
         },
         {
             title: cms?.feature4_title || "Media Upload & Delivery",
             description: cms?.feature4_desc || "Upload photos and videos, share with brands, and control when files are released",
             image: cms?.feature4_image || UploadImage,
-            className: "lg:col-span-5",
+            className: "col-span-12 lg:col-span-5",
         },
     ];
 
@@ -46,7 +46,7 @@ const ManageAndDeliver = ({ cms }) => {
         <section id="features" className="section-padding bg-white overflow-hidden">
             <div className="">
                 {/* Header Content */}
-                <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16 lg:mb-24">
+                <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-10 lg:mb-24">
                     <Label>Features</Label>
                     <SectionHeader className="mb-6">
                         {cms?.features_title || (

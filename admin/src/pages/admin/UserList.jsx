@@ -272,7 +272,7 @@ const UserList = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-Primary/20"
+          className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           Add User
@@ -303,54 +303,54 @@ const UserList = () => {
             <Loader2 className="w-8 h-8 text-Primary animate-spin" />
           </div>
         ) : filteredUsers.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">User</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Email</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Role</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Verified</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Joined</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">User</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Email</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Role</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Verified</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Joined</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="py-4 px-6">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-Primary/5 flex items-center justify-center text-Primary font-bold">
+                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-Primary/5 flex items-center justify-center text-Primary font-bold text-xs md:text-sm">
                           {(user.firstName || "?")[0].toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-800">
+                          <p className="font-bold text-slate-800 text-xs md:text-sm">
                             {user.firstName} {user.lastName}
                           </p>
-                          <p className="text-xs text-slate-400">{user.displayName || "No display name"}</p>
+                          <p className="text-[10px] text-slate-400">{user.displayName || "No display name"}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-6 font-semibold text-slate-600">{user.email}</td>
-                    <td className="py-4 px-6">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 font-semibold text-slate-600 text-xs md:text-sm">{user.email}</td>
+                    <td className="py-2.5 px-3 md:py-4 md:px-6">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold uppercase ${
                         user.role === "admin" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"
                       }`}>
-                        {user.role === "admin" ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                        {user.role === "admin" ? <Shield className="w-3 h-3 md:w-3.5 md:h-3.5" /> : <User className="w-3 h-3 md:w-3.5 md:h-3.5" />}
                         {user.role}
                       </span>
                     </td>
-                    <td className="py-4 px-6">
-                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                    <td className="py-2.5 px-3 md:py-4 md:px-6">
+                      <span className={`text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full ${
                         user.isVerified ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
                       }`}>
                         {user.isVerified ? "Yes" : "No"}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-slate-500 font-medium text-sm">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-slate-500 font-medium text-xs md:text-sm">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-4 px-6 text-center">
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleViewUser(user)}
@@ -517,40 +517,40 @@ const UserList = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000] flex justify-end">
           <div className="w-full max-w-4xl bg-[#FAFAFA] h-full shadow-2xl flex flex-col relative animate-in slide-in-from-right duration-300">
             {/* Header */}
-            <div className="bg-white p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-white p-4 md:p-6 border-b border-slate-100 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-Primary/5 flex items-center justify-center text-Primary text-xl font-bold">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-Primary/5 flex items-center justify-center text-Primary text-lg md:text-xl font-bold">
                   {(viewedUser.firstName || "?")[0].toUpperCase()}
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">
+                  <h2 className="text-lg md:text-xl font-bold text-slate-800">
                     {viewedUser.firstName} {viewedUser.lastName}
                   </h2>
                   <p className="text-xs text-slate-400">{viewedUser.email}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                 {viewedUser.slug && (
                   <a
                     href={`${import.meta.env.VITE_CLIENT_URL || "http://localhost:5173"}/preview/${viewedUser.slug}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs font-bold text-Primary border border-Primary/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5 hover:bg-Primary/5"
+                    className="text-[11px] md:text-xs font-bold text-Primary border border-Primary/20 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 hover:bg-Primary/5"
                   >
-                    View Public Page <ExternalLink className="w-3.5 h-3.5" />
+                    View Public Page <ExternalLink className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </a>
                 )}
                 <button
                   onClick={() => setViewedUser(null)}
-                  className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+                  className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600 ml-auto sm:ml-0"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
               </div>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="bg-white border-b border-slate-100 px-6 flex gap-6">
+            <div className="bg-white border-b border-slate-100 px-4 md:px-6 flex gap-4 md:gap-6 overflow-x-auto custom-scrollbar whitespace-nowrap">
               {[
                 { id: "profile", label: "Profile & Portfolio" },
                 { id: "campaigns", label: `Campaigns (${userCampaigns.length})` },
@@ -560,7 +560,7 @@ const UserList = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 text-sm font-bold border-b-2 transition-all ${
+                  className={`py-3 md:py-4 text-xs md:text-sm font-bold border-b-2 transition-all whitespace-nowrap ${
                     activeTab === tab.id
                       ? "border-Primary text-Primary"
                       : "border-transparent text-slate-400 hover:text-slate-600"
@@ -572,20 +572,20 @@ const UserList = () => {
             </div>
 
             {/* Content Body */}
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
               {activeTab === "profile" && (
-                <div className="space-y-8">
+                <div className="space-y-6 md:space-y-8">
                   {/* Overview Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-5 rounded-2xl border border-slate-100/80 shadow-sm col-span-2">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Bio / Description</h3>
-                      <p className="text-sm font-medium text-slate-600 leading-relaxed">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-100/80 shadow-sm md:col-span-2">
+                      <h3 className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 md:mb-3">Bio / Description</h3>
+                      <p className="text-xs md:text-sm font-medium text-slate-600 leading-relaxed">
                         {portfolioData?.profile?.shortBio || "No bio set by user."}
                       </p>
                     </div>
-                    <div className="bg-white p-5 rounded-2xl border border-slate-100/80 shadow-sm">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Niche / Services</h3>
-                      <p className="text-sm font-bold text-slate-700">
+                    <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-100/80 shadow-sm">
+                      <h3 className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 md:mb-3">Niche / Services</h3>
+                      <p className="text-xs md:text-sm font-bold text-slate-700">
                         {portfolioData?.profile?.servicesOffered || "No niche/services listed."}
                       </p>
                     </div>
@@ -593,24 +593,24 @@ const UserList = () => {
 
                   {/* Social links */}
                   {portfolioData?.profile?.socialLinks && (
-                    <div className="bg-white p-6 rounded-2xl border border-slate-100/80 shadow-sm">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Social Accounts</h3>
-                      <div className="flex flex-wrap gap-6">
+                    <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100/80 shadow-sm">
+                      <h3 className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 md:mb-4">Social Accounts</h3>
+                      <div className="flex flex-wrap gap-4 md:gap-6">
                         {portfolioData.profile.socialLinks.instagram && (
-                          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                            <Instagram className="w-4 h-4 text-pink-500" />
+                          <div className="flex items-center gap-2 text-xs md:text-sm font-semibold text-slate-600">
+                            <Instagram className="w-3.5 h-3.5 md:w-4 md:h-4 text-pink-500" />
                             {portfolioData.profile.socialLinks.instagram}
                           </div>
                         )}
                         {portfolioData.profile.socialLinks.youtube && (
-                          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                            <Youtube className="w-4 h-4 text-red-500" />
+                          <div className="flex items-center gap-2 text-xs md:text-sm font-semibold text-slate-600">
+                            <Youtube className="w-3.5 h-3.5 md:w-4 md:h-4 text-red-500" />
                             {portfolioData.profile.socialLinks.youtube}
                           </div>
                         )}
                         {portfolioData.profile.socialLinks.website && (
-                          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                            <Globe className="w-4 h-4 text-blue-500" />
+                          <div className="flex items-center gap-2 text-xs md:text-sm font-semibold text-slate-600">
+                            <Globe className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500" />
                             {portfolioData.profile.socialLinks.website}
                           </div>
                         )}
@@ -620,27 +620,27 @@ const UserList = () => {
 
                   {/* Portfolio Gallery */}
                   <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-2 border-b border-slate-100">
-                      <h3 className="text-base font-bold text-slate-800">Portfolio Media Items</h3>
-                      <form onSubmit={handleUploadPortfolioItem} className="flex flex-wrap items-center gap-2 bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-xs">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 pb-2 border-b border-slate-100">
+                      <h3 className="text-sm md:text-base font-bold text-slate-800">Portfolio Media Items</h3>
+                      <form onSubmit={handleUploadPortfolioItem} className="flex flex-col sm:flex-row flex-wrap items-center gap-2 bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-xs w-full lg:w-auto">
                         <input
                           type="text"
                           required
                           placeholder="Title"
                           value={newPortfolioTitle}
                           onChange={(e) => setNewPortfolioTitle(e.target.value)}
-                          className="bg-white border border-slate-100 rounded py-1 px-2 focus:outline-none"
+                          className="bg-white border border-slate-100 rounded py-1.5 px-3 focus:outline-none w-full sm:w-auto flex-1"
                         />
                         <input
                           type="file"
                           required
                           onChange={(e) => setNewPortfolioFile(e.target.files[0])}
-                          className="text-[10px] text-slate-500 w-40"
+                          className="text-[10px] text-slate-500 w-full sm:w-auto py-1"
                         />
                         <button
                           type="submit"
                           disabled={isUploadingPortfolio || !newPortfolioFile || !newPortfolioTitle.trim()}
-                          className="bg-Primary hover:bg-Primary/90 text-white font-bold py-1.5 px-3 rounded flex items-center gap-1 disabled:opacity-50"
+                          className="bg-Primary hover:bg-Primary/90 text-white font-bold py-1.5 px-3 rounded flex items-center justify-center gap-1 disabled:opacity-50 w-full sm:w-auto"
                         >
                           {isUploadingPortfolio ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
                           Add Media
@@ -666,7 +666,7 @@ const UserList = () => {
                                 </>
                               ) : (
                                 <>
-                                  <img src={getMediaUrl(item.url)} alt={item.title} className="w-full h-full object-cover" />
+                                  <img src={getMediaUrl(item.url)} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
                                   <div className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-lg text-white">
                                     <ImageIcon className="w-3.5 h-3.5" />
                                   </div>
@@ -710,25 +710,26 @@ const UserList = () => {
               {activeTab === "campaigns" && (
                 <div className="bg-white rounded-2xl border border-slate-100/80 shadow-sm overflow-hidden">
                   {userCampaigns.length > 0 ? (
+                  <div className="overflow-x-auto w-full custom-scrollbar">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/50">
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Campaign</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Brand</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Amount</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Deadline</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Status</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Brand</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Amount</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Deadline</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {userCampaigns.map((c) => (
                           <tr key={c.id}>
-                            <td className="py-3 px-5 font-bold text-slate-800 text-sm">{c.name}</td>
-                            <td className="py-3 px-5 font-semibold text-slate-600 text-sm">{c.brandName}</td>
-                            <td className="py-3 px-5 font-bold text-slate-800 text-sm">{c.amount}</td>
-                            <td className="py-3 px-5 text-slate-500 text-xs">{c.deadline}</td>
-                            <td className="py-3 px-5">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600`}>
+                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{c.name}</td>
+                            <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{c.brandName}</td>
+                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{c.amount}</td>
+                            <td className="py-2 px-3 text-slate-500 text-[11px]">{c.deadline}</td>
+                            <td className="py-2 px-3">
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600`}>
                                 {c.status}
                               </span>
                             </td>
@@ -736,6 +737,7 @@ const UserList = () => {
                         ))}
                       </tbody>
                     </table>
+                  </div>
                   ) : (
                     <div className="text-center py-12">
                       <Folder className="w-8 h-8 text-slate-200 mx-auto mb-2" />
@@ -748,28 +750,29 @@ const UserList = () => {
               {activeTab === "tasks" && (
                 <div className="bg-white rounded-2xl border border-slate-100/80 shadow-sm overflow-hidden">
                   {userTasks.length > 0 ? (
+                  <div className="overflow-x-auto w-full custom-scrollbar">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/50">
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Task Name</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Campaign</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Due Date</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Completed</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Task Name</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Due Date</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Completed</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {userTasks.map((t) => (
                           <tr key={t.id}>
-                            <td className="py-3 px-5 font-bold text-slate-800 text-sm">{t.name}</td>
-                            <td className="py-3 px-5 font-semibold text-slate-600 text-sm">{t.campaign}</td>
-                            <td className="py-3 px-5 text-slate-500 text-xs">
+                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{t.name}</td>
+                            <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{t.campaign}</td>
+                            <td className="py-2 px-3 text-slate-500 text-[11px]">
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                                 {new Date(t.date).toLocaleDateString()}
                               </div>
                             </td>
-                            <td className="py-3 px-5">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            <td className="py-2 px-3">
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
                                 t.completed ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
                               }`}>
                                 {t.completed ? "Completed" : "Pending"}
@@ -779,6 +782,7 @@ const UserList = () => {
                         ))}
                       </tbody>
                     </table>
+                  </div>
                   ) : (
                     <div className="text-center py-12">
                       <Calendar className="w-8 h-8 text-slate-200 mx-auto mb-2" />
@@ -791,25 +795,26 @@ const UserList = () => {
               {activeTab === "invoices" && (
                 <div className="bg-white rounded-2xl border border-slate-100/80 shadow-sm overflow-hidden">
                   {userInvoices.length > 0 ? (
+                  <div className="overflow-x-auto w-full custom-scrollbar">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/50">
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Invoice No</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Campaign</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Amount</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Due Date</th>
-                          <th className="py-3 px-5 text-xs font-bold uppercase text-slate-400">Status</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Invoice No</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Amount</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Due Date</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {userInvoices.map((i) => (
                           <tr key={i.id}>
-                            <td className="py-3 px-5 font-bold text-slate-800 text-sm">{i.invoiceNo}</td>
-                            <td className="py-3 px-5 font-semibold text-slate-600 text-sm">{i.campaignName}</td>
-                            <td className="py-3 px-5 font-bold text-slate-800 text-sm">{i.amount}</td>
-                            <td className="py-3 px-5 text-slate-500 text-xs">{new Date(i.dueDate).toLocaleDateString()}</td>
-                            <td className="py-3 px-5">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{i.invoiceNo}</td>
+                            <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{i.campaignName}</td>
+                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{i.amount}</td>
+                            <td className="py-2 px-3 text-slate-500 text-[11px]">{new Date(i.dueDate).toLocaleDateString()}</td>
+                            <td className="py-2 px-3">
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
                                 i.status === "Paid" ? "bg-green-50 text-green-600" :
                                 i.status === "Overdue" ? "bg-red-50 text-red-600" :
                                 "bg-yellow-50 text-yellow-600"
@@ -821,6 +826,7 @@ const UserList = () => {
                         ))}
                       </tbody>
                     </table>
+                  </div>
                   ) : (
                     <div className="text-center py-12">
                       <FileText className="w-8 h-8 text-slate-200 mx-auto mb-2" />

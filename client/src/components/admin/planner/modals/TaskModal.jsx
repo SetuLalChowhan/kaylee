@@ -70,9 +70,8 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
                 <input
                   {...register('date', { required: true })}
                   type="date"
-                  className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] appearance-none"
+                  className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]"
                 />
-                <CalendarIcon className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-300 pointer-events-none group-focus-within:text-Primary transition-colors" />
               </div>
             </div>
 

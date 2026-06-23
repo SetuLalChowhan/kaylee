@@ -24,10 +24,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 // ── Core Middleware ───────────────────────────────────────────────────────────
 const allowedOrigins = [
-    process.env.CLIENT_URL || "http://localhost:5173",
-    process.env.ADMIN_URL || "http://localhost:5174",
+    "http://localhost:5173",
+    "http://localhost:5174",
     "https://stackd12.netlify.app",
-    "https://stackdadmin.netlify.app"
+    "https://stackdadmin.netlify.app",
 ];
 app.use(cors({
     origin: (origin, callback) => {

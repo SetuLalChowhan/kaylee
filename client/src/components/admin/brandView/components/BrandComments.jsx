@@ -32,15 +32,14 @@ const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewM
                 {/* Avatar and name */}
                 <div className={`flex items-center gap-2 mb-1 ${msg.from === 'creator' ? 'flex-row' : 'flex-row-reverse'}`}>
                   <div className="w-7 h-7 rounded-full overflow-hidden border border-white bg-gray-100 shadow-sm shrink-0">
-                    <img
-                      src={
+                    <img src={
                         msg.from === 'creator'
                           ? "https://api.dicebear.com/7.x/adventurer/svg?seed=creator"
                           : "https://api.dicebear.com/7.x/initials/svg?seed=Brand"
                       }
                       alt={msg.from}
                       className="w-full h-full object-cover"
-                    />
+                    loading="lazy" />
                   </div>
                   <span className="text-[10px] font-bold text-gray-400 capitalize">
                     {msg.from === 'creator' ? 'Creator' : 'Brand Client'}
@@ -70,7 +69,7 @@ const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewM
                       {msg.media.type === 'video' ? (
                         <video src={getImgUrl(msg.media.url)} className="w-full h-full object-cover" muted />
                       ) : (
-                        <img src={getImgUrl(msg.media.url)} alt="" className="w-full h-full object-cover" />
+                        <img src={getImgUrl(msg.media.url)} alt="" className="w-full h-full object-cover" loading="lazy" />
                       )}
                     </div>
                   </div>
@@ -118,16 +117,16 @@ const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewM
         </div>
 
         {/* Input */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 w-full">
           <input
             type="text"
             placeholder="Enter your message..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onSend()}
-            className="flex-1 bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+            className="flex-1 min-w-0 bg-white border border-gray-100 rounded-xl py-2 px-3 md:py-3 md:px-4 text-xs md:text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
           />
-          <button onClick={onSend} className="bg-Primary text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer shrink-0">Send</button>
+          <button onClick={onSend} className="bg-Primary text-white px-4 md:px-5 py-2 md:py-3 rounded-xl text-xs md:text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer shrink-0">Send</button>
         </div>
       </div>
     </div>

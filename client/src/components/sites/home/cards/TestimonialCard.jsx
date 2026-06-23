@@ -3,7 +3,7 @@ import { Star } from 'lucide-react';
 
 const TestimonialCard = ({ quote, author, role, avatar }) => {
   return (
-    <div className="bg-white rounded-[32px] p-6 lg:p-10 border border-[#F2F2F2] flex flex-col h-full shadow-sm hover:shadow-md transition-shadow duration-300">
+    <div className="bg-white rounded-[32px] p-5 lg:p-10 border border-[#F2F2F2] flex flex-col h-full shadow-sm hover:shadow-md transition-shadow duration-300">
       {/* 5-Star Rating */}
       <div className="flex gap-1 mb-6">
         {[...Array(5)].map((_, i) => (
@@ -19,11 +19,11 @@ const TestimonialCard = ({ quote, author, role, avatar }) => {
       {/* Author Info */}
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-          <img 
-            src={avatar} 
+          <img src={avatar} 
             alt={author} 
             className="w-full h-full object-cover"
             onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=" + author }}
+            loading="lazy"
           />
         </div>
         <div>
