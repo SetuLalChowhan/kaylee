@@ -2,9 +2,11 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { AppError } from "../utils/AppError.js";
-const avatarDir = "uploads/avatars";
-const brandLogoDir = "uploads/brand-logos";
-const portfolioDir = "uploads/portfolios";
+const isVercel = !!process.env.VERCEL;
+const baseUploadDir = isVercel ? "/tmp/uploads" : "uploads";
+const avatarDir = path.join(baseUploadDir, "avatars");
+const brandLogoDir = path.join(baseUploadDir, "brand-logos");
+const portfolioDir = path.join(baseUploadDir, "portfolios");
 // Ensure upload directories exist
 if (!fs.existsSync(avatarDir)) {
     fs.mkdirSync(avatarDir, { recursive: true });
@@ -78,7 +80,7 @@ export const uploadPortfolio = multer({
     limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit for portfolio items (videos/images)
 });
 // Campaign uploads config supporting images, videos, and documents
-const campaignDir = "uploads/campaigns";
+const campaignDir = path.join(baseUploadDir, "campaigns");
 if (!fs.existsSync(campaignDir)) {
     fs.mkdirSync(campaignDir, { recursive: true });
 }
@@ -96,7 +98,7 @@ export const uploadCampaignFile = multer({
     limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
 });
 // CMS uploads config supporting images
-const cmsDir = "uploads/cms";
+const cmsDir = path.join(baseUploadDir, "cms");
 if (!fs.existsSync(cmsDir)) {
     fs.mkdirSync(cmsDir, { recursive: true });
 }
