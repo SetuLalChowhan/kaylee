@@ -4,6 +4,7 @@ import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { comparePassword, hashPassword } from "../utils/auth.util.js";
 import fs from "fs";
+import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
 
 // Typed request with authenticated user payload
 interface AuthRequest extends Request {
@@ -110,10 +111,11 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
 
   const avatarFile = files?.avatar?.[0];
   if (avatarFile) {
-    if (user.avatar?.startsWith("uploads/") && fs.existsSync(user.avatar)) {
-      fs.unlinkSync(user.avatar);
+    const prevAvatarPath = user.avatar ? getAbsoluteUploadPath(user.avatar) : "";
+    if (prevAvatarPath && fs.existsSync(prevAvatarPath)) {
+      fs.unlinkSync(prevAvatarPath);
     }
-    avatarUrl = avatarFile.path.replace(/\\/g, "/");
+    avatarUrl = normalizeUploadPath(avatarFile.path);
   }
 
   // Merge existing + new brand logos
@@ -136,7 +138,7 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
   const newLogoPaths: string[] = [];
   if (files?.brandLogos?.length) {
     files.brandLogos.forEach((f) => {
-      newLogoPaths.push(f.path.replace(/\\/g, "/"));
+      newLogoPaths.push(normalizeUploadPath(f.path));
     });
   }
 
@@ -198,10 +200,11 @@ export const completeOnboarding = catchAsync(async (req: Request, res: Response,
   let avatarUrl = user.avatar;
 
   if (req.file) {
-    if (user.avatar?.startsWith("uploads/") && fs.existsSync(user.avatar)) {
-      fs.unlinkSync(user.avatar);
+    const prevAvatarPath = user.avatar ? getAbsoluteUploadPath(user.avatar) : "";
+    if (prevAvatarPath && fs.existsSync(prevAvatarPath)) {
+      fs.unlinkSync(prevAvatarPath);
     }
-    avatarUrl = req.file.path.replace(/\\/g, "/");
+    avatarUrl = normalizeUploadPath(req.file.path);
   }
 
   const updatedUser = await prisma.user.update({
@@ -252,8 +255,9 @@ export const deleteBrandLogo = catchAsync(async (req: Request, res: Response, ne
 
   // If it was removed, also delete the physical file
   if (updatedLogos.length < currentLogos.length) {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    const absolutePath = getAbsoluteUploadPath(filePath);
+    if (fs.existsSync(absolutePath)) {
+      fs.unlinkSync(absolutePath);
     }
   }
 

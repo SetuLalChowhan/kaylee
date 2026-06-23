@@ -2,6 +2,7 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import fs from "fs";
+import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
 async function checkCampaignAccess(campaignId, req) {
     const { userId, role } = req.user;
     const isAdmin = role === "admin";
@@ -155,18 +156,20 @@ export const deleteUgcCampaign = catchAsync(async (req, res, next) => {
     }
     const mediaItems = await prisma.ugcMedia.findMany({ where: { campaignId: id } });
     for (const item of mediaItems) {
-        if (fs.existsSync(item.url)) {
+        const absPath = getAbsoluteUploadPath(item.url);
+        if (fs.existsSync(absPath)) {
             try {
-                fs.unlinkSync(item.url);
+                fs.unlinkSync(absPath);
             }
             catch { }
         }
     }
     const docs = await prisma.ugcDocument.findMany({ where: { campaignId: id } });
     for (const doc of docs) {
-        if (fs.existsSync(doc.url)) {
+        const absPath = getAbsoluteUploadPath(doc.url);
+        if (fs.existsSync(absPath)) {
             try {
-                fs.unlinkSync(doc.url);
+                fs.unlinkSync(absPath);
             }
             catch { }
         }
@@ -255,7 +258,7 @@ export const uploadMedia = catchAsync(async (req, res, next) => {
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
-    const url = req.file.path.replace(/\\/g, "/");
+    const url = normalizeUploadPath(req.file.path);
     const media = await prisma.ugcMedia.create({
         data: {
             campaignId,
@@ -284,14 +287,15 @@ export const replaceMedia = catchAsync(async (req, res, next) => {
     const existing = await prisma.ugcMedia.findUnique({ where: { id } });
     if (!existing)
         return next(new AppError("Media item not found", 404));
-    if (existing.url && fs.existsSync(existing.url)) {
+    const absolutePath = getAbsoluteUploadPath(existing.url);
+    if (existing.url && fs.existsSync(absolutePath)) {
         try {
-            fs.unlinkSync(existing.url);
+            fs.unlinkSync(absolutePath);
         }
         catch { }
     }
     const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
-    const url = req.file.path.replace(/\\/g, "/");
+    const url = normalizeUploadPath(req.file.path);
     // Update the existing record in-place (preserves ID & relations, resets status to pending)
     const updated = await prisma.ugcMedia.update({
         where: { id },
@@ -312,11 +316,14 @@ export const deleteMedia = catchAsync(async (req, res, next) => {
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const media = await prisma.ugcMedia.findUnique({ where: { id } });
-    if (media && fs.existsSync(media.url)) {
-        try {
-            fs.unlinkSync(media.url);
+    if (media) {
+        const absolutePath = getAbsoluteUploadPath(media.url);
+        if (fs.existsSync(absolutePath)) {
+            try {
+                fs.unlinkSync(absolutePath);
+            }
+            catch { }
         }
-        catch { }
     }
     await prisma.ugcMedia.delete({ where: { id } });
     res.status(200).json({ status: "success", message: "Media deleted successfully" });
@@ -332,7 +339,7 @@ export const uploadDocument = catchAsync(async (req, res, next) => {
     const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
-    const url = req.file.path.replace(/\\/g, "/");
+    const url = normalizeUploadPath(req.file.path);
     const doc = await prisma.ugcDocument.create({
         data: {
             campaignId,
@@ -349,11 +356,14 @@ export const deleteDocument = catchAsync(async (req, res, next) => {
     if (!campaign)
         return next(new AppError("Campaign not found or unauthorized", 404));
     const doc = await prisma.ugcDocument.findUnique({ where: { id } });
-    if (doc && fs.existsSync(doc.url)) {
-        try {
-            fs.unlinkSync(doc.url);
+    if (doc) {
+        const absolutePath = getAbsoluteUploadPath(doc.url);
+        if (fs.existsSync(absolutePath)) {
+            try {
+                fs.unlinkSync(absolutePath);
+            }
+            catch { }
         }
-        catch { }
     }
     await prisma.ugcDocument.delete({ where: { id } });
     res.status(200).json({ status: "success", message: "Document deleted successfully" });
@@ -394,7 +404,7 @@ export const createFeedback = catchAsync(async (req, res, next) => {
         return next(new AppError("Campaign not found or unauthorized", 404));
     let fileUrl = null;
     if (req.file) {
-        fileUrl = req.file.path.replace(/\\/g, "/");
+        fileUrl = normalizeUploadPath(req.file.path);
     }
     const message = await prisma.ugcFeedbackMessage.create({
         data: {

@@ -3,6 +3,7 @@ import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { comparePassword, hashPassword } from "../utils/auth.util.js";
 import fs from "fs";
+import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
 /**
  * Helper to generate a unique lowercase URL slug from a display name
  */
@@ -87,10 +88,11 @@ export const updateProfile = catchAsync(async (req, res, next) => {
     const files = req.files;
     const avatarFile = files?.avatar?.[0];
     if (avatarFile) {
-        if (user.avatar?.startsWith("uploads/") && fs.existsSync(user.avatar)) {
-            fs.unlinkSync(user.avatar);
+        const prevAvatarPath = user.avatar ? getAbsoluteUploadPath(user.avatar) : "";
+        if (prevAvatarPath && fs.existsSync(prevAvatarPath)) {
+            fs.unlinkSync(prevAvatarPath);
         }
-        avatarUrl = avatarFile.path.replace(/\\/g, "/");
+        avatarUrl = normalizeUploadPath(avatarFile.path);
     }
     // Merge existing + new brand logos
     let existingBrandLogos = Array.isArray(user.brandLogos) ? user.brandLogos : [];
@@ -112,7 +114,7 @@ export const updateProfile = catchAsync(async (req, res, next) => {
     const newLogoPaths = [];
     if (files?.brandLogos?.length) {
         files.brandLogos.forEach((f) => {
-            newLogoPaths.push(f.path.replace(/\\/g, "/"));
+            newLogoPaths.push(normalizeUploadPath(f.path));
         });
     }
     const finalBrandLogos = [...existingBrandLogos, ...newLogoPaths];
@@ -162,10 +164,11 @@ export const completeOnboarding = catchAsync(async (req, res, next) => {
     }
     let avatarUrl = user.avatar;
     if (req.file) {
-        if (user.avatar?.startsWith("uploads/") && fs.existsSync(user.avatar)) {
-            fs.unlinkSync(user.avatar);
+        const prevAvatarPath = user.avatar ? getAbsoluteUploadPath(user.avatar) : "";
+        if (prevAvatarPath && fs.existsSync(prevAvatarPath)) {
+            fs.unlinkSync(prevAvatarPath);
         }
-        avatarUrl = req.file.path.replace(/\\/g, "/");
+        avatarUrl = normalizeUploadPath(req.file.path);
     }
     const updatedUser = await prisma.user.update({
         where: { id: userId },
@@ -210,8 +213,9 @@ export const deleteBrandLogo = catchAsync(async (req, res, next) => {
     const updatedLogos = currentLogos.filter((logo) => logo !== filePath);
     // If it was removed, also delete the physical file
     if (updatedLogos.length < currentLogos.length) {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+        const absolutePath = getAbsoluteUploadPath(filePath);
+        if (fs.existsSync(absolutePath)) {
+            fs.unlinkSync(absolutePath);
         }
     }
     const updatedUser = await prisma.user.update({

@@ -59,7 +59,9 @@ app.use((req, res, next) => {
 });
 app.use(cookieParser());
 // ── Static Files (uploaded avatars) ──────────────────────────────────────────
-app.use("/uploads", express.static("uploads"));
+const isVercel = !!process.env.VERCEL;
+const baseUploadDir = isVercel ? "/tmp/uploads" : "uploads";
+app.use("/uploads", express.static(baseUploadDir));
 // ── API Documentation ─────────────────────────────────────────────────────────
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // ── Health Check ──────────────────────────────────────────────────────────────

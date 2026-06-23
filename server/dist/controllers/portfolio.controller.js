@@ -2,6 +2,7 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import fs from "fs";
+import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
 /**
  * POST /api/user/portfolio — Create a new portfolio item
  */
@@ -12,7 +13,7 @@ export const createPortfolioItem = catchAsync(async (req, res, next) => {
         return next(new AppError("Media file is required", 400));
     }
     const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
-    const url = req.file.path.replace(/\\/g, "/");
+    const url = normalizeUploadPath(req.file.path);
     const finalUserId = (role === "admin" && targetUserId) ? targetUserId : userId;
     const newItem = await prisma.portfolioItem.create({
         data: {
@@ -61,15 +62,16 @@ export const updatePortfolioItem = catchAsync(async (req, res, next) => {
     let url = existingItem.url;
     let type = existingItem.type;
     if (req.file) {
-        if (fs.existsSync(existingItem.url)) {
+        const absolutePath = getAbsoluteUploadPath(existingItem.url);
+        if (fs.existsSync(absolutePath)) {
             try {
-                fs.unlinkSync(existingItem.url);
+                fs.unlinkSync(absolutePath);
             }
             catch (err) {
                 // ignore disk deletion errors in case file doesn't exist anymore
             }
         }
-        url = req.file.path.replace(/\\/g, "/");
+        url = normalizeUploadPath(req.file.path);
         type = req.file.mimetype.startsWith("video/") ? "video" : "image";
     }
     const updatedItem = await prisma.portfolioItem.update({
@@ -101,9 +103,10 @@ export const deletePortfolioItem = catchAsync(async (req, res, next) => {
     if (existingItem.userId !== userId && req.user.role !== "admin") {
         return next(new AppError("You do not have permission to delete this item", 403));
     }
-    if (fs.existsSync(existingItem.url)) {
+    const absolutePath = getAbsoluteUploadPath(existingItem.url);
+    if (fs.existsSync(absolutePath)) {
         try {
-            fs.unlinkSync(existingItem.url);
+            fs.unlinkSync(absolutePath);
         }
         catch (err) {
             // ignore
