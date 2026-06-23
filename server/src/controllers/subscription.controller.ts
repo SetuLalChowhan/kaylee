@@ -393,11 +393,11 @@ export const adminGetPayments = catchAsync(async (req: Request, res: Response, n
     },
   });
 
-  const aggregates = plans.map((p) => ({
+  const aggregates = plans.map((p: any) => ({
     planId: p.id,
     title: p.title,
     price: p.price,
-    totalEarnings: p.purchases.reduce((sum, pr) => sum + pr.amount, 0),
+    totalEarnings: p.purchases.reduce((sum: number, pr: any) => sum + pr.amount, 0),
     totalSales: p.purchases.length,
   }));
 

@@ -317,7 +317,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         return sum + amt;
     }, 0);
     const completedCampaignsEarned = campaigns
-        .filter(c => c.status === "Completed" && c.paymentStatus !== "Paid")
+        .filter((c) => c.status === "Completed" && c.paymentStatus !== "Paid")
         .reduce((sum, c) => {
         const cleanAmount = c.amount.replace(/[^0-9.]/g, "");
         const amt = parseFloat(cleanAmount) || 0;
@@ -355,7 +355,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         }
     });
     const parsedDeadlines = activeCampaignsForDeadlines
-        .map(c => {
+        .map((c) => {
         const date = new Date(c.deadline);
         return {
             id: c.id,
@@ -366,7 +366,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
             month: isNaN(date.getTime()) ? "" : date.toLocaleString("en-US", { month: "short" })
         };
     })
-        .filter(d => d.day !== "")
+        .filter((d) => d.day !== "")
         .sort((a, b) => a.date.getTime() - b.date.getTime())
         .slice(0, 5)
         .map(({ id, title, sub, day, month }) => ({ id, title, sub, day, month }));
@@ -376,7 +376,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         orderBy: { date: "asc" }
     });
     const parsedTasks = tasks
-        .map(t => {
+        .map((t) => {
         const dateObj = new Date(t.date);
         let formattedDate = t.date;
         if (!isNaN(dateObj.getTime())) {
@@ -435,7 +435,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         });
     }
     // Populate campaign counts
-    trendCampaigns.forEach(c => {
+    trendCampaigns.forEach((c) => {
         const d = new Date(c.createdAt);
         const key = `${d.getFullYear()}-${d.getMonth()}`;
         if (monthlyMap.has(key)) {
@@ -444,7 +444,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         }
     });
     // Populate invoice earnings
-    trendInvoices.forEach(inv => {
+    trendInvoices.forEach((inv) => {
         const d = new Date(inv.createdAt);
         const key = `${d.getFullYear()}-${d.getMonth()}`;
         if (monthlyMap.has(key)) {

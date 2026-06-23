@@ -375,15 +375,15 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
     select: { amount: true }
   });
 
-  const invoiceEarned = invoices.reduce((sum, inv) => {
+  const invoiceEarned = invoices.reduce((sum: number, inv: any) => {
     const cleanAmount = inv.amount.replace(/[^0-9.]/g, "");
     const amt = parseFloat(cleanAmount) || 0;
     return sum + amt;
   }, 0);
 
   const completedCampaignsEarned = campaigns
-    .filter(c => c.status === "Completed" && c.paymentStatus !== "Paid")
-    .reduce((sum, c) => {
+    .filter((c: any) => c.status === "Completed" && c.paymentStatus !== "Paid")
+    .reduce((sum: number, c: any) => {
       const cleanAmount = c.amount.replace(/[^0-9.]/g, "");
       const amt = parseFloat(cleanAmount) || 0;
       return sum + amt;
@@ -426,7 +426,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   });
 
   const parsedDeadlines = activeCampaignsForDeadlines
-    .map(c => {
+    .map((c: any) => {
       const date = new Date(c.deadline);
       return {
         id: c.id,
@@ -437,10 +437,10 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
         month: isNaN(date.getTime()) ? "" : date.toLocaleString("en-US", { month: "short" })
       };
     })
-    .filter(d => d.day !== "")
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .filter((d: any) => d.day !== "")
+    .sort((a: any, b: any) => a.date.getTime() - b.date.getTime())
     .slice(0, 5)
-    .map(({ id, title, sub, day, month }) => ({ id, title, sub, day, month }));
+    .map(({ id, title, sub, day, month }: any) => ({ id, title, sub, day, month }));
 
   // 4. Pending & Upcoming Tasks from Planner (up to 5)
   const tasks = await prisma.task.findMany({
@@ -449,7 +449,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   });
 
   const parsedTasks = tasks
-    .map(t => {
+    .map((t: any) => {
       const dateObj = new Date(t.date);
       let formattedDate = t.date;
       if (!isNaN(dateObj.getTime())) {
@@ -464,7 +464,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
         completed: t.completed
       };
     })
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
       // Sort in-completed first, then by date
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
@@ -514,7 +514,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   }
 
   // Populate campaign counts
-  trendCampaigns.forEach(c => {
+  trendCampaigns.forEach((c: any) => {
     const d = new Date(c.createdAt);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     if (monthlyMap.has(key)) {
@@ -524,7 +524,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   });
 
   // Populate invoice earnings
-  trendInvoices.forEach(inv => {
+  trendInvoices.forEach((inv: any) => {
     const d = new Date(inv.createdAt);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     if (monthlyMap.has(key)) {
