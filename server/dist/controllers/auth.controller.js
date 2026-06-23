@@ -47,10 +47,11 @@ export const verifyEmail = catchAsync(async (req, res, next) => {
     });
     const accessToken = generateAccessToken({ userId: updatedUser.id, role: updatedUser.role });
     const refreshToken = generateRefreshToken({ userId: updatedUser.id, role: updatedUser.role });
+    const isSecureCookie = process.env.NODE_ENV === "production" || !req.get("host")?.includes("localhost");
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: isSecureCookie,
+        sameSite: isSecureCookie ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(200).json({
@@ -79,10 +80,11 @@ export const login = catchAsync(async (req, res, next) => {
         return next(new AppError("Invalid credentials!", 401));
     const accessToken = generateAccessToken({ userId: user.id, role: user.role });
     const refreshToken = generateRefreshToken({ userId: user.id, role: user.role });
+    const isSecureCookie = process.env.NODE_ENV === "production" || !req.get("host")?.includes("localhost");
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: isSecureCookie,
+        sameSite: isSecureCookie ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(200).json({
@@ -141,11 +143,12 @@ export const googleLogin = async (req, res, next) => {
         }
         const accessToken = generateAccessToken({ userId: user.id, role: user.role });
         const refreshToken = generateRefreshToken({ userId: user.id, role: user.role });
+        const isSecureCookie = process.env.NODE_ENV === "production" || !req.get("host")?.includes("localhost");
         // Set Refresh Token in Cookie
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: isSecureCookie,
+            sameSite: isSecureCookie ? "none" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
         res.status(200).json({
@@ -264,10 +267,11 @@ export const refreshTokenHandler = catchAsync(async (req, res, next) => {
     }
 });
 export const logout = catchAsync(async (req, res) => {
+    const isSecureCookie = process.env.NODE_ENV === "production" || !req.get("host")?.includes("localhost");
     res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: isSecureCookie,
+        sameSite: isSecureCookie ? "none" : "lax",
     });
     res
         .status(200)
