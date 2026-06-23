@@ -82,10 +82,14 @@ app.use((req, _res, next) => {
 });
 // ── Global Error Handler (must be last) ───────────────────────────────────────
 app.use(globalErrorHandler);
-// ── Database Auto-seeding ─────────────────────────────────────────────────────
-runSeeds();
-app.listen(PORT, () => {
-    console.log(`Server running → http://localhost:${PORT}`);
-    console.log(`API Docs      → http://localhost:${PORT}/api-docs`);
-});
+// ── Standalone Mode Setup (Local / Non-Serverless) ────────────────────────────
+if (!process.env.VERCEL) {
+    // ── Database Auto-seeding ─────────────────────────────────────────────────────
+    runSeeds();
+    app.listen(PORT, () => {
+        console.log(`Server running → http://localhost:${PORT}`);
+        console.log(`API Docs      → http://localhost:${PORT}/api-docs`);
+    });
+}
+export default app;
 //# sourceMappingURL=server.js.map
