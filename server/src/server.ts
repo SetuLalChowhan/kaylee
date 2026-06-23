@@ -29,7 +29,8 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
   process.env.CLIENT_URL || "http://localhost:5173",
   process.env.ADMIN_URL || "http://localhost:5174",
-  "https://radiant-lolly-c00349.netlify.app",
+  "https://stackd12.netlify.app",
+  "https://stackdadmin.netlify.app"
 ];
 app.use(
   cors({
