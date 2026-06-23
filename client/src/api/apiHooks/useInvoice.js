@@ -12,9 +12,13 @@ export const useInvoices = (status) => {
   return useQuery({
     queryKey: ["invoices", status],
     queryFn: async () => {
-      const statusParam = status && status !== "All" ? `?status=${status}` : "";
-      const res = await axiosSecure.get(`${USER.INVOICE}${statusParam}`);
-      return res.data?.data || [];
+      const params = new URLSearchParams();
+      if (status && status !== "All") {
+        params.append("status", status);
+      }
+      params.append("includeStats", "true");
+      const res = await axiosSecure.get(`${USER.INVOICE}?${params.toString()}`);
+      return res.data?.data || { invoices: [], stats: {} };
     },
     staleTime: 5 * 60 * 1000,
   });
