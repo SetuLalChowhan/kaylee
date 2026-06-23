@@ -27,7 +27,7 @@ const PORT = process.env.PORT || 3000;
 
 // ── Core Middleware ───────────────────────────────────────────────────────────
 const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:5173" || "https://radiant-lolly-c00349.netlify.app/",
+  process.env.CLIENT_URL || "http://localhost:5173" ,
   process.env.ADMIN_URL || "http://localhost:5174",
 ];
 app.use(
