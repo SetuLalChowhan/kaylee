@@ -27,8 +27,9 @@ const PORT = process.env.PORT || 3000;
 
 // ── Core Middleware ───────────────────────────────────────────────────────────
 const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:5173" ,
+  process.env.CLIENT_URL || "http://localhost:5173",
   process.env.ADMIN_URL || "http://localhost:5174",
+  "https://radiant-lolly-c00349.netlify.app",
 ];
 app.use(
   cors({
@@ -36,7 +37,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(null, false);
       }
     },
     credentials: true,

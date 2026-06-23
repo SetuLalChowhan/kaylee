@@ -2,7 +2,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { AppError } from "../utils/AppError.js";
-const isVercel = !!process.env.VERCEL;
+const isVercel = true;
 const baseUploadDir = isVercel ? "/tmp/uploads" : "uploads";
 const avatarDir = path.join(baseUploadDir, "avatars");
 const brandLogoDir = path.join(baseUploadDir, "brand-logos");
