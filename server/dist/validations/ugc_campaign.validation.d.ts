@@ -17,7 +17,7 @@ export declare const updateUgcCampaignSchema: z.ZodObject<{
         amount: z.ZodOptional<z.ZodString>;
         status: z.ZodOptional<z.ZodString>;
         releaseFiles: z.ZodOptional<z.ZodBoolean>;
-        notes: z.ZodOptional<z.ZodString>;
+        notes: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         paymentStatus: z.ZodOptional<z.ZodString>;
     }, z.core.$strip>;
 }, z.core.$strip>;

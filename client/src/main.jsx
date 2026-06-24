@@ -9,6 +9,8 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./redux/store";
 import { ToastContainer } from "react-toastify";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")).render(
@@ -16,7 +18,9 @@ createRoot(document.getElementById("root")).render(
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
-          <RouterProvider router={router} />
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+            <RouterProvider router={router} />
+          </GoogleOAuthProvider>
           <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
           <ReactQueryDevtools initialIsOpen={false} />
         </PersistGate>

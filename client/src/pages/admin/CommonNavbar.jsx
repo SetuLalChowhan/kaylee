@@ -82,14 +82,7 @@ const CommonNavbar = ({ setOpen }) => {
           <Menu className="w-6 h-6 text-gray-600" />
         </button>
 
-        <div className="hidden md:block relative w-full group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-Primary transition-colors" />
-          <input
-            type="text"
-            placeholder="Search your campaigns, planners etc..."
-            className="w-full bg-[#F8FAFC] border border-transparent focus:border-Primary/30 focus:bg-white focus:outline-none rounded-2xl py-3 pl-11 pr-4 text-sm text-[#1A1A1A] placeholder:text-gray-400 transition-all shadow-sm"
-          />
-        </div>
+
       </div>
 
       {/* Right Side Icons */}
@@ -124,7 +117,7 @@ const CommonNavbar = ({ setOpen }) => {
               <img src={avatarUrl}
                 alt="User Profile"
                 className="w-full h-full object-cover"
-              loading="lazy" />
+                loading="lazy" />
             </div>
             <div className="hidden md:flex items-center gap-1.5">
               <span className="text-sm font-bold text-[#1A1A1A]">{displayName}</span>
@@ -211,7 +204,7 @@ const CommonNavbar = ({ setOpen }) => {
                       Mark all read
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={() => setIsNotificationsOpen(false)}
                     className="p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 bg-white"
                   >

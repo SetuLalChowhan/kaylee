@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-const AuthInput = ({ label, type = "text", placeholder, name, register, rules = {}, error, required = false }) => {
+const AuthInput = ({ label, type = "text", placeholder, name, register, rules = {}, error, required = false, disabled = false }) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
 
@@ -16,10 +16,11 @@ const AuthInput = ({ label, type = "text", placeholder, name, register, rules = 
         <input
           type={isPassword ? (showPassword ? "text" : "password") : type}
           placeholder={placeholder}
+          disabled={disabled}
           {...register(name, { required: required ? "This field is required" : false, ...rules })}
           className={`w-full px-4 py-3.5 bg-white border ${error ? '!border-red-500 !focus:border-red-500' : 'border-[#E6E6E6] focus:border-Primary'
             } rounded-xl text-[#1A1A1A] text-sm focus:outline-none focus:ring-1 ${error ? '!ring-red-500/20' : 'focus:ring-Primary/20'
-            } transition-all placeholder:text-gray-400`}
+            } transition-all placeholder:text-gray-400 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`}
         />
         {isPassword && (
           <button

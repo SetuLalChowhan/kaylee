@@ -19,7 +19,7 @@ export const updateUgcCampaignSchema = z.object({
     amount: z.string().optional(),
     status: z.string().optional(),
     releaseFiles: z.boolean().optional(),
-    notes: z.string().optional(),
+    notes: z.string().nullable().optional(),
     paymentStatus: z.string().optional(),
   }),
 });

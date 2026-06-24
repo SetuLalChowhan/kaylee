@@ -5,11 +5,13 @@ import AuthInput from '@/components/ui/AuthInput';
 import CommonButton from '@/components/ui/CommonButton';
 import { FcGoogle } from 'react-icons/fc';
 import { toast } from 'react-toastify';
-import { useLogin } from '@/api/apiHooks/useAuth';
+import { useLogin, useGoogleLogin } from '@/api/apiHooks/useAuth';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const navigate = useNavigate();
   const loginMutation = useLogin();
+  const googleLoginMutation = useGoogleLogin();
 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
@@ -17,11 +19,7 @@ const Login = () => {
     loginMutation.mutate({ email: data.email, password: data.password });
   };
 
-  const handleGoogleLogin = () => {
-    // Google login will be handled via @react-oauth/google or custom flow
-    // For now, show a message
-    toast.info("Google login integration coming soon!");
-  };
+  const isPending = loginMutation.isPending || googleLoginMutation.isPending;
 
   return (
     <div className="w-full">
@@ -39,6 +37,7 @@ const Login = () => {
           register={register}
           error={errors.email}
           required
+          disabled={isPending}
         />
         <AuthInput 
           label="Password"
@@ -48,6 +47,7 @@ const Login = () => {
           register={register}
           error={errors.password}
           required
+          disabled={isPending}
         />
 
         <div className="flex justify-end mb-8">
@@ -58,20 +58,37 @@ const Login = () => {
 
         <CommonButton 
           type="submit"
-          disabled={loginMutation.isPending}
+          disabled={isPending}
           className="w-full py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 shadow-lg shadow-Primary/20 mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loginMutation.isPending ? "Signing in..." : "Sign In"}
         </CommonButton>
 
-        <button 
-          type="button"
-          onClick={handleGoogleLogin}
-          className="w-full py-4 bg-white border border-[#E6E6E6] text-[#1A1A1A] font-bold rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-all"
-        >
-          <FcGoogle className="w-6 h-6" />
-          Continue with Google
-        </button>
+        <div className="relative w-full overflow-hidden">
+          <button 
+            type="button"
+            className="w-full py-4 bg-white border border-[#E6E6E6] text-[#1A1A1A] font-bold rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isPending}
+          >
+            <FcGoogle className="w-6 h-6" />
+            {googleLoginMutation.isPending ? "Connecting to Google..." : "Continue with Google"}
+          </button>
+          {!isPending && (
+            <div className="absolute inset-0 w-full h-full opacity-0 cursor-pointer [&>div]:w-full [&>div>iframe]:w-full [&_iframe]:w-full [&_iframe]:scale-150 [&_iframe]:opacity-0 [&_iframe]:min-h-full">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    googleLoginMutation.mutate(credentialResponse.credential);
+                  }
+                }}
+                onError={() => {
+                  toast.error("Google login failed. Please try again.");
+                }}
+                useOneTap
+              />
+            </div>
+          )}
+        </div>
       </form>
 
       <p className="text-center text-sm text-[#666]">

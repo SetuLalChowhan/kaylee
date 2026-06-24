@@ -788,11 +788,35 @@ const CampaignDetails = () => {
               </button>
             </form>
             <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+              {campaign.notes && (
+                <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1 relative group">
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Delete the initial campaign note?")) {
+                        updateMutation.mutate({ notes: null });
+                      }
+                    }}
+                    className="absolute right-2 top-2 text-red-400 hover:text-red-650 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    title="Delete Initial Note"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[8px] bg-Primary/10 text-Primary font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                      Initial Note
+                    </span>
+                  </div>
+                  <p className="text-xs font-medium text-slate-600 leading-relaxed pr-6">{campaign.notes}</p>
+                  <span className="block text-[8px] text-slate-400 font-semibold">
+                    {new Date(campaign.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
               {campaign.notesComments?.map((note) => (
                 <div key={note.id} className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1 relative group">
                   <button
                     onClick={() => deleteNote(note.id)}
-                    className="absolute right-2 top-2 text-red-400 hover:text-red-650 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute right-2 top-2 text-red-400 hover:text-red-650 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -802,7 +826,7 @@ const CampaignDetails = () => {
                   </span>
                 </div>
               ))}
-              {(!campaign.notesComments || campaign.notesComments.length === 0) && (
+              {!campaign.notes && (!campaign.notesComments || campaign.notesComments.length === 0) && (
                 <p className="text-[11px] text-slate-400 text-center py-4">No admin notes stored.</p>
               )}
             </div>

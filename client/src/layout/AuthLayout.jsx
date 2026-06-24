@@ -9,7 +9,7 @@ const AuthLayout = () => {
       {/* Go Home Button */}
       <Link
         to="/"
-        className="absolute top-6 left-6 lg:left-auto lg:right-6 z-50 flex items-center gap-2 px-4 py-2 bg-gray-50 backdrop-blur-md rounded-full text-[#1A1A1A] text-sm font-bold hover:bg-gray-100 transition-all border border-gray-200 shadow-sm"
+        className="absolute top-6 right-6 lg:left-auto lg:right-6 z-50 flex items-center gap-2 px-4 py-2 bg-gray-50 backdrop-blur-md rounded-full text-[#1A1A1A] text-sm font-bold hover:bg-gray-100 transition-all border border-gray-200 shadow-sm"
       >
         <ArrowLeft className="w-4 h-4" />
         Go Home

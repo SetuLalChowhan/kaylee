@@ -8,7 +8,7 @@ import { BannerTitle, Subtext } from '@/components/ui/Typography';
 const Banner = ({ cms }) => {
     return (
         <section
-            className="relative w-full overflow-hidden bg-white pt-12 md:pt-[130px]"
+            className="relative w-full overflow-hidden bg-white pt-20 md:pt-[130px]"
             style={{
                 background: 'linear-gradient(180deg, rgba(51, 124, 222, 0.00) -3.32%, rgba(153, 189, 239, 0.50) 23.85%, #FFF 100%)'
             }}
@@ -73,7 +73,7 @@ const Banner = ({ cms }) => {
                             <img src={cms?.banner_image ? (cms.banner_image.startsWith("http") || cms.banner_image.startsWith("data:") ? cms.banner_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.banner_image}`) : DashLayout}
                                 alt="STAKD Dashboard Preview"
                                 className="w-full h-auto object-cover transition-transform duration-700"
-                            loading="lazy" />
+                                loading="lazy" />
 
                             {/* Bottom White Overlay to match image pixel-perfectly */}
                             <div className="absolute bottom-0 left-0 w-full h-[100px] sm:h-[150px] lg:h-[300px] bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" />

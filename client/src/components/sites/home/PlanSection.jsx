@@ -7,6 +7,7 @@ import { selectIsAuthenticated } from '@/redux/slices/authSlice';
 import useAxiosSecure from '@/hooks/useAxiosSecure';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const PlanSection = () => {
   const [plans, setPlans] = useState([]);
@@ -16,54 +17,6 @@ const PlanSection = () => {
   const navigate = useNavigate();
 
   const [checkoutLoadingId, setCheckoutLoadingId] = useState(null);
-
-  const fallbackPlans = [
-    {
-      title: "STATER",
-      description: "Try STAKD risk-free for a short sprint.",
-      price: 0,
-      priceSuffix: "",
-      features: [
-        "Up to 2 active campaigns",
-        "Limited brand review links",
-        "Watermarked content previews",
-        "Basic campaign planner",
-      ],
-      buttonText: "Start Free Trial",
-      isRecommended: false,
-      isDark: false,
-    },
-    {
-      title: "PRO",
-      description: "Built for creators working with brands regularly.",
-      price: 24,
-      priceSuffix: "/ monthly",
-      features: [
-        "Up to 20 active campaigns",
-        "Unlimited brand review links",
-        "Full approval & feedback system",
-        "No STAKD branding on deliveries",
-      ],
-      buttonText: "Get Started with Pro",
-      isRecommended: true,
-      isDark: true,
-    },
-    {
-      title: "GROWTH",
-      description: "Scale your creator business and save more.",
-      price: 100,
-      priceSuffix: "/ yearly",
-      features: [
-        "Unlimited active campaigns",
-        "Unlimited brand review links",
-        "Priority support",
-        "Best value pricing (save 20%)",
-      ],
-      buttonText: "Go Yearly & Save",
-      isRecommended: false,
-      isDark: false,
-    },
-  ];
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -88,7 +41,19 @@ const PlanSection = () => {
 
   const handleCheckout = async (plan) => {
     if (!isAuthenticated) {
-      navigate('/signup');
+      Swal.fire({
+        title: "Please Login",
+        text: "You need to log in to choose a subscription plan.",
+        icon: "info",
+        confirmButtonText: "Login",
+        confirmButtonColor: "#005BD6",
+        showCancelButton: true,
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/login');
+        }
+      });
       return;
     }
 
@@ -117,8 +82,6 @@ const PlanSection = () => {
     );
   }
 
-  const displayPlans = plans.length > 0 ? plans : fallbackPlans;
-
   return (
     <section id="pricing" className="section-padding bg-white overflow-hidden">
       <div className="">
@@ -134,17 +97,24 @@ const PlanSection = () => {
         </div>
 
         {/* Pricing Cards Grid - 3 Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-8 max-w-[1300px] mx-auto">
-          {displayPlans.map((plan, index) => (
-            <PricingCard
-              key={plan.id || index}
-              index={index}
-              {...plan}
-              loading={checkoutLoadingId === (plan.id || plan.title)}
-              onSelect={() => handleCheckout(plan)}
-            />
-          ))}
-        </div>
+        {plans.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-8 max-w-[1300px] mx-auto">
+            {plans.map((plan, index) => (
+              <PricingCard
+                key={plan.id || index}
+                index={index}
+                {...plan}
+                loading={checkoutLoadingId === (plan.id || plan.title)}
+                onSelect={() => handleCheckout(plan)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 max-w-md mx-auto p-8 rounded-3xl bg-white/70 backdrop-blur-xl border border-[#E6E6E6] flex flex-col items-center">
+            <h3 className="text-lg font-bold text-[#1A1A1A] mb-2">No plans right now available</h3>
+            <p className="text-[#666] text-sm">Please check back later.</p>
+          </div>
+        )}
       </div>
     </section>
   );
