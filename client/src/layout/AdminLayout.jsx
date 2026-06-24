@@ -1,12 +1,19 @@
 import CommonNavbar from "@/pages/admin/CommonNavbar";
 import SideBar from "@/pages/admin/SideBar";
-import React, { useState } from "react";
-import { Outlet, ScrollRestoration } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Outlet, ScrollRestoration, useNavigate } from "react-router-dom";
 import { useUserProfile } from "@/hooks/fetchUserProfile";
 
 const AdminLayout = () => {
-  useUserProfile();
+  const { data: user } = useUserProfile();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && user.role === "user" && !user.slug) {
+      navigate("/onboarding");
+    }
+  }, [user, navigate]);
 
   return (
     <>

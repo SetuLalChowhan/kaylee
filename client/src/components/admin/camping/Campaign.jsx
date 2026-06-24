@@ -32,6 +32,7 @@ const StatsCard = ({ title, value, label, icon: Icon, isPrimary, index }) => (
 
 const Campaign = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
 
   const { data: campaigns = [], isLoading } = useUgcCampaigns('all');
@@ -98,8 +99,9 @@ const Campaign = () => {
     }
   };
 
-  const handleEdit = (id) => {
-    console.log('Edit Campaign:', id);
+  const handleEdit = (campaign) => {
+    setSelectedCampaign(campaign);
+    setIsModalOpen(true);
   };
 
   const handleDelete = (id) => {
@@ -133,7 +135,7 @@ const Campaign = () => {
           <p className="text-gray-400 text-sm font-medium tracking-tight">Track progress, deliverables, and brand feedback</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => { setSelectedCampaign(null); setIsModalOpen(true); }}
           className="bg-Primary text-white flex justify-center items-center px-8 py-3.5 rounded-2xl font-bold gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all"
         >
           <Plus className="w-5 h-5" />
@@ -179,7 +181,7 @@ const Campaign = () => {
                 dueDate={campaign.deadline}
                 status={campaign.status}
                 progress={getProgress(campaign.status)}
-                onEdit={() => handleEdit(campaign.id)}
+                onEdit={() => handleEdit(campaign)}
                 onDelete={() => handleDelete(campaign.id)}
               />
             ))}
@@ -202,7 +204,7 @@ const Campaign = () => {
                     dueDate={campaign.deadline}
                     status={campaign.status}
                     progress={getProgress(campaign.status)}
-                    onEdit={() => handleEdit(campaign.id)}
+                    onEdit={() => handleEdit(campaign)}
                     onDelete={() => handleDelete(campaign.id)}
                   />
                 </SwiperSlide>
@@ -221,6 +223,7 @@ const Campaign = () => {
       <CreateCampaignModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        campaign={selectedCampaign}
       />
     </div>
   );

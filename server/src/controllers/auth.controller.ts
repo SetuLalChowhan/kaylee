@@ -92,6 +92,8 @@ export const verifyEmail = catchAsync(
         email: updatedUser.email,
         avatar: updatedUser.avatar,
         role: updatedUser.role,
+        displayName: updatedUser.displayName,
+        slug: updatedUser.slug,
       },
     });
   },
@@ -132,6 +134,8 @@ export const login = catchAsync(
         email: user.email,
         avatar: user.avatar,
         role: user.role,
+        displayName: user.displayName,
+        slug: user.slug,
       },
     });
   },
@@ -213,6 +217,8 @@ export const googleLogin = async (
         email: user.email,
         avatar: user.avatar,
         role: user.role,
+        displayName: user.displayName,
+        slug: user.slug,
       },
     });
   } catch (error) {

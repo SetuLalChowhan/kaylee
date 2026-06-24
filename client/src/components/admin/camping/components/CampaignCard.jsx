@@ -38,7 +38,17 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
                 className="absolute right-0 mt-2 w-32 bg-white rounded-2xl shadow-xl z-20 py-2 overflow-hidden border border-gray-50"
               >
-                {/* Edit option removed - clicking card goes to details */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    onEdit();
+                    setShowOptions(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-gray-700 hover:bg-gray-50 transition-colors font-bold"
+                >
+                  <Edit3 className="w-4 h-4 text-gray-500" />
+                  <span>Edit</span>
+                </button>
                 <button
                   onClick={(e) => {
                     e.preventDefault(); e.stopPropagation();

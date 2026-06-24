@@ -65,6 +65,8 @@ export const verifyEmail = catchAsync(async (req, res, next) => {
             email: updatedUser.email,
             avatar: updatedUser.avatar,
             role: updatedUser.role,
+            displayName: updatedUser.displayName,
+            slug: updatedUser.slug,
         },
     });
 });
@@ -98,6 +100,8 @@ export const login = catchAsync(async (req, res, next) => {
             email: user.email,
             avatar: user.avatar,
             role: user.role,
+            displayName: user.displayName,
+            slug: user.slug,
         },
     });
 });
@@ -162,6 +166,8 @@ export const googleLogin = async (req, res, next) => {
                 email: user.email,
                 avatar: user.avatar,
                 role: user.role,
+                displayName: user.displayName,
+                slug: user.slug,
             },
         });
     }

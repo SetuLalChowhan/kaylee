@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import CampaignCard from '../camping/components/CampaignCard';
 import { useDeleteUgcCampaign } from '@/api/apiHooks/useUgcCampaign';
 
-const CampaignGrid = ({ campaigns = [] }) => {
+const CampaignGrid = ({ campaigns = [], onEdit }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const deleteMutation = useDeleteUgcCampaign();
@@ -18,10 +18,6 @@ const CampaignGrid = ({ campaigns = [] }) => {
       case 'Draft': return 25;
       default: return 10;
     }
-  };
-
-  const handleEdit = (id) => {
-    console.log('Edit Campaign from Dashboard:', id);
   };
 
   const handleDelete = (id) => {
@@ -57,7 +53,7 @@ const CampaignGrid = ({ campaigns = [] }) => {
               dueDate={campaign.deadline}
               status={campaign.status}
               progress={getProgress(campaign.status)}
-              onEdit={() => handleEdit(campaign.id)}
+              onEdit={() => onEdit && onEdit(campaign)}
               onDelete={() => handleDelete(campaign.id)}
             />
           ))

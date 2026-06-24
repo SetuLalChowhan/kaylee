@@ -76,7 +76,11 @@ export const useLogin = () => {
     onSuccess: (data) => {
       dispatch(setCredentials({ token: data.accessToken, user: data.user }));
       toast.success(data?.message || "Login successful!");
-      navigate("/dashboard");
+      if (data.user?.role === "user" && !data.user?.slug) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Login failed";
@@ -101,7 +105,11 @@ export const useGoogleLogin = () => {
     onSuccess: (data) => {
       dispatch(setCredentials({ token: data.accessToken, user: data.user }));
       toast.success(data?.message || "Google login successful!");
-      navigate("/dashboard");
+      if (data.user?.role === "user" && !data.user?.slug) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Google login failed";

@@ -2,18 +2,54 @@ import React from 'react';
 import { X, Calendar, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
-import { useCreateUgcCampaign } from '@/api/apiHooks/useUgcCampaign';
+import { useCreateUgcCampaign, useUpdateUgcCampaign } from '@/api/apiHooks/useUgcCampaign';
 
-const CreateCampaignModal = ({ isOpen, onClose }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const createCampaignMutation = useCreateUgcCampaign();
+  const updateCampaignMutation = useUpdateUgcCampaign();
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (campaign) {
+        reset({
+          campaignName: campaign.name || '',
+          brandName: campaign.brandName || '',
+          deadline: campaign.deadline || '2026-04-25',
+          amount: campaign.amount || '',
+          status: campaign.status || 'Pending',
+          notes: campaign.notes || '',
+        });
+      } else {
+        reset({
+          campaignName: '',
+          brandName: '',
+          deadline: '2026-04-25',
+          amount: '',
+          status: 'Pending',
+          notes: '',
+        });
+      }
+    }
+  }, [campaign, isOpen, reset]);
 
   const onSubmit = (data) => {
-    createCampaignMutation.mutate(data, {
-      onSuccess: () => {
-        onClose();
-      },
-    });
+    if (campaign) {
+      updateCampaignMutation.mutate(
+        { id: campaign.id, campaignData: data },
+        {
+          onSuccess: () => {
+            onClose();
+          },
+        }
+      );
+    } else {
+      createCampaignMutation.mutate(data, {
+        onSuccess: () => {
+          onClose();
+        },
+      });
+    }
   };
 
   if (!isOpen) return null;
@@ -45,7 +81,7 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
             </button>
 
             <div className="mb-4 md:mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">Create Campaigns</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">{campaign ? 'Edit Campaign' : 'Create Campaigns'}</h2>
               <div className="w-full border-b border-dashed border-gray-100 mt-4 md:mt-6" />
             </div>
           </div>
@@ -155,9 +191,10 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 bg-Primary text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm"
+                  disabled={createCampaignMutation.isPending || updateCampaignMutation.isPending}
+                  className="flex-1 bg-Primary text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Create Campaign
+                  {createCampaignMutation.isPending || updateCampaignMutation.isPending ? 'Saving...' : (campaign ? 'Save Changes' : 'Create Campaign')}
                 </button>
               </div>
             </form>
