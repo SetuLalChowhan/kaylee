@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SectionHeader, Subtext, Label } from '@/components/ui/Typography';
 import CommonButton from '@/components/ui/CommonButton';
 import FAQItem from './cards/FAQItem';
+import ContactModal from './ContactModal';
 
 const faqData = [
     {
@@ -28,6 +29,7 @@ const faqData = [
 
 const FAQ = () => {
     const [openIndex, setOpenIndex] = useState(0);
+    const [isContactOpen, setIsContactOpen] = useState(false);
 
     return (
         <section id="faq" className="section-padding bg-white ">
@@ -44,13 +46,12 @@ const FAQ = () => {
                             Have questions? Explore detailed answers about features, workflows, and how to get the most out of STAKD
                         </Subtext>
 
-                        <CommonButton
-                            type="link"
-                            path="/contact"
-                            className="px-8 py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20"
+                        <button
+                            onClick={() => setIsContactOpen(true)}
+                            className="px-8 py-4 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 cursor-pointer"
                         >
                             Contact Us
-                        </CommonButton>
+                        </button>
                     </div>
 
                     {/* Right Column - Accordion */}
@@ -68,6 +69,8 @@ const FAQ = () => {
 
                 </div>
             </div>
+            
+            <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
         </section>
     );
 };

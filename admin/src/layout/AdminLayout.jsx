@@ -4,7 +4,7 @@ import SideBar from "@/pages/admin/SideBar";
 import React, { useEffect, useState } from "react";
 import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import { MdDashboard } from "react-icons/md";
-import { FaUsers, FaBullhorn, FaListCheck, FaFileInvoiceDollar, FaCreditCard } from "react-icons/fa6";
+import { FaUsers, FaBullhorn, FaListCheck, FaFileInvoiceDollar, FaCreditCard, FaEnvelope } from "react-icons/fa6";
 import { FaRegEdit, FaHistory, FaQuestionCircle } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useUserProfile } from "@/hooks/fetchUserProfile";
@@ -68,6 +68,14 @@ const AdminLayout = () => {
       text: "FAQ Control",
       path: "/dashboard/faq",
       activePaths: ["/dashboard/faq"],
+      sublink: false,
+    },
+    {
+      id: 11,
+      icon: <FaEnvelope />,
+      text: "Contacts",
+      path: "/dashboard/contacts",
+      activePaths: ["/dashboard/contacts"],
       sublink: false,
     },
     {
