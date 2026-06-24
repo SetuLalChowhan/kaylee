@@ -94,9 +94,13 @@ const CampaingDetails = () => {
           {!campaign.releaseFiles ? (
             <button
               onClick={handleReleaseFiles}
-              className="bg-green-600 text-white text-xs font-bold px-5 py-2.5 rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-200 cursor-pointer shrink-0"
+              disabled={updateMutation.isPending}
+              className="bg-green-600 text-white text-xs font-bold px-5 py-2.5 rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-200 cursor-pointer shrink-0 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
-              Release Files Now
+              {updateMutation.isPending && (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+              )}
+              {updateMutation.isPending ? 'Releasing...' : 'Release Files Now'}
             </button>
           ) : (
             <span className="text-xs font-bold text-green-600 bg-white border border-green-200 px-4 py-2 rounded-2xl shrink-0">

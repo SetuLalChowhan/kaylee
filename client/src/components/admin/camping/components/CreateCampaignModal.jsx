@@ -8,6 +8,14 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const createCampaignMutation = useCreateUgcCampaign();
   const updateCampaignMutation = useUpdateUgcCampaign();
+  const getLocalDateString = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const today = getLocalDateString();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -15,7 +23,7 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
         reset({
           campaignName: campaign.name || '',
           brandName: campaign.brandName || '',
-          deadline: campaign.deadline || '2026-04-25',
+          deadline: campaign.deadline || today,
           amount: campaign.amount || '',
           status: campaign.status || 'Pending',
           notes: campaign.notes || '',
@@ -24,14 +32,14 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
         reset({
           campaignName: '',
           brandName: '',
-          deadline: '2026-04-25',
+          deadline: today,
           amount: '',
           status: 'Pending',
           notes: '',
         });
       }
     }
-  }, [campaign, isOpen, reset]);
+  }, [campaign, isOpen, reset, today]);
 
   const onSubmit = (data) => {
     if (campaign) {
@@ -117,7 +125,7 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
                   <input
                     {...register('deadline', { required: 'Deadline is required' })}
                     type="date"
-                    defaultValue="2026-04-25"
+                    defaultValue={today}
                     className={`w-full bg-white border rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm ${errors.deadline ? 'border-red-500' : 'border-gray-100'}`}
                   />
                 </div>

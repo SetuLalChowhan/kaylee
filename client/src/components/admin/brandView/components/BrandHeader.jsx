@@ -3,7 +3,7 @@ import { Download, Check, Lock, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { downloadCampaignZip } from '@/utils/download';
 
-const BrandHeader = ({ campaign, onApproveAll }) => {
+const BrandHeader = ({ campaign, onApproveAll, isApprovePending }) => {
   const [isZipping, setIsZipping] = useState(false);
 
   const handleDownloadAll = async () => {
@@ -77,10 +77,15 @@ const BrandHeader = ({ campaign, onApproveAll }) => {
           </button>
           <button
             onClick={onApproveAll}
-            className="flex items-center gap-2 bg-Primary text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 cursor-pointer"
+            disabled={isApprovePending}
+            className="flex items-center gap-2 bg-Primary text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <Check className="w-4 h-4" />
-            Approve All Media
+            {isApprovePending ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+            ) : (
+              <Check className="w-4 h-4" />
+            )}
+            {isApprovePending ? 'Approving...' : 'Approve All Media'}
           </button>
         </div>
       </div>

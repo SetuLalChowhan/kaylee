@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { MoreVertical, CheckCircle, FileEdit, Play, X, Download, Lock } from 'lucide-react';
+import { MoreVertical, CheckCircle, FileEdit, Play, X, Download, Lock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'react-toastify';
 import { getImgUrl } from '@/utils/image';
@@ -14,7 +14,8 @@ const BrandContentGallery = ({
   setChangeText,
   sendChangeRequest,
   setRequestChangesId,
-  releaseFiles
+  releaseFiles,
+  pendingApproveId
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
@@ -68,8 +69,14 @@ const BrandContentGallery = ({
               </div>
               <div className="relative shrink-0 ml-2">
                 <button
-                  onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
-                  className="p-1.5 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
+                  onClick={() => {
+                    const isPending = pendingApproveId === item.id || (pendingApproveId === 'all' && item.status !== 'approved');
+                    if (!isPending) {
+                      setOpenMenuId(openMenuId === item.id ? null : item.id);
+                    }
+                  }}
+                  disabled={pendingApproveId === item.id || (pendingApproveId === 'all' && item.status !== 'approved')}
+                  className="p-1.5 hover:bg-gray-50 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <MoreVertical className="w-4 h-4 text-gray-400" />
                 </button>
@@ -83,7 +90,7 @@ const BrandContentGallery = ({
                       className="absolute right-0 top-full mt-1 w-52 bg-white border border-gray-100 rounded-xl shadow-xl z-30 py-1.5 overflow-hidden"
                     >
                       <button onClick={() => handleApprove(item.id)} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer text-left">
-                        <CheckCircle className="w-4 h-4 text-green-500" /> Approve this file
+                        <CheckCircle className="w-4 h-4 text-Primary" /> Approve this file
                       </button>
                       <button onClick={() => handleRequest(item.id)} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer text-left">
                         <FileEdit className="w-4 h-4 text-orange-500" /> Request for changes
@@ -102,8 +109,17 @@ const BrandContentGallery = ({
           {/* Media */}
           <div className="px-4 pb-4">
             <div
-              className="aspect-square rounded-xl overflow-hidden bg-gray-100 relative cursor-pointer group/media"
-              onClick={() => setPreviewItem(item)}
+              className={`aspect-square rounded-xl overflow-hidden bg-gray-100 relative group/media ${
+                pendingApproveId === item.id || (pendingApproveId === 'all' && item.status !== 'approved')
+                  ? 'cursor-not-allowed'
+                  : 'cursor-pointer'
+              }`}
+              onClick={() => {
+                const isPending = pendingApproveId === item.id || (pendingApproveId === 'all' && item.status !== 'approved');
+                if (!isPending) {
+                  setPreviewItem(item);
+                }
+              }}
             >
               {item.type === 'video' ? (
                 <>
@@ -133,12 +149,20 @@ const BrandContentGallery = ({
                 <p className="text-white/70 text-[10px] truncate">{item.name}</p>
                 <p className="text-white/50 text-[10px]">{formatDate(item.createdAt)}</p>
               </div>
+
+              {/* Loading spinner overlay */}
+              {(pendingApproveId === item.id || (pendingApproveId === 'all' && item.status !== 'approved')) && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center z-10 pointer-events-auto">
+                  <Loader2 className="w-8 h-8 text-Primary animate-spin mb-1.5" />
+                  <span className="text-[10px] font-bold text-Primary">Approving...</span>
+                </div>
+              )}
             </div>
 
             {item.status && (
               <div className="mt-2 flex items-center gap-1.5">
                 {item.status === 'approved' ? (
-                  <div className="flex items-center gap-1.5 text-green-500">
+                  <div className="flex items-center gap-1.5 text-Primary">
                     <CheckCircle className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-bold">Approved & Verified</span>
                   </div>
@@ -193,8 +217,8 @@ const BrandContentGallery = ({
 
       {approvedItems.length > 0 && (
         <div className="bg-white border border-gray-50 rounded-2xl p-6">
-          <h3 className="text-sm font-bold text-green-600 mb-4 flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-green-500" />
+          <h3 className="text-sm font-bold text-Primary mb-4 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-Primary" />
             Verified & Approved Assets ({approvedItems.length})
           </h3>
           {renderGrid(approvedItems)}

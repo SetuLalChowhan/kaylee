@@ -1,8 +1,7 @@
-import React from 'react';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const ApproveModal = ({ isOpen, isAll, onClose, onConfirm }) => {
+const ApproveModal = ({ isOpen, isAll, onClose, onConfirm, isPending }) => {
   if (!isOpen) return null;
 
   return (
@@ -28,8 +27,8 @@ const ApproveModal = ({ isOpen, isAll, onClose, onConfirm }) => {
             <X className="w-5 h-5 md:w-6 md:h-6" />
           </button>
           <div className="text-center mb-6 md:mb-8">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-green-50 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4">
-              <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-green-500" />
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-Primary/5 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4">
+              <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-Primary" />
             </div>
             <h2 className="text-lg md:text-xl font-bold text-[#1A1A1A] mb-1 md:mb-2">Are you sure?</h2>
             <p className="text-xs md:text-sm text-gray-400">
@@ -40,12 +39,14 @@ const ApproveModal = ({ isOpen, isAll, onClose, onConfirm }) => {
             </p>
           </div>
           <div className="flex gap-3 md:gap-4">
-            <button onClick={onClose} className="flex-1 bg-gray-50 text-gray-500 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-gray-100 transition-colors text-xs md:text-sm">Cancel</button>
+            <button onClick={onClose} disabled={isPending} className="flex-1 bg-gray-50 text-gray-500 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-gray-100 transition-colors text-xs md:text-sm disabled:opacity-60 disabled:cursor-not-allowed">Cancel</button>
             <button
               onClick={onConfirm}
-              className="flex-1 bg-green-500 text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-200 text-xs md:text-sm"
+              disabled={isPending}
+              className="flex-1 bg-Primary text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/95 transition-all shadow-lg shadow-Primary/25 text-xs md:text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
             >
-              Approve
+              {isPending && <Loader2 className="w-4 h-4 animate-spin text-white" />}
+              {isPending ? 'Approving...' : 'Approve'}
             </button>
           </div>
         </motion.div>

@@ -112,7 +112,7 @@ const BrandView = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <BrandHeader campaign={campaign} onApproveAll={handleApproveAll} />
+            <BrandHeader campaign={campaign} onApproveAll={handleApproveAll} isApprovePending={approveMutation.isPending} />
 
             {/* Deliverables — read-only for brand */}
             {campaign.deliverables && campaign.deliverables.length > 0 && (
@@ -153,6 +153,7 @@ const BrandView = () => {
                     sendChangeRequest={sendChangeRequest}
                     setRequestChangesId={setRequestChangesId}
                     releaseFiles={campaign.releaseFiles}
+                    pendingApproveId={approveMutation.isPending ? approveMutation.variables?.mediaId : null}
                 />
             )}
 
@@ -179,6 +180,7 @@ const BrandView = () => {
                 isAll={approveModal.id === 'all'}
                 onClose={() => setApproveModal({ open: false, id: null })}
                 onConfirm={confirmApprove}
+                isPending={approveMutation.isPending}
             />
 
             {/* Shared Media Preview Modal */}

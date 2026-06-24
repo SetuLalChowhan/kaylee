@@ -105,8 +105,8 @@ const ProfileCard = ({ profile }) => {
         <h3 className="text-sm font-bold text-[#1A1A1A] mb-4">Brands I've worked with</h3>
         <div className="flex flex-wrap gap-3">
           {profile.brands.map((brand, idx) => (
-            <div key={idx} className="w-12 h-12 rounded-full border border-gray-50 p-2 bg-white flex items-center justify-center">
-              <img src={getImgUrl(brand) || brand} alt="Brand" className="max-w-full h-auto grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all" loading="lazy" />
+            <div key={idx} className="w-16 h-16 rounded-full border border-gray-100 p-2 bg-white flex items-center justify-center shadow-xs">
+              <img src={getImgUrl(brand) || brand} alt="Brand" className="max-w-full max-h-full object-contain" loading="lazy" />
             </div>
           ))}
         </div>
