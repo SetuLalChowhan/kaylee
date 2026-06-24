@@ -49,6 +49,7 @@ export const getMe = catchAsync(async (req, res, next) => {
             firstName: true,
             lastName: true,
             displayName: true,
+            slug: true,
             shortBio: true,
             servicesOffered: true,
             brandLogos: true,

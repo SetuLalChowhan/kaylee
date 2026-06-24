@@ -60,6 +60,7 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
       firstName: true,
       lastName: true,
       displayName: true,
+      slug: true,
       shortBio: true,
       servicesOffered: true,
       brandLogos: true,
