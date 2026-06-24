@@ -74,7 +74,7 @@ const Login = () => {
             {googleLoginMutation.isPending ? "Connecting to Google..." : "Continue with Google"}
           </button>
           {!isPending && (
-            <div className="absolute inset-0 w-full h-full opacity-0 cursor-pointer [&>div]:w-full [&>div>iframe]:w-full [&_iframe]:w-full [&_iframe]:scale-150 [&_iframe]:opacity-0 [&_iframe]:min-h-full">
+            <div className="absolute inset-0 w-full h-full opacity-0 cursor-pointer pointer-events-auto z-10 [&_div]:!w-full [&_div]:!h-full [&_div]:!max-w-none [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!max-w-none [&_iframe]:!opacity-0">
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (credentialResponse.credential) {
