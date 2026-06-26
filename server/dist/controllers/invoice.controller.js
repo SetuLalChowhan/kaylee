@@ -7,10 +7,18 @@ import { catchAsync } from "../utils/catchAsync.js";
 export const createInvoice = catchAsync(async (req, res, next) => {
     const { userId, role } = req.user;
     const { invoiceNo, campaign, issueDate, dueDate, amount, status, targetUserId } = req.body;
-    // Find dynamic campaign by title to link campaignId
-    const dbCampaign = await prisma.campaign.findUnique({
+    // Find dynamic campaign by title to link campaignId, or create it if it doesn't exist
+    let dbCampaign = campaign ? await prisma.campaign.findUnique({
         where: { title: campaign },
-    });
+    }) : null;
+    if (!dbCampaign && campaign) {
+        dbCampaign = await prisma.campaign.create({
+            data: {
+                title: campaign,
+                description: `Auto-created via invoice ${invoiceNo}`,
+            },
+        });
+    }
     const invoice = await prisma.invoice.create({
         data: {
             userId: (role === "admin" && targetUserId) ? targetUserId : userId,
@@ -107,9 +115,17 @@ export const updateInvoice = catchAsync(async (req, res, next) => {
     let campaignName = existingInvoice.campaignName;
     if (campaign !== undefined) {
         campaignName = campaign;
-        const dbCampaign = await prisma.campaign.findUnique({
+        let dbCampaign = campaign ? await prisma.campaign.findUnique({
             where: { title: campaign },
-        });
+        }) : null;
+        if (!dbCampaign && campaign) {
+            dbCampaign = await prisma.campaign.create({
+                data: {
+                    title: campaign,
+                    description: `Auto-created via invoice update ${invoiceNo || existingInvoice.invoiceNo}`,
+                },
+            });
+        }
         campaignId = dbCampaign?.id || null;
     }
     const updatedInvoice = await prisma.invoice.update({

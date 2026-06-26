@@ -3,17 +3,34 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 
+interface AuthRequest extends Request {
+  user: { userId: string; role: string };
+}
+
+
 /**
- * GET /api/campaign — Retrieve all campaigns
+ * GET /api/campaign — Retrieve all campaigns (returns only user-created UGC campaigns)
  */
 export const getCampaigns = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const campaigns = await prisma.campaign.findMany({
-    orderBy: { title: "asc" },
+  const { userId, role } = (req as AuthRequest).user;
+  const isAdmin = role === "admin";
+
+  const userUgcCampaigns = await prisma.ugcCampaign.findMany({
+    where: isAdmin ? {} : { userId },
+    orderBy: { name: "asc" },
   });
+
+  const mappedCampaigns = userUgcCampaigns.map((uc) => ({
+    id: uc.id,
+    title: uc.name,
+    description: uc.notes || null,
+    createdAt: uc.createdAt,
+    updatedAt: uc.updatedAt,
+  }));
 
   res.status(200).json({
     status: "success",
-    data: campaigns,
+    data: mappedCampaigns,
   });
 });
 

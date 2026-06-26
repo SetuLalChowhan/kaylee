@@ -1,12 +1,31 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { useCampaigns } from '@/api/apiHooks/useCampaign';
 
 const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isPending }) => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { data: campaigns = [] } = useCampaigns();
+
+  const [isOpenDropdown, setIsOpenDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const selectedCampaign = watch('campaign') || '';
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpenDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredCampaigns = campaigns.filter((c) =>
+    c.title?.toLowerCase().includes(selectedCampaign.toLowerCase())
+  );
 
   // Helper to format ISO Date string from backend into YYYY-MM-DD format for date input
   const toInputDate = (dateStr) => {
@@ -63,7 +82,7 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
 
           {/* Form - Scrollable */}
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-8 space-y-4 md:space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className={`p-4 md:p-8 space-y-4 md:space-y-6 transition-all duration-200 ${isOpenDropdown ? 'pb-36' : ''}`}>
               {/* Invoice No */}
               <div>
                 <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Invoice No</label>
@@ -79,19 +98,50 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
               {/* Campaign */}
               <div>
                 <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Campaign</label>
-                <div className="relative group">
-                  <select
-                    {...register('campaign', type === 'create' ? { required: 'Please select a campaign' } : {})}
-                    className={`w-full bg-white border rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] appearance-none text-xs md:text-sm ${type === 'create' && errors.campaign ? 'border-red-500' : 'border-gray-100'}`}
-                  >
-                    <option value="">Select a campaign</option>
-                    {campaigns.map((c) => (
-                      <option key={c.id} value={c.title}>
-                        {c.title}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-300 pointer-events-none group-focus-within:text-Primary transition-colors" />
+                <div className="relative" ref={dropdownRef}>
+                  <input
+                    {...register('campaign', type === 'create' ? { required: 'Please select or type a campaign' } : {})}
+                    type="text"
+                    placeholder="Select or type a campaign"
+                    onFocus={() => setIsOpenDropdown(true)}
+                    autoComplete="off"
+                    className={`w-full bg-white border rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] placeholder:text-gray-300 text-xs md:text-sm ${type === 'create' && errors.campaign ? 'border-red-500' : 'border-gray-100'}`}
+                  />
+                  <ChevronDown className={`absolute right-3 md:right-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-300 pointer-events-none transition-transform duration-200 ${isOpenDropdown ? 'rotate-180 text-Primary' : ''}`} />
+                  
+                  <AnimatePresence>
+                    {isOpenDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-gray-100 rounded-lg md:rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar"
+                      >
+                        {filteredCampaigns.length > 0 ? (
+                          <div className="py-1">
+                            {filteredCampaigns.map((c) => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setValue('campaign', c.title, { shouldValidate: true });
+                                  setIsOpenDropdown(false);
+                                }}
+                                className="w-full text-left px-3 md:px-4 py-2 hover:bg-gray-50 text-xs md:text-sm text-[#1A1A1A] font-medium transition-colors"
+                              >
+                                {c.title}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="px-3 md:px-4 py-3 text-xs md:text-sm text-gray-400 font-medium italic">
+                            No matching campaigns. Keep typing to add manually.
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 {type === 'create' && errors.campaign && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.campaign.message}</p>}
               </div>

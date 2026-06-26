@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 /**
- * GET /api/campaign — Retrieve all campaigns
+ * GET /api/campaign — Retrieve all campaigns (returns only user-created UGC campaigns)
  */
 export declare const getCampaigns: (req: Request, res: Response, next: NextFunction) => void;
 /**

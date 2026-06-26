@@ -1,12 +1,31 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { useCampaigns } from '@/api/apiHooks/useCampaign';
 
 const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
-  const { register, handleSubmit, reset, setValue, watch } = useForm();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { data: campaigns = [] } = useCampaigns();
+
+  const [isOpenDropdown, setIsOpenDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const selectedCampaign = watch('campaign') || '';
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpenDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredCampaigns = campaigns.filter((c) =>
+    c.title?.toLowerCase().includes(selectedCampaign.toLowerCase())
+  );
 
   useEffect(() => {
     if (task) {
@@ -51,7 +70,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 md:p-8 space-y-4 md:space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className={`p-6 md:p-8 space-y-4 md:space-y-6 transition-all duration-200 ${isOpenDropdown ? 'pb-36' : ''}`}>
             {/* Task Name */}
             <div>
               <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2 md:mb-3">Task Name</label>
@@ -78,21 +97,54 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
             {/* Campaign */}
             <div>
               <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2 md:mb-3">Campaign</label>
-              <div className="relative group">
-                <select
-                  {...register('campaign', { required: true })}
-                  className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] appearance-none"
-                >
-                  <option value="">Select a campaign</option>
-                  <option value="Content Creation">Content Creation</option>
-                  {campaigns.map((c) => (
-                    <option key={c.id} value={c.title}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-300 pointer-events-none group-focus-within:text-Primary transition-colors" />
+              <div className="relative" ref={dropdownRef}>
+                <input
+                  {...register('campaign', { required: 'Please select or type a campaign name' })}
+                  type="text"
+                  placeholder="Select or type a campaign"
+                  onFocus={() => setIsOpenDropdown(true)}
+                  autoComplete="off"
+                  className={`w-full bg-white border rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] placeholder:text-gray-300 ${
+                    errors.campaign ? 'border-red-500' : 'border-gray-100'
+                  }`}
+                />
+                <ChevronDown className={`absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-300 pointer-events-none transition-transform duration-200 ${isOpenDropdown ? 'rotate-180 text-Primary' : ''}`} />
+                
+                <AnimatePresence>
+                  {isOpenDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-gray-100 rounded-xl md:rounded-2xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar"
+                    >
+                      {filteredCampaigns.length > 0 ? (
+                        <div className="py-1">
+                          {filteredCampaigns.map((c) => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => {
+                                setValue('campaign', c.title, { shouldValidate: true });
+                                setIsOpenDropdown(false);
+                              }}
+                              className="w-full text-left px-4 md:px-6 py-2 hover:bg-gray-50 text-xs md:text-sm text-[#1A1A1A] font-medium transition-colors"
+                            >
+                              {c.title}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="px-4 md:px-6 py-3 text-xs md:text-sm text-gray-400 font-medium italic">
+                          No matching campaigns. Keep typing to add manually.
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+              {errors.campaign && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.campaign.message}</p>}
             </div>
 
             {/* Actions */}

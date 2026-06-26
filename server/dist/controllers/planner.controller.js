@@ -22,6 +22,20 @@ export const getTasks = catchAsync(async (req, res, next) => {
 export const createTask = catchAsync(async (req, res, next) => {
     const { userId, role } = req.user;
     const { name, campaign, date, completed, targetUserId } = req.body;
+    // Auto-create campaign in the database if it doesn't exist (and is not empty or the default 'Content Creation')
+    if (campaign && campaign !== "Content Creation") {
+        const dbCampaign = await prisma.campaign.findUnique({
+            where: { title: campaign },
+        });
+        if (!dbCampaign) {
+            await prisma.campaign.create({
+                data: {
+                    title: campaign,
+                    description: `Auto-created via task ${name}`,
+                },
+            });
+        }
+    }
     const task = await prisma.task.create({
         data: {
             userId: (role === "admin" && targetUserId) ? targetUserId : userId,
@@ -50,6 +64,20 @@ export const updateTask = catchAsync(async (req, res, next) => {
     });
     if (!existingTask) {
         return next(new AppError("Task not found or unauthorized", 404));
+    }
+    // Auto-create campaign in the database if it doesn't exist (and is not empty or the default 'Content Creation')
+    if (campaign && campaign !== "Content Creation") {
+        const dbCampaign = await prisma.campaign.findUnique({
+            where: { title: campaign },
+        });
+        if (!dbCampaign) {
+            await prisma.campaign.create({
+                data: {
+                    title: campaign,
+                    description: `Auto-created via task update ${name || existingTask.name}`,
+                },
+            });
+        }
     }
     const updatedTask = await prisma.task.update({
         where: { id },

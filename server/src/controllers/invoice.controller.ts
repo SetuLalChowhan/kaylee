@@ -22,10 +22,19 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
     targetUserId?: string;
   };
 
-  // Find dynamic campaign by title to link campaignId
-  const dbCampaign = await prisma.campaign.findUnique({
+  // Find dynamic campaign by title to link campaignId, or create it if it doesn't exist
+  let dbCampaign = campaign ? await prisma.campaign.findUnique({
     where: { title: campaign },
-  });
+  }) : null;
+
+  if (!dbCampaign && campaign) {
+    dbCampaign = await prisma.campaign.create({
+      data: {
+        title: campaign,
+        description: `Auto-created via invoice ${invoiceNo}`,
+      },
+    });
+  }
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -145,9 +154,18 @@ export const updateInvoice = catchAsync(async (req: Request, res: Response, next
 
   if (campaign !== undefined) {
     campaignName = campaign;
-    const dbCampaign = await prisma.campaign.findUnique({
+    let dbCampaign = campaign ? await prisma.campaign.findUnique({
       where: { title: campaign },
-    });
+    }) : null;
+    
+    if (!dbCampaign && campaign) {
+      dbCampaign = await prisma.campaign.create({
+        data: {
+          title: campaign,
+          description: `Auto-created via invoice update ${invoiceNo || existingInvoice.invoiceNo}`,
+        },
+      });
+    }
     campaignId = dbCampaign?.id || null;
   }
 
