@@ -18,8 +18,8 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
   const { data: publicData, isLoading: isPublicLoading } = usePublicPortfolio(isPublic ? slug : undefined);
 
   // 2. Fetch logged in user's profile and items if isPublic is false
-  const { user: currentUserProfile, isLoading: isProfileLoading } = useUserProfile();
-  const { data: portfolioItems, isLoading: isItemsLoading } = usePortfolioItems();
+  const { user: currentUserProfile, isLoading: isProfileLoading } = useUserProfile({ enabled: !isPublic });
+  const { data: portfolioItems, isLoading: isItemsLoading } = usePortfolioItems({ enabled: !isPublic });
 
   const isLoading = isPublic ? isPublicLoading : (isProfileLoading || isItemsLoading);
 

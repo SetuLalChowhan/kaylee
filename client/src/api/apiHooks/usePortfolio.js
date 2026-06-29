@@ -7,7 +7,7 @@ import { USER } from "../apiEndPoint";
 /**
  * usePortfolioItems — Fetch authenticated user's portfolio items
  */
-export const usePortfolioItems = () => {
+export const usePortfolioItems = (options = {}) => {
   const axiosSecure = useAxiosSecure();
 
   return useQuery({
@@ -17,6 +17,7 @@ export const usePortfolioItems = () => {
       return res.data?.data || [];
     },
     staleTime: 5 * 60 * 1000,
+    ...options,
   });
 };
 

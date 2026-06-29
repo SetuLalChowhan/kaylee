@@ -4,10 +4,12 @@ import useAxiosSecure from "@/hooks/useAxiosSecure";
 import useAxiosPublic from "@/hooks/useAxiosPublic";
 import { Save, Loader2, RefreshCw, Plus, Trash2, Quote, Upload, X } from "lucide-react";
 import { toast } from "react-toastify";
+import dummyImage from "@/assets/images/dummyImage.png";
 
 // Custom Image Upload component with preview, upload, and delete
 const ImageUploadField = ({ label, value, onChange, axiosSecure }) => {
   const [uploading, setUploading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -42,22 +44,24 @@ const ImageUploadField = ({ label, value, onChange, axiosSecure }) => {
     <div className="space-y-2">
       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl">
-        {value ? (
-          <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 group shrink-0 mx-auto sm:mx-0">
-            <img src={getFullImageUrl(value)} alt={label} className="w-full h-full object-cover" loading="lazy" />
-            <button
-              type="button"
-              onClick={() => onChange("")}
-              className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-opacity"
-            >
-              Delete
-            </button>
+        <div
+          onClick={() => setPreviewOpen(true)}
+          className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 group shrink-0 mx-auto sm:mx-0 bg-slate-100 cursor-pointer"
+        >
+          <img
+            src={value ? getFullImageUrl(value) : dummyImage}
+            alt={label}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            loading="lazy"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = dummyImage;
+            }}
+          />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-opacity">
+            Preview
           </div>
-        ) : (
-          <div className="w-16 h-16 rounded-lg bg-slate-200 border border-dashed border-slate-350 flex items-center justify-center text-slate-400 text-[10px] text-center p-1 shrink-0 mx-auto sm:mx-0">
-            No Image
-          </div>
-        )}
+        </div>
         <div className="flex-1 w-full text-center sm:text-left">
           {uploading ? (
             <div className="flex items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-Primary">
@@ -74,6 +78,29 @@ const ImageUploadField = ({ label, value, onChange, axiosSecure }) => {
           )}
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {previewOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" onClick={() => setPreviewOpen(false)}>
+          <div className="relative max-w-4xl max-h-[90vh] bg-transparent rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewOpen(false)}
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-all cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={value ? getFullImageUrl(value) : dummyImage}
+              alt="Preview"
+              className="max-w-full max-h-[85vh] object-contain rounded-xl"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = dummyImage;
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

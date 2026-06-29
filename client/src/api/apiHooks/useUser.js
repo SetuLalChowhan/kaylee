@@ -10,7 +10,7 @@ import { USER } from "../apiEndPoint";
  * useUserProfile — Fetch authenticated user's profile
  * Auto-syncs with Redux on successful fetch
  */
-export const useUserProfile = () => {
+export const useUserProfile = (options = {}) => {
   const dispatch = useDispatch();
   const axiosSecure = useAxiosSecure();
 
@@ -24,6 +24,7 @@ export const useUserProfile = () => {
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,
+    ...options,
   });
 
   return {
