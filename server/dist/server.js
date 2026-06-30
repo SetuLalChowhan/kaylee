@@ -28,8 +28,8 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
-    "https://stakd-client.vercel.app",
-    "https://stakd-admin.vercel.app",
+    "https://stackd12.netlify.app",
+    "https://stackdadmin.netlify.app",
     "https://stakd.co",
 ];
 app.use(cors({

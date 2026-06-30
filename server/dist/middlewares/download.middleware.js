@@ -22,9 +22,12 @@ export const downloadInterceptor = async (req, res, next) => {
         const allowedHosts = [
             "localhost:5173",
             "localhost:5174",
+            "stackd12.netlify.app",
+            "stackdadmin.netlify.app",
             "stakd-client.vercel.app",
             "stakd-admin.vercel.app",
             "stakd.co",
+            "softvencealpha.com",
         ];
         const isFromOurApp = referer && allowedHosts.some(host => referer.includes(host));
         if (isFromOurApp) {
