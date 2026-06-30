@@ -266,8 +266,28 @@ export const createCampaignTask = catchAsync(async (req: Request, res: Response,
   const campaign = await checkCampaignAccess(campaignId, req);
   if (!campaign) return next(new AppError("Campaign not found or unauthorized", 404));
 
-  const task = await prisma.ugcCampaignTask.create({
-    data: { campaignId, name, date, completed: completed ?? false },
+  const task = await prisma.$transaction(async (tx) => {
+    // 1. Create a task in the planner table
+    const plannerTask = await tx.task.create({
+      data: {
+        userId: campaign.userId,
+        name,
+        campaign: campaign.name,
+        date,
+        completed: completed ?? false,
+      },
+    });
+
+    // 2. Create the campaign task pointing to the planner task
+    return tx.ugcCampaignTask.create({
+      data: {
+        campaignId,
+        name,
+        date,
+        completed: completed ?? false,
+        plannerTaskId: plannerTask.id,
+      },
+    });
   });
 
   res.status(201).json({ status: "success", data: task });
@@ -281,13 +301,34 @@ export const updateCampaignTask = catchAsync(async (req: Request, res: Response,
   const campaign = await checkCampaignAccess(campaignId, req);
   if (!campaign) return next(new AppError("Campaign not found or unauthorized", 404));
 
-  const task = await prisma.ugcCampaignTask.update({
-    where: { id },
-    data: {
-      ...(name !== undefined && { name }),
-      ...(date !== undefined && { date }),
-      ...(completed !== undefined && { completed }),
-    },
+  const existingTask = await prisma.ugcCampaignTask.findUnique({ where: { id } });
+  if (!existingTask) return next(new AppError("Task not found", 404));
+
+  const task = await prisma.$transaction(async (tx) => {
+    const updatedTask = await tx.ugcCampaignTask.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(date !== undefined && { date }),
+        ...(completed !== undefined && { completed }),
+      },
+    });
+
+    // Update corresponding planner task
+    if (existingTask.plannerTaskId) {
+      await tx.task.update({
+        where: { id: existingTask.plannerTaskId },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(date !== undefined && { date }),
+          ...(completed !== undefined && { completed }),
+        },
+      }).catch((err) => {
+        console.warn("Failed to sync planner task update: ", err);
+      });
+    }
+
+    return updatedTask;
   });
 
   res.status(200).json({ status: "success", data: task });
@@ -300,7 +341,18 @@ export const deleteCampaignTask = catchAsync(async (req: Request, res: Response,
   const campaign = await checkCampaignAccess(campaignId, req);
   if (!campaign) return next(new AppError("Campaign not found or unauthorized", 404));
 
-  await prisma.ugcCampaignTask.delete({ where: { id } });
+  const existingTask = await prisma.ugcCampaignTask.findUnique({ where: { id } });
+  
+  await prisma.$transaction(async (tx) => {
+    if (existingTask && existingTask.plannerTaskId) {
+      await tx.task.delete({ where: { id: existingTask.plannerTaskId } })
+        .catch((err) => {
+          console.warn("Failed to sync planner task deletion: ", err);
+        });
+    }
+
+    await tx.ugcCampaignTask.delete({ where: { id } });
+  });
 
   res.status(200).json({ status: "success", message: "Task deleted successfully" });
 });
@@ -311,20 +363,33 @@ export const deleteCampaignTask = catchAsync(async (req: Request, res: Response,
 export const uploadMedia = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = (req as AuthRequest).user;
   const { campaignId } = req.params as { campaignId: string };
-  const { description } = req.body as { description?: string };
+  const { title, description } = req.body as { title?: string; description?: string };
 
   if (!req.file) return next(new AppError("Media file is required", 400));
 
   const campaign = await checkCampaignAccess(campaignId, req);
-  if (!campaign) return next(new AppError("Campaign not found or unauthorized", 404));
+  if (!campaign) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Campaign not found or unauthorized", 404));
+  }
 
   const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
+  if (type === "image" && req.file.size > 2 * 1024 * 1024) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Image file size must be less than 2MB", 400));
+  }
+  if (type === "video" && req.file.size > 10 * 1024 * 1024) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Video file size must be less than 10MB", 400));
+  }
+
   const url = normalizeUploadPath(req.file.path);
 
   const media = await prisma.ugcMedia.create({
     data: {
       campaignId,
-      name: req.file.originalname,
+      name: title || req.file.originalname,
+      originalName: req.file.originalname,
       type,
       url,
       description: description ?? null,
@@ -341,30 +406,46 @@ export const uploadMedia = catchAsync(async (req: Request, res: Response, next: 
 export const replaceMedia = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = (req as AuthRequest).user;
   const { campaignId, id } = req.params as { campaignId: string; id: string };
-  const { description } = req.body as { description?: string };
+  const { title, description } = req.body as { title?: string; description?: string };
 
   if (!req.file) return next(new AppError("Replacement file is required", 400));
 
   const campaign = await checkCampaignAccess(campaignId, req);
-  if (!campaign) return next(new AppError("Campaign not found or unauthorized", 404));
+  if (!campaign) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Campaign not found or unauthorized", 404));
+  }
 
   // Find and delete the old physical file
   const existing = await prisma.ugcMedia.findUnique({ where: { id } });
-  if (!existing) return next(new AppError("Media item not found", 404));
+  if (!existing) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Media item not found", 404));
+  }
+
+  const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
+  if (type === "image" && req.file.size > 2 * 1024 * 1024) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Image file size must be less than 2MB", 400));
+  }
+  if (type === "video" && req.file.size > 10 * 1024 * 1024) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Video file size must be less than 10MB", 400));
+  }
 
   const absolutePath = getAbsoluteUploadPath(existing.url);
   if (existing.url && fs.existsSync(absolutePath)) {
     try { fs.unlinkSync(absolutePath); } catch { }
   }
 
-  const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
   const url = normalizeUploadPath(req.file.path);
 
   // Update the existing record in-place (preserves ID & relations, resets status to pending)
   const updated = await prisma.ugcMedia.update({
     where: { id },
     data: {
-      name: req.file.originalname,
+      name: title || req.file.originalname,
+      originalName: req.file.originalname,
       type,
       url,
       description: description ?? existing.description,
@@ -405,18 +486,28 @@ export const deleteMedia = catchAsync(async (req: Request, res: Response, next: 
 export const uploadDocument = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = (req as AuthRequest).user;
   const { campaignId } = req.params as { campaignId: string };
+  const { title } = req.body as { title?: string };
 
   if (!req.file) return next(new AppError("Document file is required", 400));
 
   const campaign = await checkCampaignAccess(campaignId, req);
-  if (!campaign) return next(new AppError("Campaign not found or unauthorized", 404));
+  if (!campaign) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Campaign not found or unauthorized", 404));
+  }
+
+  if (req.file.size > 10 * 1024 * 1024) {
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return next(new AppError("Document file size must be less than 10MB", 400));
+  }
 
   const url = normalizeUploadPath(req.file.path);
 
   const doc = await prisma.ugcDocument.create({
     data: {
       campaignId,
-      name: req.file.originalname,
+      name: title || req.file.originalname,
+      originalName: req.file.originalname,
       url,
     },
   });

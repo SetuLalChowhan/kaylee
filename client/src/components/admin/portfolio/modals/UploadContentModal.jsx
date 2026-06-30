@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, CloudUpload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
-import natureVideo from '@/assets/videos/nature.mp4';
+import { toast } from 'react-toastify';
 
 const UploadContentModal = ({ isOpen, onClose, onUpload, isPending }) => {
   const [preview, setPreview] = useState(null);
@@ -13,13 +13,27 @@ const UploadContentModal = ({ isOpen, onClose, onUpload, isPending }) => {
   useEffect(() => {
     if (selectedFile && selectedFile[0]) {
       const file = selectedFile[0];
-      const url = URL.createObjectURL(file);
       const type = file.type.startsWith('video') ? 'video' : 'image';
+      
+      if (type === 'image' && file.size > 2 * 1024 * 1024) {
+        toast.error("Image file size exceeds the 2MB limit.");
+        reset({ file: null });
+        setPreview(null);
+        return;
+      }
+      if (type === 'video' && file.size > 10 * 1024 * 1024) {
+        toast.error("Video file size exceeds the 10MB limit.");
+        reset({ file: null });
+        setPreview(null);
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
       setPreview({ url, type });
     } else {
       setPreview(null);
     }
-  }, [selectedFile]);
+  }, [selectedFile, reset]);
 
   const handleFormSubmit = (data) => {
     onUpload({ ...data, file: data.file[0] });

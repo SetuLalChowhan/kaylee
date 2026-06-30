@@ -35,14 +35,15 @@ model UgcDeliverable {
 }
 
 model UgcCampaignTask {
-  id         String      @id @default(uuid())
-  campaignId String
-  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  name       String
-  date       String
-  completed  Boolean     @default(false)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id            String      @id @default(uuid())
+  campaignId    String
+  campaign      UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name          String
+  date          String
+  completed     Boolean     @default(false)
+  plannerTaskId String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@map("ugc_campaign_tasks")
 }
@@ -52,6 +53,7 @@ model UgcMedia {
   campaignId  String
   campaign    UgcCampaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   name        String
+  originalName String?
   type        String               // "image" | "video"
   url         String
   description String?
@@ -68,6 +70,7 @@ model UgcDocument {
   campaignId String
   campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   name       String
+  originalName String?
   url        String
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt

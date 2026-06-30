@@ -120,7 +120,7 @@ const BrandView = () => {
             )}
 
             {/* Tabs */}
-            <div className="flex items-center gap-6 mb-8 border-b border-gray-100 pb-0">
+            <div className="flex items-center gap-6 mb-8 border-b border-gray-100 pb-0 mt-8">
                 {tabs.map((tab) => (
                     <button
                         key={tab}
@@ -206,11 +206,22 @@ const BrandView = () => {
                             >
                                 <X className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
-                            <div className="rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+                            <div
+                                className="rounded-2xl overflow-hidden bg-black flex items-center justify-center relative"
+                                onContextMenu={(e) => e.preventDefault()}
+                                onDragStart={(e) => e.preventDefault()}
+                            >
                                 {previewItem.type === 'video' ? (
-                                    <video src={getImgUrl(previewItem.url)} className="w-full max-h-[75vh]" controls autoPlay />
+                                    <video src={getImgUrl(previewItem.url)} className="w-full max-h-[75vh]" controls autoPlay onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
                                 ) : (
-                                    <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[75vh] object-contain" loading="lazy" />
+                                    <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[75vh] object-contain" loading="lazy" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+                                )}
+                                {!campaign?.releaseFiles && (
+                                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden bg-black/10">
+                                        <span className="text-white/20 text-7xl font-black tracking-widest uppercase transform -rotate-45 drop-shadow-lg select-none">
+                                            STAKD
+                                        </span>
+                                    </div>
                                 )}
                             </div>
                             <div className="mt-3 text-center text-white">

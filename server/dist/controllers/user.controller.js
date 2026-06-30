@@ -556,6 +556,79 @@ export const adminUpdateUser = catchAsync(async (req, res, next) => {
         data: updatedUser
     });
 });
+// Helper function to clean up all physical files associated with a user
+async function cleanUserPhysicalFiles(userId) {
+    const fileUrls = [];
+    try {
+        // 1. Fetch user avatar & brandLogos
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { avatar: true, brandLogos: true },
+        });
+        if (user) {
+            if (user.avatar)
+                fileUrls.push(user.avatar);
+            if (user.brandLogos && Array.isArray(user.brandLogos)) {
+                fileUrls.push(...user.brandLogos);
+            }
+        }
+        // 2. Fetch portfolio items
+        const portfolioItems = await prisma.portfolioItem.findMany({
+            where: { userId },
+            select: { url: true },
+        });
+        fileUrls.push(...portfolioItems.map((item) => item.url));
+        // 3. Fetch campaign media & documents
+        const campaigns = await prisma.ugcCampaign.findMany({
+            where: { userId },
+            select: {
+                media: { select: { url: true } },
+                documents: { select: { url: true } },
+            },
+        });
+        for (const c of campaigns) {
+            fileUrls.push(...c.media.map((m) => m.url));
+            fileUrls.push(...c.documents.map((d) => d.url));
+        }
+        // Physically delete files
+        for (const url of fileUrls) {
+            if (!url)
+                continue;
+            const absPath = getAbsoluteUploadPath(url);
+            if (fs.existsSync(absPath)) {
+                try {
+                    fs.unlinkSync(absPath);
+                }
+                catch (err) {
+                    // ignore
+                }
+            }
+        }
+    }
+    catch (err) {
+        console.error("Error cleaning up physical user files: ", err);
+    }
+}
+/**
+ * DELETE /api/user/delete-account — Authenticated user permanently deletes their own account
+ */
+export const deleteAccount = catchAsync(async (req, res, next) => {
+    const { userId } = req.user;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user)
+        return next(new AppError("User not found", 404));
+    // 1. Physically delete all files of the user
+    await cleanUserPhysicalFiles(userId);
+    // 2. Cascade delete database records
+    await prisma.user.delete({ where: { id: userId } });
+    // 3. Clear auth cookies
+    res.clearCookie("token");
+    res.clearCookie("refreshToken");
+    res.status(200).json({
+        status: "success",
+        message: "Your account and all associated data have been permanently deleted.",
+    });
+});
 /**
  * DELETE /api/user/admin/users/:id — Admin deletes any user (Admin-only)
  */
@@ -569,6 +642,9 @@ export const adminDeleteUser = catchAsync(async (req, res, next) => {
     if (id === userId) {
         return next(new AppError("You cannot delete your own admin account", 400));
     }
+    // 1. Physically delete all files of the user
+    await cleanUserPhysicalFiles(id);
+    // 2. Cascade delete database records
     await prisma.user.delete({ where: { id } });
     res.status(200).json({
         status: "success",

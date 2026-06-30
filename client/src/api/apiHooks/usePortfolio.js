@@ -29,11 +29,19 @@ export const useCreatePortfolioItem = () => {
   const axiosSecure = useAxiosSecure();
 
   return useMutation({
-    mutationFn: async (formData) => {
+    mutationFn: async (variables) => {
+      const formData = variables instanceof FormData ? variables : variables.formData;
+      const onProgress = variables instanceof FormData ? null : variables.onProgress;
       const res = await axiosSecure.post(USER.PORTFOLIO, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(percentCompleted);
+          }
+        }
       });
       return res.data;
     },
@@ -56,11 +64,17 @@ export const useUpdatePortfolioItem = () => {
   const axiosSecure = useAxiosSecure();
 
   return useMutation({
-    mutationFn: async ({ id, formData }) => {
+    mutationFn: async ({ id, formData, onProgress }) => {
       const res = await axiosSecure.patch(`${USER.PORTFOLIO}/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(percentCompleted);
+          }
+        }
       });
       return res.data;
     },

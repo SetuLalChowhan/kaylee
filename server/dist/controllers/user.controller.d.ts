@@ -31,6 +31,10 @@ export declare const adminCreateUser: (req: Request, res: Response, next: NextFu
  */
 export declare const adminUpdateUser: (req: Request, res: Response, next: NextFunction) => void;
 /**
+ * DELETE /api/user/delete-account — Authenticated user permanently deletes their own account
+ */
+export declare const deleteAccount: (req: Request, res: Response, next: NextFunction) => void;
+/**
  * DELETE /api/user/admin/users/:id — Admin deletes any user (Admin-only)
  */
 export declare const adminDeleteUser: (req: Request, res: Response, next: NextFunction) => void;

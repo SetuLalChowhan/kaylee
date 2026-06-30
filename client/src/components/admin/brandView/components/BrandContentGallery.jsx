@@ -114,6 +114,8 @@ const BrandContentGallery = ({
                   ? 'cursor-not-allowed'
                   : 'cursor-pointer'
               }`}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
               onClick={() => {
                 const isPending = pendingApproveId === item.id || (pendingApproveId === 'all' && item.status !== 'approved');
                 if (!isPending) {
@@ -132,6 +134,9 @@ const BrandContentGallery = ({
                     preload="metadata"
                     onMouseEnter={(e) => { e.target.play().catch(() => { }); }}
                     onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    draggable="false"
                   />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover/media:opacity-0 transition-opacity">
                     <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
@@ -140,7 +145,15 @@ const BrandContentGallery = ({
                   </div>
                 </>
               ) : (
-                <img src={getImgUrl(item.url)} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                <img src={getImgUrl(item.url)} alt={item.name} className="w-full h-full object-cover" loading="lazy" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+              )}
+
+              {!releaseFiles && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden bg-black/5">
+                  <span className="text-white/30 text-3xl font-black tracking-widest uppercase transform -rotate-45 drop-shadow-sm select-none">
+                    STAKD
+                  </span>
+                </div>
               )}
 
               {/* Hover overlay with description */}
@@ -245,11 +258,22 @@ const BrandContentGallery = ({
               <button onClick={() => setPreviewItem(null)} className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer">
                 <X className="w-5 h-5 md:w-6 md:h-6" />
               </button>
-              <div className="rounded-2xl overflow-hidden bg-black">
+              <div 
+                className="rounded-2xl overflow-hidden bg-black relative"
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+              >
                 {previewItem.type === 'video' ? (
-                  <video src={getImgUrl(previewItem.url)} className="w-full max-h-[80vh]" controls autoPlay />
+                  <video src={getImgUrl(previewItem.url)} className="w-full max-h-[80vh]" controls autoPlay onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
                 ) : (
-                  <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" loading="lazy" />
+                  <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" loading="lazy" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+                )}
+                {!releaseFiles && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden bg-black/10">
+                    <span className="text-white/20 text-7xl font-black tracking-widest uppercase transform -rotate-45 drop-shadow-lg select-none">
+                      STAKD
+                    </span>
+                  </div>
                 )}
               </div>
               <div className="mt-3 text-center">

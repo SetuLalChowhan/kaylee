@@ -2,7 +2,7 @@ import React from 'react';
 import { X, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
-import natureVideo from '@/assets/videos/nature.mp4';
+import { toast } from 'react-toastify';
 
 const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => {
   const [previewUrl, setPreviewUrl] = React.useState(content?.url);
@@ -21,8 +21,19 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const url = URL.createObjectURL(file);
       const type = file.type.startsWith('video') ? 'video' : 'image';
+      if (type === 'image' && file.size > 2 * 1024 * 1024) {
+        toast.error("Image file size exceeds the 2MB limit.");
+        e.target.value = '';
+        return;
+      }
+      if (type === 'video' && file.size > 10 * 1024 * 1024) {
+        toast.error("Video file size exceeds the 10MB limit.");
+        e.target.value = '';
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       setPreviewType(type);
       setValue('newFile', file); // For console log
@@ -68,7 +79,7 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => 
             <div className="relative rounded-2xl md:rounded-[32px] overflow-hidden group bg-gray-50 border border-gray-100 aspect-square">
               {previewType === 'video' ? (
                 <video 
-                  src={previewUrl || natureVideo} 
+                  src={previewUrl} 
                   className="w-full h-full object-cover"
                   autoPlay
                   muted

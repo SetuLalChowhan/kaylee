@@ -22,6 +22,7 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const UserList = () => {
   const axiosSecure = useAxiosSecure();
@@ -719,6 +720,7 @@ const UserList = () => {
                           <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Amount</th>
                           <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Deadline</th>
                           <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Status</th>
+                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400 text-center">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -732,6 +734,15 @@ const UserList = () => {
                               <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600`}>
                                 {c.status}
                               </span>
+                            </td>
+                            <td className="py-2 px-3 text-center">
+                              <Link
+                                to={`/dashboard/campaigns/${c.id}`}
+                                className="inline-flex items-center justify-center p-1 text-slate-400 hover:text-Primary hover:bg-slate-100 rounded transition-all"
+                                title="View Campaign"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </Link>
                             </td>
                           </tr>
                         ))}

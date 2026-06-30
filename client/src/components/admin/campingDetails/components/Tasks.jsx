@@ -3,9 +3,17 @@ import { ClipboardList, Trash2, PlusCircle, CheckCircle2, Circle } from 'lucide-
 import { useCreateCampaignTask, useUpdateCampaignTask, useDeleteCampaignTask } from '@/api/apiHooks/useUgcCampaign';
 
 const Tasks = ({ campaign }) => {
+  const getTodayString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const [showInput, setShowInput] = useState(false);
   const [newTask, setNewTask] = useState('');
-  const [newDate, setNewDate] = useState('2026-04-20');
+  const [newDate, setNewDate] = useState(getTodayString());
 
   const createTaskMutation = useCreateCampaignTask();
   const updateTaskMutation = useUpdateCampaignTask();
@@ -19,7 +27,7 @@ const Tasks = ({ campaign }) => {
       {
         onSuccess: () => {
           setNewTask('');
-          setNewDate('2026-04-20');
+          setNewDate(getTodayString());
           setShowInput(false);
         },
       }
@@ -54,11 +62,14 @@ const Tasks = ({ campaign }) => {
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center">
+      <div className="flex items-start gap-3 mb-5">
+        <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center shrink-0">
           <ClipboardList className="w-5 h-5 text-Primary" />
         </div>
-        <h3 className="text-sm font-bold text-[#1A1A1A]">Tasks</h3>
+        <div>
+          <h3 className="text-sm font-bold text-[#1A1A1A]">Tasks</h3>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">Remain organised create a task list</p>
+        </div>
       </div>
 
       <div className="space-y-2 mb-4">
@@ -87,7 +98,7 @@ const Tasks = ({ campaign }) => {
         )}
       </div>
 
-      {showInput && (
+      {showInput ? (
         <div className="space-y-3 mb-4">
           <input
             type="text"
@@ -106,16 +117,16 @@ const Tasks = ({ campaign }) => {
                 className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
               />
             </div>
-            <button onClick={handleAdd} className="bg-Primary text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all">Add</button>
-            <button onClick={() => { setShowInput(false); setNewTask(''); }} className="text-sm text-gray-500 font-medium hover:text-[#1A1A1A] transition-colors">Cancel</button>
+            <button onClick={handleAdd} className="bg-Primary text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer">Add</button>
+            <button onClick={() => { setShowInput(false); setNewTask(''); setNewDate(getTodayString()); }} className="text-sm text-gray-500 font-medium hover:text-[#1A1A1A] transition-colors cursor-pointer">Cancel</button>
           </div>
         </div>
+      ) : (
+        <button onClick={() => setShowInput(true)} className="flex items-center gap-2 text-Primary text-sm font-bold hover:underline cursor-pointer">
+          <PlusCircle className="w-4 h-4" />
+          Add Task
+        </button>
       )}
-
-      <button onClick={() => setShowInput(true)} className="flex items-center gap-2 text-Primary text-sm font-bold hover:underline">
-        <PlusCircle className="w-4 h-4" />
-        Add Task
-      </button>
     </div>
   );
 };

@@ -1,6 +1,16 @@
 import JSZip from 'jszip';
 import { getImgUrl } from './image';
 
+const getExtension = (url) => {
+  if (!url) return '';
+  const parts = url.split('.');
+  if (parts.length > 1) {
+    const ext = parts[parts.length - 1].split('?')[0]; // Strip query parameters
+    return `.${ext}`;
+  }
+  return '';
+};
+
 /**
  * Downloads a single file directly as a Blob, forcing browser auto-download.
  */
@@ -12,9 +22,15 @@ export const downloadFileDirectly = async (relativeUrl, name) => {
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
     
+    const ext = getExtension(relativeUrl);
+    let downloadName = name || 'download';
+    if (ext && !downloadName.toLowerCase().endsWith(ext.toLowerCase())) {
+      downloadName = downloadName + ext;
+    }
+
     const link = document.createElement('a');
     link.href = blobUrl;
-    link.download = name || 'download';
+    link.download = downloadName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -48,7 +64,13 @@ export const downloadCampaignZip = async (campaign) => {
       const response = await fetch(absoluteUrl);
       if (!response.ok) throw new Error(`Failed to fetch media item ${item.name}`);
       const blob = await response.blob();
-      const filename = item.name || `media_${idx}.${item.type === 'video' ? 'mp4' : 'jpg'}`;
+      
+      const ext = getExtension(item.url);
+      let filename = item.name || `media_${idx}`;
+      if (ext && !filename.toLowerCase().endsWith(ext.toLowerCase())) {
+        filename = filename + ext;
+      }
+      
       mediaFolder.file(filename, blob);
     } catch (err) {
       console.error(`Failed to pack media file ${item.name || idx}:`, err);
@@ -62,7 +84,13 @@ export const downloadCampaignZip = async (campaign) => {
       const response = await fetch(absoluteUrl);
       if (!response.ok) throw new Error(`Failed to fetch document ${doc.name}`);
       const blob = await response.blob();
-      const filename = doc.name || `doc_${idx}.pdf`;
+      
+      const ext = getExtension(doc.url);
+      let filename = doc.name || `doc_${idx}`;
+      if (ext && !filename.toLowerCase().endsWith(ext.toLowerCase())) {
+        filename = filename + ext;
+      }
+      
       documentsFolder.file(filename, blob);
     } catch (err) {
       console.error(`Failed to pack document ${doc.name || idx}:`, err);

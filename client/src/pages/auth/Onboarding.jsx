@@ -199,7 +199,7 @@ const Onboarding = () => {
                         </div>
                         <input 
                           {...register("instagram")}
-                          placeholder="@username"
+                          placeholder="https://instagram.com/username"
                           className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.instagram ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-xs sm:text-sm focus:outline-none focus:border-Primary transition-all`}
                         />
                       </div>
@@ -212,7 +212,7 @@ const Onboarding = () => {
                         </div>
                         <input 
                           {...register("tiktok")}
-                          placeholder="@username"
+                          placeholder="https://tiktok.com/@username"
                           className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.tiktok ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-xs sm:text-sm focus:outline-none focus:border-Primary transition-all`}
                         />
                       </div>
@@ -226,7 +226,7 @@ const Onboarding = () => {
                       </div>
                       <input 
                         {...register("youtube")}
-                        placeholder="URL link here"
+                        placeholder="https://youtube.com/@username"
                         className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.youtube ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-xs sm:text-sm focus:outline-none focus:border-Primary transition-all`}
                       />
                     </div>
@@ -237,7 +237,7 @@ const Onboarding = () => {
                 <AuthInput 
                   label="Other Link"
                   name="otherLink"
-                  placeholder="URL link here"
+                  placeholder="https://example.com"
                   register={register}
                   error={errors.otherLink}
                 />

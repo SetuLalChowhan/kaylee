@@ -65,20 +65,10 @@ const MediaItem = ({ item, onEdit, onDelete, onPreview }) => {
               >
                 <button 
                   onClick={() => {
-                    onEdit(item);
-                    setShowOptions(false);
-                  }}
-                  className="w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-600 hover:bg-gray-50 hover:text-Primary transition-colors font-bold"
-                >
-                  <Edit3 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  <span>Edit</span>
-                </button>
-                <button 
-                  onClick={() => {
                     onDelete(item);
                     setShowOptions(false);
                   }}
-                  className="w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-red-500 hover:bg-red-50 transition-colors font-bold"
+                  className="w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-red-500 hover:bg-red-50 transition-colors font-bold cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   <span>Delete</span>

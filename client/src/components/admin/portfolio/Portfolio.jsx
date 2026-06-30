@@ -217,7 +217,7 @@ const Portfolio = () => {
               </button>
               <div className="rounded-2xl overflow-hidden bg-black">
                 {previewItem.type === 'video' ? (
-                  <video src={natureVideo} className="w-full max-h-[80vh]" controls autoPlay />
+                  <video src={previewItem.url} className="w-full max-h-[80vh]" controls autoPlay />
                 ) : (
                   <img src={previewItem.url} alt={previewItem.title} className="w-full max-h-[80vh] object-contain" loading="lazy" />
                 )}

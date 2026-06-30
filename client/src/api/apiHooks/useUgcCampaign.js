@@ -154,6 +154,8 @@ export const useCreateCampaignTask = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -168,6 +170,8 @@ export const useUpdateCampaignTask = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -182,6 +186,8 @@ export const useDeleteCampaignTask = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -193,9 +199,15 @@ export const useUploadCampaignMedia = () => {
   const queryClient = useQueryClient();
   const axiosSecure = useAxiosSecure();
   return useMutation({
-    mutationFn: async ({ campaignId, formData }) => {
+    mutationFn: async ({ campaignId, formData, onProgress }) => {
       const res = await axiosSecure.post(`${USER.UGC_CAMPAIGN}/${campaignId}/media`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(percentCompleted);
+          }
+        }
       });
       return res.data;
     },
@@ -231,11 +243,19 @@ export const useReplaceCampaignMedia = () => {
   const queryClient = useQueryClient();
   const axiosSecure = useAxiosSecure();
   return useMutation({
-    mutationFn: async ({ campaignId, id, formData }) => {
+    mutationFn: async ({ campaignId, id, formData, onProgress }) => {
       const res = await axiosSecure.patch(
         `${USER.UGC_CAMPAIGN}/${campaignId}/media/${id}/replace`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: (progressEvent) => {
+            if (onProgress && progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              onProgress(percentCompleted);
+            }
+          }
+        }
       );
       return res.data;
     },
@@ -257,9 +277,15 @@ export const useUploadCampaignDocument = () => {
   const queryClient = useQueryClient();
   const axiosSecure = useAxiosSecure();
   return useMutation({
-    mutationFn: async ({ campaignId, formData }) => {
+    mutationFn: async ({ campaignId, formData, onProgress }) => {
       const res = await axiosSecure.post(`${USER.UGC_CAMPAIGN}/${campaignId}/documents`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(percentCompleted);
+          }
+        }
       });
       return res.data;
     },

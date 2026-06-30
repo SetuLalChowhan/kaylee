@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
-import { setUser as setReduxUser } from "../../redux/slices/authSlice";
+import { setUser as setReduxUser, clearAuth } from "../../redux/slices/authSlice";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import { USER } from "../apiEndPoint";
 
@@ -152,6 +153,31 @@ export const useDashboardStats = () => {
       return res.data?.data || res.data;
     },
     staleTime: 2 * 60 * 1000,
+  });
+};
+
+/**
+ * useDeleteAccount — Permanently delete user account
+ */
+export const useDeleteAccount = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const axiosSecure = useAxiosSecure();
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await axiosSecure.delete(USER.DELETE_ACCOUNT);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || "Account permanently deleted.");
+      dispatch(clearAuth());
+      navigate("/login");
+    },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to delete account";
+      toast.error(msg);
+    },
   });
 };
 

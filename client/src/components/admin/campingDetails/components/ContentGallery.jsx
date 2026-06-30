@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Image as ImageIcon, CloudUpload, Play, RefreshCw, Trash2, X } from 'lucide-react';
+import { Image as ImageIcon, CloudUpload, Play, RefreshCw, Trash2, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUploadCampaignMedia, useDeleteCampaignMedia, useReplaceCampaignMedia } from '@/api/apiHooks/useUgcCampaign';
 import { getImgUrl } from '@/utils/image';
+import { toast } from 'react-toastify';
 
 const ContentGallery = ({ campaign }) => {
   const fileRef = useRef(null);
@@ -16,10 +17,13 @@ const ContentGallery = ({ campaign }) => {
   // Caption modal state (for new uploads)
   const [captionModal, setCaptionModal] = useState({ open: false, files: [] });
   const [captions, setCaptions] = useState({});
+  const [titles, setTitles] = useState({});
+  const [uploadProgress, setUploadProgress] = useState({});
 
   // Replace caption modal state (for individual replace)
   const [replaceModal, setReplaceModal] = useState({ open: false, itemId: null, file: null, url: null, type: null });
   const [replaceCaption, setReplaceCaption] = useState('');
+  const [replaceTitle, setReplaceTitle] = useState('');
 
   // Preview modal
   const [previewItem, setPreviewItem] = useState(null);
@@ -30,7 +34,28 @@ const ContentGallery = ({ campaign }) => {
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-    const mapped = files.map(f => ({
+
+    // Filter valid files and toast errors for invalid ones
+    const validFiles = [];
+    for (const f of files) {
+      const type = f.type.startsWith('video') ? 'video' : 'image';
+      if (type === 'image' && f.size > 2 * 1024 * 1024) {
+        toast.error(`Image "${f.name}" exceeds the 2MB limit.`);
+        continue;
+      }
+      if (type === 'video' && f.size > 10 * 1024 * 1024) {
+        toast.error(`Video "${f.name}" exceeds the 10MB limit.`);
+        continue;
+      }
+      validFiles.push(f);
+    }
+
+    if (validFiles.length === 0) {
+      if (fileRef.current) fileRef.current.value = '';
+      return;
+    }
+
+    const mapped = validFiles.map(f => ({
       file: f,
       name: f.name,
       type: f.type.startsWith('video') ? 'video' : 'image',
@@ -38,6 +63,7 @@ const ContentGallery = ({ campaign }) => {
     }));
     setCaptionModal({ open: true, files: mapped });
     setCaptions({});
+    setTitles({});
     // reset input
     if (fileRef.current) fileRef.current.value = '';
   };
@@ -46,8 +72,33 @@ const ContentGallery = ({ campaign }) => {
     captionModal.files.forEach(f => {
       const formData = new FormData();
       formData.append('file', f.file);
+      formData.append('title', titles[f.name] || f.name);
       formData.append('description', captions[f.name] || '');
-      uploadMutation.mutate({ campaignId: campaign.id, formData });
+
+      setUploadProgress(prev => ({ ...prev, [f.name]: 0 }));
+
+      uploadMutation.mutate({
+        campaignId: campaign.id,
+        formData,
+        onProgress: (percent) => {
+          setUploadProgress(prev => ({ ...prev, [f.name]: percent }));
+        }
+      }, {
+        onSuccess: () => {
+          setUploadProgress(prev => {
+            const next = { ...prev };
+            delete next[f.name];
+            return next;
+          });
+        },
+        onError: () => {
+          setUploadProgress(prev => {
+            const next = { ...prev };
+            delete next[f.name];
+            return next;
+          });
+        }
+      });
     });
     setCaptionModal({ open: false, files: [] });
   };
@@ -64,14 +115,27 @@ const ContentGallery = ({ campaign }) => {
   const handleReplaceFileSelect = (e, itemId) => {
     const file = e.target.files[0];
     if (!file) return;
-    // Open the caption modal for this specific replacement
+
+    const type = file.type.startsWith('video') ? 'video' : 'image';
+    if (type === 'image' && file.size > 2 * 1024 * 1024) {
+      toast.error(`Image "${file.name}" exceeds the 2MB limit.`);
+      e.target.value = '';
+      return;
+    }
+    if (type === 'video' && file.size > 10 * 1024 * 1024) {
+      toast.error(`Video "${file.name}" exceeds the 10MB limit.`);
+      e.target.value = '';
+      return;
+    }
+
     setReplaceCaption('');
+    setReplaceTitle('');
     setReplaceModal({
       open: true,
       itemId,
       file,
       url: URL.createObjectURL(file),
-      type: file.type.startsWith('video') ? 'video' : 'image',
+      type,
     });
     e.target.value = '';
   };
@@ -80,8 +144,14 @@ const ContentGallery = ({ campaign }) => {
     if (!replaceModal.file || !replaceModal.itemId) return;
     const formData = new FormData();
     formData.append('file', replaceModal.file);
+    formData.append('title', replaceTitle || replaceModal.file.name);
     formData.append('description', replaceCaption);
-    replaceMutation.mutate({ campaignId: campaign.id, id: replaceModal.itemId, formData });
+
+    replaceMutation.mutate({
+      campaignId: campaign.id,
+      id: replaceModal.itemId,
+      formData,
+    });
     setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null });
   };
 
@@ -96,11 +166,14 @@ const ContentGallery = ({ campaign }) => {
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center">
+      <div className="flex items-start gap-3 mb-5">
+        <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center shrink-0">
           <ImageIcon className="w-5 h-5 text-Primary" />
         </div>
-        <h3 className="text-sm font-bold text-[#1A1A1A]">Content Gallery</h3>
+        <div>
+          <h3 className="text-sm font-bold text-[#1A1A1A]">Content Gallery</h3>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">Upload deliverables here for brand to see via their unique link</p>
+        </div>
       </div>
 
       {/* Upload Area — adds new files to the gallery */}
@@ -116,10 +189,18 @@ const ContentGallery = ({ campaign }) => {
       </div>
 
       {/* Grid */}
-      {items.length > 0 && (
+      {(items.length > 0 || Object.keys(uploadProgress).length > 0) && (
         <>
           <h4 className="text-sm font-bold text-[#1A1A1A] mb-4">Uploaded Content</h4>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            {Object.entries(uploadProgress).map(([filename, progress]) => (
+              <div key={filename} className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 flex flex-col items-center justify-center p-4">
+                <Loader2 className="w-6 h-6 text-Primary animate-spin mb-2" />
+                <span className="text-xs font-bold text-[#1A1A1A] text-center truncate w-full px-2">{filename}</span>
+                <span className="text-[10px] font-bold text-Primary mt-1">{progress}%</span>
+                <div className="absolute bottom-0 left-0 h-1 bg-Primary transition-all duration-300" style={{ width: `${progress}%` }} />
+              </div>
+            ))}
             {items.map((item) => (
               <div
                 key={item.id}
@@ -245,14 +326,21 @@ const ContentGallery = ({ campaign }) => {
                         <img src={file.url} alt={file.name} className="w-full h-full object-cover" loading="lazy" />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs md:text-sm font-bold text-[#1A1A1A] mb-1 md:mb-2 text-left">{file.name}</p>
+                    <div className="flex-1 space-y-2">
+                      <p className="text-xs md:text-sm font-bold text-[#1A1A1A] mb-1 text-left">{file.name}</p>
+                      <input
+                        type="text"
+                        placeholder="File Title (e.g. 'OTWAY PASTURES PRODUCT PHOTO')"
+                        value={titles[file.name] || ''}
+                        onChange={(e) => setTitles(prev => ({ ...prev, [file.name]: e.target.value }))}
+                        className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+                      />
                       <input
                         type="text"
                         placeholder="e.g. 'Behind the scenes shot with product', etc."
                         value={captions[file.name] || ''}
                         onChange={(e) => setCaptions(prev => ({ ...prev, [file.name]: e.target.value }))}
-                        className="w-full bg-white border border-gray-100 rounded-xl py-2 md:py-2.5 px-3 md:px-4 text-xs md:text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+                        className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
                       />
                     </div>
                   </div>
@@ -305,14 +393,21 @@ const ContentGallery = ({ campaign }) => {
                     <img src={replaceModal.url} alt="replacement preview" className="w-full h-full object-cover" loading="lazy" />
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs font-bold text-[#1A1A1A] mb-2 text-left truncate">{replaceModal.file?.name}</p>
+                <div className="flex-1 space-y-2">
+                  <p className="text-xs font-bold text-[#1A1A1A] mb-1 text-left truncate">{replaceModal.file?.name}</p>
+                  <input
+                    type="text"
+                    placeholder="File Title (e.g. 'OTWAY PASTURES PRODUCT PHOTO')"
+                    value={replaceTitle}
+                    onChange={(e) => setReplaceTitle(e.target.value)}
+                    className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+                  />
                   <input
                     type="text"
                     placeholder="e.g. 'Final version with logo', etc."
                     value={replaceCaption}
                     onChange={(e) => setReplaceCaption(e.target.value)}
-                    className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-4 text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+                    className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
                     autoFocus
                   />
                 </div>

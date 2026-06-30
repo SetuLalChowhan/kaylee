@@ -355,7 +355,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                     <input
                       {...register('socials.instagram')}
                       type="text"
-                      placeholder="@username"
+                      placeholder="https://instagram.com/username"
                       className={`flex-1 bg-white border ${errors.socials?.instagram ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
                     />
                   </div>
@@ -369,7 +369,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                     <input
                       {...register('socials.tiktok')}
                       type="text"
-                      placeholder="@username"
+                      placeholder="https://tiktok.com/@username"
                       className={`flex-1 bg-white border ${errors.socials?.tiktok ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
                     />
                   </div>
@@ -384,7 +384,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                   <input
                     {...register('socials.youtube')}
                     type="text"
-                    placeholder="youtube/username"
+                    placeholder="https://youtube.com/@username"
                     className={`flex-1 bg-white border ${errors.socials?.youtube ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
                   />
                 </div>
@@ -398,7 +398,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
               <input
                 {...register('otherLink')}
                 type="text"
-                placeholder="Paste your link"
+                placeholder="https://example.com"
                 className={`w-full bg-white border ${errors.otherLink ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]`}
               />
               {errors.otherLink && <p className="mt-1 text-xs text-red-500">{errors.otherLink.message}</p>}

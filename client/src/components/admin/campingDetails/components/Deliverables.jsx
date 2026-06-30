@@ -31,12 +31,15 @@ const Deliverables = ({ campaign, readOnly }) => {
   const items = campaign.deliverables || [];
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center">
+    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm ">
+      <div className="flex items-start gap-3 mb-5">
+        <div className="w-10 h-10 bg-Primary/5 rounded-xl flex items-center justify-center shrink-0">
           <ListChecks className="w-5 h-5 text-Primary" />
         </div>
-        <h3 className="text-sm font-bold text-[#1A1A1A]">Deliverables</h3>
+        <div>
+          <h3 className="text-sm font-bold text-[#1A1A1A]">Deliverables</h3>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">Campaign deliverable requirements</p>
+        </div>
       </div>
 
       <div className="space-y-2 mb-4">

@@ -23,6 +23,8 @@ import { AppError } from "./utils/AppError.js";
 import prisma from "./config/db.js";
 import { runSeeds } from "./seeds/index.js";
 
+import { downloadInterceptor } from "./middlewares/download.middleware.js";
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -30,20 +32,21 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  "https://stackd12.netlify.app",
-  "https://stackdadmin.netlify.app",
+  "https://stakd-client.vercel.app",
+  "https://stakd-admin.vercel.app",
+  "https://stakd.co",
 ];
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        callback(null, false);
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
-  }),
+  })
 );
 // Bypasses global parsing for Stripe webhook to preserve raw body signature
 app.use((req, res, next) => {
@@ -61,6 +64,9 @@ app.use((req, res, next) => {
   }
 });
 app.use(cookieParser());
+
+// ── Custom Static Interceptor (campaign download locking) ─────────────────────
+app.get("/uploads/campaigns/:filename", downloadInterceptor);
 
 // ── Static Files (uploaded avatars) ──────────────────────────────────────────
 const isVercel = !!process.env.VERCEL;

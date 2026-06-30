@@ -33,6 +33,7 @@ export const USER = {
   CAMPAIGN: `${API_BASE}/campaign`,
   PLANNER: `${API_BASE}/planner`,
   UGC_CAMPAIGN: `${API_BASE}/ugc-campaigns`,
+  DELETE_ACCOUNT: `${API_BASE}/user/delete-account`,
 };
 
 export default { AUTH, USER };

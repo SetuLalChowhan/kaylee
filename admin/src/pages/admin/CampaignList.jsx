@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
-import { Plus, Search, Edit3, Trash2, X, Loader2, Folder, ExternalLink } from "lucide-react";
+import { Plus, Search, Edit3, Trash2, X, Loader2, Folder, ExternalLink, Eye } from "lucide-react";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 
@@ -269,6 +269,13 @@ const CampaignList = () => {
                     </td>
                     <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-center">
                       <div className="flex items-center justify-center gap-1.5 md:gap-2">
+                        <Link
+                          to={`/dashboard/campaigns/${c.id}`}
+                          className="p-1.5 text-slate-500 hover:text-[#005BD6] hover:bg-slate-100 rounded-xl transition-all"
+                          title="View Campaign"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Link>
                         <button
                           onClick={() => openEditModal(c)}
                           className="p-1.5 text-slate-500 hover:text-[#005BD6] hover:bg-slate-100 rounded-xl transition-all"
