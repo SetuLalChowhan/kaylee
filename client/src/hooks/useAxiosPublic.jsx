@@ -6,7 +6,7 @@ const useAxiosPublic = () => {
     return axios.create({
       baseURL: import.meta.env.VITE_API_URL,
       withCredentials: true,
-      timeout: 30000,
+      // timeout: 30000,
     });
   }, []);
 
