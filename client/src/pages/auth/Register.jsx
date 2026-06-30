@@ -56,25 +56,25 @@ const Register = () => {
           error={errors.email}
           required
         />          <AuthInput
-            label="Password"
-            type="password"
-            name="password"
-            placeholder="Enter your password"
-            register={register}
-            rules={PASSWORD_RULES}
-            error={errors.password}
-            required
-          />
-          <AuthInput
-            label="Confirm Password"
-            type="password"
-            name="confirmPassword"
-            placeholder="Re-enter your password"
-            register={register}
-            rules={CONFIRM_PASSWORD_RULES(password)}
-            error={errors.confirmPassword}
-            required
-          />
+          label="Password"
+          type="password"
+          name="password"
+          placeholder="Enter your password"
+          register={register}
+          rules={PASSWORD_RULES}
+          error={errors.password}
+          required
+        />
+        <AuthInput
+          label="Confirm Password"
+          type="password"
+          name="confirmPassword"
+          placeholder="Re-enter your password"
+          register={register}
+          rules={CONFIRM_PASSWORD_RULES(password)}
+          error={errors.confirmPassword}
+          required
+        />
 
         <div className="flex items-start gap-2 mb-8">
           <input
@@ -99,13 +99,7 @@ const Register = () => {
           {registerMutation.isPending ? "Creating account..." : "Sign Up"}
         </CommonButton>
 
-        <button
-          type="button"
-          className="w-full py-4 bg-white border border-[#E6E6E6] text-[#1A1A1A] font-bold rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-all"
-        >
-          <FcGoogle className="w-6 h-6" />
-          Continue with Google
-        </button>
+
       </form>
 
       <p className="text-center text-sm text-[#666]">
