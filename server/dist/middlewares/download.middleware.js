@@ -19,6 +19,7 @@ export const downloadInterceptor = async (req, res, next) => {
         }
         // Check if the request is loaded inside our app (e.g. preview)
         const referer = req.headers.referer;
+        const origin = req.headers.origin;
         const allowedHosts = [
             "localhost:5173",
             "localhost:5174",
@@ -26,10 +27,13 @@ export const downloadInterceptor = async (req, res, next) => {
             "stackdadmin.netlify.app",
             "stakd-client.vercel.app",
             "stakd-admin.vercel.app",
-            "stakd.co",
             "softvencealpha.com",
+            "admin.getstakd.co",
+            "getstakd.co",
+            "api.getstakd.co",
         ];
-        const isFromOurApp = referer && allowedHosts.some(host => referer.includes(host));
+        const isFromOurApp = (referer && allowedHosts.some(host => referer.includes(host))) ||
+            (origin && allowedHosts.some(host => origin.includes(host)));
         if (isFromOurApp) {
             return next();
         }
