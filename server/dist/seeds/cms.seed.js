@@ -6,9 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 export async function seedCms() {
     // 1. Copy default images to uploads/cms
-    const isVercel = !!process.env.VERCEL;
-    const baseUploadDir = isVercel ? "/tmp/uploads" : "uploads";
-    const destDir = path.join(baseUploadDir, "cms");
+    const destDir = path.join("uploads", "cms");
     if (!fs.existsSync(destDir)) {
         fs.mkdirSync(destDir, { recursive: true });
     }

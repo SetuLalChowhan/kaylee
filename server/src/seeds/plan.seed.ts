@@ -1,16 +1,13 @@
-import prisma from "./config/db.js";
+import prisma from "../config/db.js";
 
-async function main() {
-  console.log("Seeding plans...");
-  
+export async function seedPlans() {
   const count = await prisma.plan.count();
   if (count > 0) {
-    console.log("Plans already seeded. Skipping.");
     return;
   }
 
   // Create starter plan (Free)
-  const starter = await prisma.plan.create({
+  await prisma.plan.create({
     data: {
       title: "STATER",
       description: "Try STAKD risk-free for a short sprint.",
@@ -31,7 +28,7 @@ async function main() {
   });
 
   // Create Pro plan
-  const pro = await prisma.plan.create({
+  await prisma.plan.create({
     data: {
       title: "PRO",
       description: "Built for creators working with brands regularly.",
@@ -52,7 +49,7 @@ async function main() {
   });
 
   // Create Growth plan
-  const growth = await prisma.plan.create({
+  await prisma.plan.create({
     data: {
       title: "GROWTH",
       description: "Scale your creator business and save more.",
@@ -72,14 +69,5 @@ async function main() {
     }
   });
 
-  console.log("Seeding complete:", { starter, pro, growth });
+  console.log("Plans seeded successfully");
 }
-
-main()
-  .catch((e) => {
-    console.error("Error seeding plans:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

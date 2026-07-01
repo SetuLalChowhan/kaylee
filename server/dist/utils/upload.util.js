@@ -16,12 +16,6 @@ export function normalizeUploadPath(filePath) {
  * resolving to "/tmp/uploads/" when running in the Vercel serverless environment.
  */
 export function getAbsoluteUploadPath(dbPath) {
-    const isVercel = !!process.env.VERCEL;
-    if (isVercel) {
-        if (dbPath.startsWith("uploads/")) {
-            return "/tmp/" + dbPath;
-        }
-    }
     return dbPath;
 }
 //# sourceMappingURL=upload.util.js.map

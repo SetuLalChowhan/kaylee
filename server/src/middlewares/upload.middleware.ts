@@ -3,8 +3,7 @@ import path from "path";
 import fs from "fs";
 import { AppError } from "../utils/AppError.js";
 
-const isVercel = !!process.env.VERCEL;
-const baseUploadDir = isVercel ? "/tmp/uploads" : "uploads";
+const baseUploadDir = "uploads";
 
 const avatarDir = path.join(baseUploadDir, "avatars");
 const brandLogoDir = path.join(baseUploadDir, "brand-logos");
