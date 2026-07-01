@@ -40,6 +40,9 @@ export const useCreateInvoice = () => {
       toast.success(data?.message || "Invoice created successfully!");
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaign"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to create invoice";
@@ -64,6 +67,9 @@ export const useUpdateInvoice = () => {
       toast.success(data?.message || "Invoice updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaign"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update invoice";
@@ -88,6 +94,9 @@ export const useDeleteInvoice = () => {
       toast.success(data?.message || "Invoice deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaign"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to delete invoice";

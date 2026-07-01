@@ -24,6 +24,7 @@ export const getCampaigns = catchAsync(async (req: Request, res: Response, next:
     id: uc.id,
     title: uc.name,
     description: uc.notes || null,
+    amount: uc.amount,
     createdAt: uc.createdAt,
     updatedAt: uc.updatedAt,
   }));

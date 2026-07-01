@@ -39,12 +39,12 @@ const ContentGallery = ({ campaign }) => {
     const validFiles = [];
     for (const f of files) {
       const type = f.type.startsWith('video') ? 'video' : 'image';
-      if (type === 'image' && f.size > 2 * 1024 * 1024) {
-        toast.error(`Image "${f.name}" exceeds the 2MB limit.`);
+      if (type === 'image' && f.size > 20 * 1024 * 1024) {
+        toast.error(`Image "${f.name}" exceeds the 20MB limit.`);
         continue;
       }
-      if (type === 'video' && f.size > 10 * 1024 * 1024) {
-        toast.error(`Video "${f.name}" exceeds the 10MB limit.`);
+      if (type === 'video' && f.size > 100 * 1024 * 1024) {
+        toast.error(`Video "${f.name}" exceeds the 100MB limit.`);
         continue;
       }
       validFiles.push(f);
@@ -117,13 +117,13 @@ const ContentGallery = ({ campaign }) => {
     if (!file) return;
 
     const type = file.type.startsWith('video') ? 'video' : 'image';
-    if (type === 'image' && file.size > 2 * 1024 * 1024) {
-      toast.error(`Image "${file.name}" exceeds the 2MB limit.`);
+    if (type === 'image' && file.size > 20 * 1024 * 1024) {
+      toast.error(`Image "${file.name}" exceeds the 20MB limit.`);
       e.target.value = '';
       return;
     }
-    if (type === 'video' && file.size > 10 * 1024 * 1024) {
-      toast.error(`Video "${file.name}" exceeds the 10MB limit.`);
+    if (type === 'video' && file.size > 100 * 1024 * 1024) {
+      toast.error(`Video "${file.name}" exceeds the 100MB limit.`);
       e.target.value = '';
       return;
     }

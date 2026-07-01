@@ -22,13 +22,13 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => 
     const file = e.target.files[0];
     if (file) {
       const type = file.type.startsWith('video') ? 'video' : 'image';
-      if (type === 'image' && file.size > 2 * 1024 * 1024) {
-        toast.error("Image file size exceeds the 2MB limit.");
+      if (type === 'image' && file.size > 20 * 1024 * 1024) {
+        toast.error("Image file size exceeds the 20MB limit.");
         e.target.value = '';
         return;
       }
-      if (type === 'video' && file.size > 10 * 1024 * 1024) {
-        toast.error("Video file size exceeds the 10MB limit.");
+      if (type === 'video' && file.size > 100 * 1024 * 1024) {
+        toast.error("Video file size exceeds the 100MB limit.");
         e.target.value = '';
         return;
       }

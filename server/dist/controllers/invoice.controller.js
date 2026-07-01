@@ -31,6 +31,21 @@ export const createInvoice = catchAsync(async (req, res, next) => {
             status: status || "Pending",
         },
     });
+    // Sync UgcCampaign amount with invoice amount
+    if (campaign) {
+        const ugcCampaign = await prisma.ugcCampaign.findFirst({
+            where: {
+                name: campaign,
+                userId: invoice.userId,
+            },
+        });
+        if (ugcCampaign) {
+            await prisma.ugcCampaign.update({
+                where: { id: ugcCampaign.id },
+                data: { amount },
+            });
+        }
+    }
     res.status(201).json({
         status: "success",
         message: "Invoice created successfully",
@@ -140,6 +155,23 @@ export const updateInvoice = catchAsync(async (req, res, next) => {
             ...(status !== undefined && { status }),
         },
     });
+    // Sync UgcCampaign amount with invoice amount
+    const finalAmount = amount !== undefined ? amount : existingInvoice.amount;
+    const finalCampaignName = campaign !== undefined ? campaign : existingInvoice.campaignName;
+    if (finalCampaignName) {
+        const ugcCampaign = await prisma.ugcCampaign.findFirst({
+            where: {
+                name: finalCampaignName,
+                userId: existingInvoice.userId,
+            },
+        });
+        if (ugcCampaign) {
+            await prisma.ugcCampaign.update({
+                where: { id: ugcCampaign.id },
+                data: { amount: finalAmount },
+            });
+        }
+    }
     res.status(200).json({
         status: "success",
         message: "Invoice updated successfully",

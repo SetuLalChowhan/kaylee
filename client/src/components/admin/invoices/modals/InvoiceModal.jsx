@@ -126,6 +126,9 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
                                 type="button"
                                 onClick={() => {
                                   setValue('campaign', c.title, { shouldValidate: true });
+                                  if (c.amount) {
+                                    setValue('amount', c.amount, { shouldValidate: true });
+                                  }
                                   setIsOpenDropdown(false);
                                 }}
                                 className="w-full text-left px-3 md:px-4 py-2 hover:bg-gray-50 text-xs md:text-sm text-[#1A1A1A] font-medium transition-colors"

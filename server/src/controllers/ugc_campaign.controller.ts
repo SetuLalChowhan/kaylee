@@ -374,13 +374,13 @@ export const uploadMedia = catchAsync(async (req: Request, res: Response, next: 
   }
 
   const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
-  if (type === "image" && req.file.size > 2 * 1024 * 1024) {
+  if (type === "image" && req.file.size > 20 * 1024 * 1024) {
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    return next(new AppError("Image file size must be less than 2MB", 400));
+    return next(new AppError("Image file size must be less than 20MB", 400));
   }
-  if (type === "video" && req.file.size > 10 * 1024 * 1024) {
+  if (type === "video" && req.file.size > 100 * 1024 * 1024) {
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    return next(new AppError("Video file size must be less than 10MB", 400));
+    return next(new AppError("Video file size must be less than 100MB", 400));
   }
 
   const url = normalizeUploadPath(req.file.path);
@@ -424,13 +424,13 @@ export const replaceMedia = catchAsync(async (req: Request, res: Response, next:
   }
 
   const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
-  if (type === "image" && req.file.size > 2 * 1024 * 1024) {
+  if (type === "image" && req.file.size > 20 * 1024 * 1024) {
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    return next(new AppError("Image file size must be less than 2MB", 400));
+    return next(new AppError("Image file size must be less than 20MB", 400));
   }
-  if (type === "video" && req.file.size > 10 * 1024 * 1024) {
+  if (type === "video" && req.file.size > 100 * 1024 * 1024) {
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    return next(new AppError("Video file size must be less than 10MB", 400));
+    return next(new AppError("Video file size must be less than 100MB", 400));
   }
 
   const absolutePath = getAbsoluteUploadPath(existing.url);

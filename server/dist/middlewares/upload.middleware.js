@@ -77,7 +77,7 @@ export const uploadBrandLogo = multer({
 export const uploadPortfolio = multer({
     storage: avatarStorage,
     fileFilter,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit for portfolio items
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB limit for portfolio items (videos/images)
 });
 // Campaign uploads config supporting images, videos, and documents
 const campaignDir = path.join(baseUploadDir, "campaigns");
@@ -95,7 +95,7 @@ const campaignStorage = multer.diskStorage({
 });
 export const uploadCampaignFile = multer({
     storage: campaignStorage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB limit
 });
 // CMS uploads config supporting images
 const cmsDir = path.join(baseUploadDir, "cms");
