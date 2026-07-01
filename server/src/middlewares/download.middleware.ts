@@ -13,9 +13,9 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
 
     const campaignDoc = !campaignMedia
       ? ((await prisma.ugcDocument.findFirst({
-          where: { url: { contains: filename as string } },
-          include: { campaign: true },
-        })) as any)
+        where: { url: { contains: filename as string } },
+        include: { campaign: true },
+      })) as any)
       : null;
 
     const campaign = campaignMedia?.campaign || campaignDoc?.campaign;
@@ -35,6 +35,8 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
       "stakd-admin.vercel.app",
       "stakd.co",
       "softvencealpha.com",
+      "https://admin.getstakd.co",
+      "https://getstakd.co",
     ];
     const isFromOurApp = referer && allowedHosts.some(host => referer.includes(host));
 

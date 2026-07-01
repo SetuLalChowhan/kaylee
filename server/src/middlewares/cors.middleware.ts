@@ -6,6 +6,8 @@ const allowedOrigins = [
   "https://stackd12.netlify.app",
   "https://stackdadmin.netlify.app",
   "https://stakd.co",
+  "https://admin.getstakd.co",
+  "https://getstakd.co",
 ];
 
 export const corsMiddleware = cors({
