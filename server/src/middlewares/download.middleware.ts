@@ -26,6 +26,7 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
 
     // Check if the request is loaded inside our app (e.g. preview)
     const referer = req.headers.referer;
+    const origin = req.headers.origin;
     const allowedHosts = [
       "localhost:5173",
       "localhost:5174",
@@ -34,12 +35,13 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
       "stakd-client.vercel.app",
       "stakd-admin.vercel.app",
       "softvencealpha.com",
-      "https://admin.getstakd.co",
-      "https://getstakd.co",
-      "https://api.getstakd.co",
-      
+      "admin.getstakd.co",
+      "getstakd.co",
+      "api.getstakd.co",
     ];
-    const isFromOurApp = referer && allowedHosts.some(host => referer.includes(host));
+    const isFromOurApp =
+      (referer && allowedHosts.some(host => referer.includes(host))) ||
+      (origin && allowedHosts.some(host => origin.includes(host)));
 
     if (isFromOurApp) {
       return next();
