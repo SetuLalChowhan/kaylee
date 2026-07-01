@@ -33,10 +33,11 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
       "stackdadmin.netlify.app",
       "stakd-client.vercel.app",
       "stakd-admin.vercel.app",
-      "stakd.co",
       "softvencealpha.com",
       "https://admin.getstakd.co",
       "https://getstakd.co",
+      "https://api.getstakd.co",
+      
     ];
     const isFromOurApp = referer && allowedHosts.some(host => referer.includes(host));
 
