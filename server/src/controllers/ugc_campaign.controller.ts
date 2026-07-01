@@ -3,6 +3,7 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import fs from "fs";
+import jwt from "jsonwebtoken";
 import {
   normalizeUploadPath,
   getAbsoluteUploadPath,
@@ -10,6 +11,50 @@ import {
 
 interface AuthRequest extends Request {
   user: { userId: string; role: string };
+}
+
+function appendPreviewToken(campaign: any) {
+  if (!campaign) return campaign;
+
+  const previewToken = jwt.sign(
+    { campaignId: campaign.id, type: "preview" },
+    process.env.ACCESS_TOKEN_SECRET as string,
+    { expiresIn: "30d" }
+  );
+
+  const updated = { ...campaign };
+
+  if (updated.media) {
+    updated.media = updated.media.map((m: any) => ({
+      ...m,
+      url: `${m.url}?token=${previewToken}`
+    }));
+  }
+
+  if (updated.documents) {
+    updated.documents = updated.documents.map((d: any) => ({
+      ...d,
+      url: `${d.url}?token=${previewToken}`
+    }));
+  }
+
+  if (updated.feedback) {
+    updated.feedback = updated.feedback.map((f: any) => {
+      const updatedFeedback = { ...f };
+      if (f.fileUrl) {
+        updatedFeedback.fileUrl = `${f.fileUrl}?token=${previewToken}`;
+      }
+      if (f.media) {
+        updatedFeedback.media = {
+          ...f.media,
+          url: `${f.media.url}?token=${previewToken}`
+        };
+      }
+      return updatedFeedback;
+    });
+  }
+
+  return updated;
 }
 
 async function checkCampaignAccess(campaignId: string, req: Request) {
@@ -81,7 +126,7 @@ export const getUgcCampaignById = catchAsync(
 
     res.status(200).json({
       status: "success",
-      data: campaign,
+      data: appendPreviewToken(campaign),
     });
   },
 );
@@ -739,7 +784,7 @@ export const getPublicCampaignBySlug = catchAsync(
 
     res.status(200).json({
       status: "success",
-      data: campaign,
+      data: appendPreviewToken(campaign),
     });
   },
 );
