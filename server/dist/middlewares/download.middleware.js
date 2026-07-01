@@ -34,6 +34,12 @@ export const downloadInterceptor = async (req, res, next) => {
         ];
         const isFromOurApp = (referer && allowedHosts.some(host => referer.includes(host))) ||
             (origin && allowedHosts.some(host => origin.includes(host)));
+        console.log("Download Interceptor Debug:", {
+            filename,
+            referer,
+            origin,
+            isFromOurApp,
+        });
         if (isFromOurApp) {
             return next();
         }
