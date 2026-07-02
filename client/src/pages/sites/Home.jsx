@@ -6,8 +6,15 @@ import ReadyWorkFlow from "@/components/sites/home/ReadyWorkFlow";
 import SimpleWorkFlow from "@/components/sites/home/SimpleWorkFlow";
 import Testmonial from "@/components/sites/home/Testmonial";
 import useClient from "@/hooks/useClient";
+import useSEO from "@/hooks/useSEO";
 
 const Home = () => {
+  useSEO({
+    title: "STAKD | The Ultimate Creator Workspace & Campaign Manager",
+    description: "STAKD is the all-in-one simple workflow built for creators. Upload, share content, get brand approvals, track invoices, and manage your campaigns with confidence.",
+    keywords: "stakd, creator platform, influencer marketing tools, creator campaign manager, workflow for creators, brand approval tool, content creator dashboard"
+  });
+
   const { data } = useClient({
     queryKey: ["publicCms"],
     url: "/cms",

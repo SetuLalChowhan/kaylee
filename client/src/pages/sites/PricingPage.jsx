@@ -1,8 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PackageOpen } from 'lucide-react';
+import useSEO from '@/hooks/useSEO';
 
 const PricingPage = () => {
+  useSEO({
+    title: "Pricing Plans | STAKD - Creator Workspace",
+    description: "View STAKD subscription plans tailored for creators. Discover our workspace options to easily manage campaigns, content, approvals, and invoices.",
+    keywords: "stakd pricing, creator workspace pricing, campaign manager cost, influencer tools price"
+  });
+
   const navigate = useNavigate();
 
   return (
