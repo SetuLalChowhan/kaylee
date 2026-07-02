@@ -212,7 +212,7 @@ const BrandView = () => {
                                 onDragStart={(e) => e.preventDefault()}
                             >
                                 {previewItem.type === 'video' ? (
-                                    <video src={getImgUrl(previewItem.url)} className="w-full max-h-[75vh]" controls autoPlay onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+                                    <video src={getImgUrl(previewItem.url)} className="w-full max-h-[75vh]" controls autoPlay controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
                                 ) : (
                                     <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[75vh] object-contain" loading="lazy" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
                                 )}

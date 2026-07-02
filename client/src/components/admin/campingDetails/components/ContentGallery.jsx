@@ -455,7 +455,7 @@ const ContentGallery = ({ campaign }) => {
               </button>
               <div className="rounded-2xl overflow-hidden bg-black">
                 {previewItem.type === 'video' ? (
-                  <video src={getMediaSrc(previewItem)} className="w-full max-h-[80vh]" controls autoPlay />
+                  <video src={getMediaSrc(previewItem)} className="w-full max-h-[80vh]" controls autoPlay controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
                 ) : (
                   <img src={getMediaSrc(previewItem)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" loading="lazy" />
                 )}

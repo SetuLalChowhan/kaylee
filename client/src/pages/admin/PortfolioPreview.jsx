@@ -135,7 +135,7 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
                 onDragStart={(e) => e.preventDefault()}
               >
                 {previewItem.type === 'video' ? (
-                  <video src={previewItem.url} className="w-full max-h-[80vh]" controls autoPlay onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+                  <video src={previewItem.url} className="w-full max-h-[80vh]" controls autoPlay controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
                 ) : (
                   <img src={previewItem.url} alt={previewItem.title} className="w-full max-h-[80vh] object-contain" loading="lazy" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
                 )}

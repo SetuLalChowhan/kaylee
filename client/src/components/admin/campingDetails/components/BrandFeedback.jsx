@@ -240,6 +240,11 @@ const BrandFeedback = ({ campaign }) => {
                   className="w-full max-h-[75vh]"
                   controls
                   autoPlay
+                  controlsList="nodownload"
+                  disablePictureInPicture
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  draggable="false"
                 />
               </div>
               <p className="mt-2 text-center text-white/70 text-xs font-medium">{previewVideo.name}</p>
