@@ -1,14 +1,78 @@
 import JSZip from 'jszip';
 import { getImgUrl } from './image';
 
+const MIME_MAP = {
+  'video/mp4': '.mp4',
+  'video/quicktime': '.mov',
+  'video/x-matroska': '.mkv',
+  'video/webm': '.webm',
+  'video/3gpp': '.3gp',
+  'video/ogg': '.ogv',
+  'video/avi': '.avi',
+  'video/msvideo': '.avi',
+  'video/x-msvideo': '.avi',
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+  'image/svg+xml': '.svg',
+  'image/bmp': '.bmp',
+  'image/tiff': '.tiff',
+  'application/pdf': '.pdf',
+  'application/msword': '.doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+  'application/vnd.ms-excel': '.xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+  'application/vnd.ms-powerpoint': '.ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+  'application/zip': '.zip',
+  'application/x-zip-compressed': '.zip',
+  'text/plain': '.txt',
+  'text/html': '.html',
+  'text/csv': '.csv',
+};
+
+const getExtensionFromMime = (mimeType) => {
+  if (!mimeType) return '';
+  const cleanMime = mimeType.split(';')[0].trim().toLowerCase();
+  return MIME_MAP[cleanMime] || '';
+};
+
 const getExtension = (url) => {
   if (!url) return '';
-  const parts = url.split('.');
+  const cleanUrl = url.split('?')[0];
+  const filename = cleanUrl.split('/').pop();
+  const parts = filename.split('.');
   if (parts.length > 1) {
-    const ext = parts[parts.length - 1].split('?')[0]; // Strip query parameters
-    return `.${ext}`;
+    const ext = parts.pop();
+    // Ignore long hashes or base64 strings as extensions (extensions are usually 2-5 chars)
+    if (ext && ext.length >= 2 && ext.length <= 5) {
+      return `.${ext}`;
+    }
   }
   return '';
+};
+
+const getSafeFilename = (originalName, blobType, url) => {
+  let name = originalName || 'file';
+  
+  // 1. Try standard MIME type mapping
+  let ext = getExtensionFromMime(blobType);
+  
+  // 2. Fallback to URL extension
+  if (!ext) {
+    ext = getExtension(url);
+  }
+
+  // 3. Append extension if the name doesn't already end with it
+  if (ext) {
+    if (!name.toLowerCase().endsWith(ext.toLowerCase())) {
+      name = name + ext;
+    }
+  }
+  
+  return name;
 };
 
 /**
@@ -22,11 +86,7 @@ export const downloadFileDirectly = async (relativeUrl, name) => {
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
     
-    const ext = getExtension(relativeUrl);
-    let downloadName = name || 'download';
-    if (ext && !downloadName.toLowerCase().endsWith(ext.toLowerCase())) {
-      downloadName = downloadName + ext;
-    }
+    const downloadName = getSafeFilename(name, blob.type, relativeUrl);
 
     const link = document.createElement('a');
     link.href = blobUrl;
@@ -65,11 +125,7 @@ export const downloadCampaignZip = async (campaign) => {
       if (!response.ok) throw new Error(`Failed to fetch media item ${item.name}`);
       const blob = await response.blob();
       
-      const ext = getExtension(item.url);
-      let filename = item.name || `media_${idx}`;
-      if (ext && !filename.toLowerCase().endsWith(ext.toLowerCase())) {
-        filename = filename + ext;
-      }
+      const filename = getSafeFilename(item.name || `media_${idx}`, blob.type, item.url);
       
       mediaFolder.file(filename, blob);
     } catch (err) {
@@ -85,11 +141,7 @@ export const downloadCampaignZip = async (campaign) => {
       if (!response.ok) throw new Error(`Failed to fetch document ${doc.name}`);
       const blob = await response.blob();
       
-      const ext = getExtension(doc.url);
-      let filename = doc.name || `doc_${idx}`;
-      if (ext && !filename.toLowerCase().endsWith(ext.toLowerCase())) {
-        filename = filename + ext;
-      }
+      const filename = getSafeFilename(doc.name || `doc_${idx}`, blob.type, doc.url);
       
       documentsFolder.file(filename, blob);
     } catch (err) {
