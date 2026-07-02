@@ -61,10 +61,15 @@ const router = createBrowserRouter([
     path: "subscription/cancel",
     element: <SubscriptionCancel />,
   },
-  // Onboarding (public — user arrives here after email verification, before logging in)
+  // Onboarding (protected)
   {
-    path: "onboarding",
-    element: <Onboarding />,
+    element: <PrivateRoute />,
+    children: [
+      {
+        path: "onboarding",
+        element: <Onboarding />,
+      },
+    ],
   },
   // Public Portfolio Preview route
   {
