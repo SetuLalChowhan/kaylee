@@ -106,6 +106,10 @@ export const getInvoices = catchAsync(async (req: Request, res: Response, next: 
     let paidCount = 0;
     let outstandingAmount = 0;
     let outstandingCount = 0;
+    let earnedPast30Days = 0;
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     for (const inv of allInvoices) {
       const amt = parseFloat(inv.amount.replace(/[^0-9.]/g, "")) || 0;
@@ -113,6 +117,9 @@ export const getInvoices = catchAsync(async (req: Request, res: Response, next: 
       if (inv.status === "Paid") {
         paidCount++;
         paidAmount += amt;
+        if (new Date(inv.issueDate) >= thirtyDaysAgo) {
+          earnedPast30Days += amt;
+        }
       } else if (inv.status === "Pending" || inv.status === "Overdue") {
         outstandingCount++;
         outstandingAmount += amt;
@@ -130,6 +137,7 @@ export const getInvoices = catchAsync(async (req: Request, res: Response, next: 
           paidAmount,
           outstandingCount,
           outstandingAmount,
+          earnedPast30Days,
         }
       },
     });

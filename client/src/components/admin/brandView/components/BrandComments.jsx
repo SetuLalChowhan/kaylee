@@ -2,7 +2,7 @@ import React from 'react';
 import { MessageCircle, Eye, Paperclip } from 'lucide-react';
 import { getImgUrl } from '@/utils/image';
 
-const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewMedia }) => {
+const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewMedia, isPending }) => {
   const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -120,13 +120,20 @@ const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewM
         <div className="flex items-center gap-2 md:gap-3 w-full">
           <input
             type="text"
-            placeholder="Enter your message..."
+            placeholder={isPending ? "Sending message..." : "Enter your message..."}
             value={newComment}
+            disabled={isPending}
             onChange={(e) => setNewComment(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onSend()}
-            className="flex-1 min-w-0 bg-white border border-gray-100 rounded-xl py-2 px-3 md:py-3 md:px-4 text-xs md:text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+            onKeyDown={(e) => e.key === 'Enter' && !isPending && onSend()}
+            className="flex-1 min-w-0 bg-white border border-gray-100 rounded-xl py-2 px-3 md:py-3 md:px-4 text-xs md:text-sm focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] disabled:opacity-50 disabled:cursor-not-allowed"
           />
-          <button onClick={onSend} className="bg-Primary text-white px-4 md:px-5 py-2 md:py-3 rounded-xl text-xs md:text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer shrink-0">Send</button>
+          <button 
+            onClick={onSend} 
+            disabled={isPending || !newComment.trim()}
+            className="bg-Primary text-white px-4 md:px-5 py-2 md:py-3 rounded-xl text-xs md:text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending ? 'Sending...' : 'Send'}
+          </button>
         </div>
       </div>
     </div>

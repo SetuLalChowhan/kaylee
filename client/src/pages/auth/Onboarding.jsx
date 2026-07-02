@@ -63,6 +63,33 @@ const Onboarding = () => {
     }
   };
 
+  const formatSocialUrl = (platform, value) => {
+    if (!value) return '';
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+
+    if (trimmed.includes('.')) {
+      return `https://${trimmed}`;
+    }
+
+    const cleanValue = trimmed.replace(/^@/, '');
+    if (platform === 'instagram') {
+      return `https://instagram.com/${cleanValue}`;
+    }
+    if (platform === 'tiktok') {
+      return `https://tiktok.com/@${cleanValue}`;
+    }
+    if (platform === 'youtube') {
+      return `https://youtube.com/@${cleanValue}`;
+    }
+
+    return `https://${trimmed}`;
+  };
+
   const onSubmit = (data) => {
     // Build FormData for file upload
     const formPayload = new FormData();
@@ -71,10 +98,10 @@ const Onboarding = () => {
 
     // Build socialLinks object (backend schema: { instagram, website, youtube, other })
     const socialLinks = {};
-    if (data.instagram) socialLinks.instagram = data.instagram;
-    if (data.tiktok) socialLinks.website = data.tiktok; // map tiktok to website field
-    if (data.youtube) socialLinks.youtube = data.youtube;
-    if (data.otherLink) socialLinks.other = data.otherLink;
+    if (data.instagram) socialLinks.instagram = formatSocialUrl('instagram', data.instagram);
+    if (data.tiktok) socialLinks.website = formatSocialUrl('tiktok', data.tiktok); // map tiktok to website field
+    if (data.youtube) socialLinks.youtube = formatSocialUrl('youtube', data.youtube);
+    if (data.otherLink) socialLinks.other = formatSocialUrl('other', data.otherLink);
     formPayload.append('socialLinks', JSON.stringify(socialLinks));
 
     if (profileFile) {
@@ -234,13 +261,18 @@ const Onboarding = () => {
                   </div>
                 </div>
  
-                <AuthInput 
-                  label="Other Link"
-                  name="otherLink"
-                  placeholder="https://example.com"
-                  register={register}
-                  error={errors.otherLink}
-                />
+                 <div className="mb-5">
+                   <AuthInput 
+                     label="Other Link"
+                     name="otherLink"
+                     placeholder="https://example.com"
+                     register={register}
+                     error={errors.otherLink}
+                   />
+                   <p className="text-[10px] text-gray-400 mt-[-12px] font-semibold">
+                     E.g., https://example.com or example.com (prefix is added automatically)
+                   </p>
+                 </div>
  
                 <div className="mt-8 md:mt-12">
                   <CommonButton 

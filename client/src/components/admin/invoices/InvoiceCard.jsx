@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MoreVertical, Edit3, Trash2, Receipt } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const InvoiceCard = ({ invoice, onEdit, onDelete }) => {
+const InvoiceCard = ({ invoice, onEdit, onDelete, onView }) => {
   const [showOptions, setShowOptions] = useState(false);
 
   const getStatusColor = (status) => {
@@ -26,7 +26,13 @@ const InvoiceCard = ({ invoice, onEdit, onDelete }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-100 rounded-[32px] p-6 sm:p-8 hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 relative group">
+    <div 
+      onClick={(e) => {
+        if (e.target.closest('.options-menu-container')) return;
+        onView && onView(invoice);
+      }}
+      className="bg-white border border-gray-100 rounded-[32px] p-6 sm:p-8 hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 relative group cursor-pointer hover:border-Primary/35"
+    >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-12 h-12 bg-Primary/5 rounded-2xl flex items-center justify-center shrink-0">
@@ -42,7 +48,7 @@ const InvoiceCard = ({ invoice, onEdit, onDelete }) => {
           <span className="text-lg font-black text-[#1A1A1A]">
             {(invoice.amount || '').startsWith('$') ? invoice.amount : `$${invoice.amount || '0.00'}`}
           </span>
-          <div className="relative">
+          <div className="relative options-menu-container">
             <button 
               onClick={() => setShowOptions(!showOptions)}
               className={`p-2 rounded-full transition-all border border-transparent ${showOptions ? 'bg-gray-100 text-[#1A1A1A]' : 'text-gray-400 hover:bg-gray-50'}`}

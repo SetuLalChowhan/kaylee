@@ -3,6 +3,7 @@ import { Plus, Loader2, DollarSign, Clock, Receipt } from 'lucide-react';
 import InvoiceCard from './InvoiceCard';
 import InvoiceModal from './modals/InvoiceModal';
 import DeleteInvoiceModal from './modals/DeleteInvoiceModal';
+import InvoiceDetailsModal from './modals/InvoiceDetailsModal';
 import {
   useInvoices,
   useCreateInvoice,
@@ -34,6 +35,7 @@ const Invoices = () => {
   // Modal States
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('create');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
@@ -52,6 +54,11 @@ const Invoices = () => {
   const handleDeleteInvoice = (invoice) => {
     setSelectedInvoice(invoice);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleViewInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setIsDetailsModalOpen(true);
   };
 
   const handleInvoiceSubmit = (data) => {
@@ -152,17 +159,17 @@ const Invoices = () => {
           </div>
         </div>
 
-        {/* Card 3: Total Invoices (White Card) */}
+        {/* Card 3: Past 30 Days (White Card) */}
         <div className="bg-white border border-gray-100 rounded-2xl md:rounded-[32px] p-5 md:p-6 lg:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[140px] md:min-h-[170px]">
           <div className="w-10 h-10 md:w-12 md:h-12 bg-Primary/5 rounded-xl md:rounded-2xl flex items-center justify-center">
             <Receipt className="w-5 h-5 md:w-6 md:h-6 text-Primary" />
           </div>
           <div className="mt-4">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1A1A1A]">
-              {formatCurrency(stats.totalAmount)}
+              {formatCurrency(stats.earnedPast30Days || 0)}
             </h2>
             <p className="text-gray-400 text-xs md:text-sm font-semibold mt-1">
-              {stats.totalCount || 0} Total invoice{stats.totalCount !== 1 ? 's' : ''}
+              Past 30 days (total earned)
             </p>
           </div>
         </div>
@@ -208,6 +215,7 @@ const Invoices = () => {
               }}
               onEdit={handleEditInvoice}
               onDelete={handleDeleteInvoice}
+              onView={handleViewInvoice}
             />
           ))}
         </div>
@@ -227,6 +235,18 @@ const Invoices = () => {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
+      />
+
+      <InvoiceDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedInvoice(null);
+        }}
+        invoice={selectedInvoice ? {
+          ...selectedInvoice,
+          campaign: selectedInvoice.campaignName || selectedInvoice.campaign,
+        } : null}
       />
     </div>
   );

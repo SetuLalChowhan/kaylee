@@ -5,6 +5,36 @@ import prisma from "../config/db.js";
 export const downloadInterceptor = async (req: Request, res: Response, next: NextFunction) => {
   const { filename } = req.params;
 
+  // Check if the request is loaded inside our app (e.g. preview)
+  const referer = req.headers.referer;
+  const origin = req.headers.origin;
+  const allowedHosts = [
+    "localhost:5173",
+    "localhost:5174",
+    "stackd12.netlify.app",
+    "stackdadmin.netlify.app",
+    "stakd-client.vercel.app",
+    "stakd-admin.vercel.app",
+    "softvencealpha.com",
+    "admin.getstakd.co",
+    "getstakd.co",
+    "api.getstakd.co",
+  ];
+  const isFromOurApp =
+    (referer && allowedHosts.some(host => referer.includes(host))) ||
+    (origin && allowedHosts.some(host => origin.includes(host)));
+
+  console.log("Download Interceptor Debug:", {
+    filename,
+    referer,
+    origin,
+    isFromOurApp,
+  });
+
+  if (isFromOurApp) {
+    return next();
+  }
+
   try {
     const campaignMedia = (await prisma.ugcMedia.findFirst({
       where: { url: { contains: filename as string } },
@@ -21,36 +51,6 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
     const campaign = campaignMedia?.campaign || campaignDoc?.campaign;
 
     if (!campaign || campaign.releaseFiles === true) {
-      return next();
-    }
-
-    // Check if the request is loaded inside our app (e.g. preview)
-    const referer = req.headers.referer;
-    const origin = req.headers.origin;
-    const allowedHosts = [
-      "localhost:5173",
-      "localhost:5174",
-      "stackd12.netlify.app",
-      "stackdadmin.netlify.app",
-      "stakd-client.vercel.app",
-      "stakd-admin.vercel.app",
-      "softvencealpha.com",
-      "admin.getstakd.co",
-      "getstakd.co",
-      "api.getstakd.co",
-    ];
-    const isFromOurApp =
-      (referer && allowedHosts.some(host => referer.includes(host))) ||
-      (origin && allowedHosts.some(host => origin.includes(host)));
-
-    console.log("Download Interceptor Debug:", {
-      filename,
-      referer,
-      origin,
-      isFromOurApp,
-    });
-
-    if (isFromOurApp) {
       return next();
     }
 

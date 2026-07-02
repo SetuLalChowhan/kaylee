@@ -82,6 +82,19 @@ const jsonArrayParser = z.preprocess((val) => {
   return val;
 }, z.array(z.string()).optional());
 
+const urlPreprocess = (val: any) => {
+  if (typeof val !== "string") return val;
+  const trimmed = val.trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  if (trimmed.includes(".")) {
+    return `https://${trimmed}`;
+  }
+  return trimmed;
+};
+
 export const updateProfileSchema = z.object({
   body: z.object({
     shortBio: z
@@ -101,22 +114,34 @@ export const updateProfileSchema = z.object({
       },
       z
         .object({
-          instagram: z
-            .string()
-            .url("Invalid Instagram URL")
-            .optional()
-            .or(z.literal("")),
-          website: z
-            .string()
-            .url("Invalid website URL")
-            .optional()
-            .or(z.literal("")),
-          youtube: z
-            .string()
-            .url("Invalid YouTube URL")
-            .optional()
-            .or(z.literal("")),
-          other: z.string().url("Invalid URL").optional().or(z.literal("")),
+          instagram: z.preprocess(
+            urlPreprocess,
+            z
+              .string()
+              .url("Invalid Instagram URL")
+              .optional()
+              .or(z.literal("")),
+          ),
+          website: z.preprocess(
+            urlPreprocess,
+            z
+              .string()
+              .url("Invalid website URL")
+              .optional()
+              .or(z.literal("")),
+          ),
+          youtube: z.preprocess(
+            urlPreprocess,
+            z
+              .string()
+              .url("Invalid YouTube URL")
+              .optional()
+              .or(z.literal("")),
+          ),
+          other: z.preprocess(
+            urlPreprocess,
+            z.string().url("Invalid URL").optional().or(z.literal("")),
+          ),
         })
         .optional(),
     ),
@@ -160,22 +185,34 @@ export const onboardingSchema = z.object({
       },
       z
         .object({
-          instagram: z
-            .string()
-            .url("Invalid Instagram URL")
-            .optional()
-            .or(z.literal("")),
-          website: z
-            .string()
-            .url("Invalid website URL")
-            .optional()
-            .or(z.literal("")),
-          youtube: z
-            .string()
-            .url("Invalid YouTube URL")
-            .optional()
-            .or(z.literal("")),
-          other: z.string().url("Invalid URL").optional().or(z.literal("")),
+          instagram: z.preprocess(
+            urlPreprocess,
+            z
+              .string()
+              .url("Invalid Instagram URL")
+              .optional()
+              .or(z.literal("")),
+          ),
+          website: z.preprocess(
+            urlPreprocess,
+            z
+              .string()
+              .url("Invalid website URL")
+              .optional()
+              .or(z.literal("")),
+          ),
+          youtube: z.preprocess(
+            urlPreprocess,
+            z
+              .string()
+              .url("Invalid YouTube URL")
+              .optional()
+              .or(z.literal("")),
+          ),
+          other: z.preprocess(
+            urlPreprocess,
+            z.string().url("Invalid URL").optional().or(z.literal("")),
+          ),
         })
         .optional(),
     ),

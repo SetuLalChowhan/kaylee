@@ -400,6 +400,10 @@ export const useUpdatePublicMediaStatus = () => {
       toast.success("Media status updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["publicCampaign", variables.slug] });
     },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to update media status";
+      toast.error(msg);
+    },
   });
 };
 
@@ -418,6 +422,10 @@ export const useRequestChangesPublicMedia = () => {
       toast.success("Change request submitted!");
       queryClient.invalidateQueries({ queryKey: ["publicCampaign", variables.slug] });
     },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to submit change request";
+      toast.error(msg);
+    },
   });
 };
 
@@ -434,6 +442,10 @@ export const useCreatePublicFeedback = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["publicCampaign", variables.slug] });
+    },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to send comment";
+      toast.error(msg);
     },
   });
 };

@@ -143,12 +143,39 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
       });
     }
 
+    const formatSocialUrl = (platform, value) => {
+      if (!value) return '';
+      const trimmed = value.trim();
+      if (!trimmed) return '';
+
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed;
+      }
+
+      if (trimmed.includes('.')) {
+        return `https://${trimmed}`;
+      }
+
+      const cleanValue = trimmed.replace(/^@/, '');
+      if (platform === 'instagram') {
+        return `https://instagram.com/${cleanValue}`;
+      }
+      if (platform === 'tiktok') {
+        return `https://tiktok.com/@${cleanValue}`;
+      }
+      if (platform === 'youtube') {
+        return `https://youtube.com/@${cleanValue}`;
+      }
+
+      return `https://${trimmed}`;
+    };
+
     // Build and append socialLinks as JSON
     const socialLinks = {};
-    if (data.socials?.instagram) socialLinks.instagram = data.socials.instagram;
-    if (data.socials?.tiktok) socialLinks.website = data.socials.tiktok; // map tiktok to website
-    if (data.socials?.youtube) socialLinks.youtube = data.socials.youtube;
-    if (data.otherLink) socialLinks.other = data.otherLink;
+    if (data.socials?.instagram) socialLinks.instagram = formatSocialUrl('instagram', data.socials.instagram);
+    if (data.socials?.tiktok) socialLinks.website = formatSocialUrl('tiktok', data.socials.tiktok); // map tiktok to website
+    if (data.socials?.youtube) socialLinks.youtube = formatSocialUrl('youtube', data.socials.youtube);
+    if (data.otherLink) socialLinks.other = formatSocialUrl('other', data.otherLink);
     if (Object.keys(socialLinks).length > 0) {
       formPayload.append('socialLinks', JSON.stringify(socialLinks));
     }
@@ -399,8 +426,11 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                 {...register('otherLink')}
                 type="text"
                 placeholder="https://example.com"
-                className={`w-full bg-white border ${errors.otherLink ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A]`}
+                className={`w-full bg-white border ${errors.otherLink ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] mb-2`}
               />
+              <p className="text-[10px] text-gray-400 font-semibold mb-2">
+                E.g., https://example.com or example.com (prefix is added automatically)
+              </p>
               {errors.otherLink && <p className="mt-1 text-xs text-red-500">{errors.otherLink.message}</p>}
             </div>
 

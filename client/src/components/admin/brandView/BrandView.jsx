@@ -75,6 +75,9 @@ const BrandView = () => {
         approveMutation.mutate({ slug: campaign.slug, mediaId: approveModal.id }, {
             onSuccess: () => {
                 setApproveModal({ open: false, id: null });
+            },
+            onError: () => {
+                setApproveModal({ open: false, id: null });
             }
         });
     };
@@ -92,6 +95,9 @@ const BrandView = () => {
         }, {
             onSuccess: () => {
                 setChangeText('');
+                setRequestChangesId(null);
+            },
+            onError: () => {
                 setRequestChangesId(null);
             }
         });
@@ -171,6 +177,7 @@ const BrandView = () => {
                     setNewComment={setNewComment}
                     onSend={handleSendComment}
                     onPreviewMedia={setPreviewItem}
+                    isPending={feedbackMutation.isPending}
                 />
             )}
 

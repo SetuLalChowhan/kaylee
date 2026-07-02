@@ -185,18 +185,43 @@ export const createUgcCampaign = catchAsync(
       .replace(/(^-|-$)/g, "");
     const randomSuffix = Math.random().toString(36).substring(2, 6);
     const slug = `${baseSlug}-${randomSuffix}`;
+    const campaign = await prisma.$transaction(async (tx) => {
+      const c = await tx.ugcCampaign.create({
+        data: {
+          userId: campaignOwnerId,
+          name: campaignName,
+          brandName,
+          deadline,
+          amount,
+          status: status || "Pending",
+          notes: notes ?? null,
+          slug,
+        },
+      });
 
-    const campaign = await prisma.ugcCampaign.create({
-      data: {
-        userId: campaignOwnerId,
-        name: campaignName,
-        brandName,
-        deadline,
-        amount,
-        status: status || "Pending",
-        notes: notes ?? null,
-        slug,
-      },
+      // Automatically create a planner task for the campaign deadline
+      const plannerTask = await tx.task.create({
+        data: {
+          userId: campaignOwnerId,
+          name: "Campaign Due Date",
+          campaign: campaignName,
+          date: deadline,
+          completed: false,
+        },
+      });
+
+      // Create the ugc campaign task pointing to the planner task
+      await tx.ugcCampaignTask.create({
+        data: {
+          campaignId: c.id,
+          name: "Campaign Due Date",
+          date: deadline,
+          completed: false,
+          plannerTaskId: plannerTask.id,
+        },
+      });
+
+      return c;
     });
 
     res.status(201).json({
@@ -238,19 +263,53 @@ export const updateUgcCampaign = catchAsync(
     if (!existing) {
       return next(new AppError("Campaign not found or unauthorized", 404));
     }
+    const updated = await prisma.$transaction(async (tx) => {
+      const u = await tx.ugcCampaign.update({
+        where: { id },
+        data: {
+          ...(campaignName !== undefined && { name: campaignName }),
+          ...(brandName !== undefined && { brandName }),
+          ...(deadline !== undefined && { deadline }),
+          ...(amount !== undefined && { amount }),
+          ...(status !== undefined && { status }),
+          ...(releaseFiles !== undefined && { releaseFiles }),
+          ...(notes !== undefined && { notes: notes ?? null }),
+          ...(paymentStatus !== undefined && { paymentStatus }),
+        },
+      });
 
-    const updated = await prisma.ugcCampaign.update({
-      where: { id },
-      data: {
-        ...(campaignName !== undefined && { name: campaignName }),
-        ...(brandName !== undefined && { brandName }),
-        ...(deadline !== undefined && { deadline }),
-        ...(amount !== undefined && { amount }),
-        ...(status !== undefined && { status }),
-        ...(releaseFiles !== undefined && { releaseFiles }),
-        ...(notes !== undefined && { notes: notes ?? null }),
-        ...(paymentStatus !== undefined && { paymentStatus }),
-      },
+      // Sync the "Campaign Due Date" task if deadline or name changed
+      if (deadline !== undefined || campaignName !== undefined) {
+        const campaignDueDateTask = await tx.ugcCampaignTask.findFirst({
+          where: {
+            campaignId: id,
+            name: "Campaign Due Date",
+          },
+        });
+
+        if (campaignDueDateTask) {
+          // Update the campaign task date
+          await tx.ugcCampaignTask.update({
+            where: { id: campaignDueDateTask.id },
+            data: {
+              ...(deadline !== undefined && { date: deadline }),
+            },
+          });
+
+          // Update the planner task date & campaign name
+          if (campaignDueDateTask.plannerTaskId) {
+            await tx.task.update({
+              where: { id: campaignDueDateTask.plannerTaskId },
+              data: {
+                ...(deadline !== undefined && { date: deadline }),
+                ...(campaignName !== undefined && { campaign: campaignName }),
+              },
+            });
+          }
+        }
+      }
+
+      return u;
     });
 
     res.status(200).json({
@@ -300,8 +359,24 @@ export const deleteUgcCampaign = catchAsync(
         } catch {}
       }
     }
+    const campaignTasks = await prisma.ugcCampaignTask.findMany({
+      where: { campaignId: id },
+      select: { plannerTaskId: true },
+    });
+    const plannerTaskIds = campaignTasks
+      .map((t) => t.plannerTaskId)
+      .filter((pid): pid is string => !!pid);
 
-    await prisma.ugcCampaign.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      if (plannerTaskIds.length > 0) {
+        await tx.task.deleteMany({
+          where: { id: { in: plannerTaskIds } },
+        }).catch((err) => {
+          console.warn("Failed to clean up associated planner tasks: ", err);
+        });
+      }
+      await tx.ugcCampaign.delete({ where: { id } });
+    });
 
     res.status(200).json({
       status: "success",
