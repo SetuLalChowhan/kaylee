@@ -287,7 +287,8 @@ const CampaignDetails = () => {
   const allMediaApproved =
     campaign.media && campaign.media.length > 0 && campaign.media.every((m) => m.status === "approved");
 
-  const shareLink = `${import.meta.env.VITE_CLIENT_URL || "http://localhost:5173"}/brand-view/${campaign.slug}`;
+  const clientUrl = (import.meta.env.VITE_CLIENT_URL || "http://localhost:5173").replace(/\/$/, "");
+  const shareLink = `${clientUrl}/brand-view/${campaign.slug}`;
 
   const getMediaUrl = (url) => {
     if (!url) return "";

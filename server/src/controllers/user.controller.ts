@@ -348,8 +348,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   // 1. Stats Card calculations
   const activeCampaignsCount = await prisma.ugcCampaign.count({
     where: {
-      ...(isAdmin ? {} : { userId }),
-      status: { in: ["Active", "Approved", "Pending"] }
+      ...(isAdmin ? {} : { userId })
     }
   });
 

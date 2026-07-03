@@ -533,7 +533,7 @@ const UserList = () => {
               <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                 {viewedUser.slug && (
                   <a
-                    href={`${import.meta.env.VITE_CLIENT_URL || "http://localhost:5173"}/preview/${viewedUser.slug}`}
+                    href={`${(import.meta.env.VITE_CLIENT_URL || "http://localhost:5173").replace(/\/$/, "")}/preview/${viewedUser.slug}`}
                     target="_blank"
                     rel="noreferrer"
                     className="text-[11px] md:text-xs font-bold text-Primary border border-Primary/20 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 hover:bg-Primary/5"
