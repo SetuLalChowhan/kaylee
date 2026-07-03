@@ -1,14 +1,16 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AuthInput from '@/components/ui/AuthInput';
 import CommonButton from '@/components/ui/CommonButton';
 import { useResetPassword } from '@/api/apiHooks/useAuth';
 import { PASSWORD_RULES, CONFIRM_PASSWORD_RULES } from '@/utils/validation';
+import { useEffect } from 'react';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const resetToken = location.state?.resetToken;
 
   const resetPasswordMutation = useResetPassword();
@@ -17,16 +19,23 @@ const ResetPassword = () => {
   const newPassword = watch("newPassword");
 
   const onSubmit = (data) => {
-    if (!resetToken) {
-      navigate('/forgot-password');
-      return;
-    }
-    resetPasswordMutation.mutate({ resetToken, newPassword: data.newPassword });
+    resetPasswordMutation.mutate({
+      token,
+      resetToken,
+      newPassword: data.newPassword,
+      confirmPassword: data.confirmPassword,
+    });
   };
 
-  // Redirect if no resetToken
-  if (!resetToken) {
-    navigate('/forgot-password');
+  const hasAccess = !!(token || resetToken);
+
+  useEffect(() => {
+    if (!hasAccess) {
+      navigate('/forgot-password');
+    }
+  }, [hasAccess, navigate]);
+
+  if (!hasAccess) {
     return null;
   }
 

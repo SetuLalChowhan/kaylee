@@ -58,16 +58,27 @@ export const verifyOtpSchema = z.object({
   }),
 });
 
+export const verifyEmailSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, "Verification token is required"),
+  }),
+});
+
 export const resetPasswordSchema = z.object({
   body: z
     .object({
-      resetToken: z.string().min(1, "Reset token is required"),
+      token: z.string().optional(),
+      resetToken: z.string().optional(),
       newPassword: passwordValidation,
       confirmPassword: z.string().min(1, "Confirm password is required"),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
       message: "Passwords do not match",
       path: ["confirmPassword"],
+    })
+    .refine((data) => data.token || data.resetToken, {
+      message: "Reset token is required",
+      path: ["token"],
     }),
 });
 

@@ -371,6 +371,14 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
 
+  // SMTP Settings States
+  const [smtpHost, setSmtpHost] = useState("");
+  const [smtpPort, setSmtpPort] = useState("");
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpPass, setSmtpPass] = useState("");
+  const [emailFromHello, setEmailFromHello] = useState("");
+  const [emailFromSupport, setEmailFromSupport] = useState("");
+
   // Fetch CMS
   const { data: cmsData, isLoading, refetch } = useQuery({
     queryKey: ["cmsContent"],
@@ -395,6 +403,12 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
       setSocialYoutube(cmsData.social_youtube || "");
       setSocialLinkedin(cmsData.social_linkedin || "");
       setSocialWebsite(cmsData.social_website || "");
+      setSmtpHost(cmsData.smtp_host || "");
+      setSmtpPort(cmsData.smtp_port || "");
+      setSmtpUser(cmsData.smtp_user || "");
+      setSmtpPass(cmsData.smtp_pass || "");
+      setEmailFromHello(cmsData.email_from_hello || "hello@getstakd.co");
+      setEmailFromSupport(cmsData.email_from_support || "support@getstakd.co");
     }
   }, [cmsData]);
 
@@ -474,6 +488,12 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
         social_youtube: socialYoutube,
         social_linkedin: socialLinkedin,
         social_website: socialWebsite,
+        smtp_host: smtpHost,
+        smtp_port: smtpPort,
+        smtp_user: smtpUser,
+        smtp_pass: smtpPass,
+        email_from_hello: emailFromHello,
+        email_from_support: emailFromSupport,
       });
 
       setLogoFile(null);
@@ -680,6 +700,76 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
                   onChange={(e) => setSocialWebsite(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all font-semibold"
                   placeholder="Website URL (e.g. https://keylee.com)"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Mail & SMTP Settings */}
+          <div className="border-t border-slate-100 pt-6">
+            <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Globe className="w-4 h-4 text-Primary" />
+              SMTP & Email Configurations
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SMTP Host</label>
+                <input
+                  type="text"
+                  value={smtpHost}
+                  onChange={(e) => setSmtpHost(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                  placeholder="e.g. smtp.gmail.com"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SMTP Port</label>
+                <input
+                  type="text"
+                  value={smtpPort}
+                  onChange={(e) => setSmtpPort(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                  placeholder="e.g. 587"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SMTP Username</label>
+                <input
+                  type="text"
+                  value={smtpUser}
+                  onChange={(e) => setSmtpUser(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                  placeholder="e.g. hello@getstakd.co"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SMTP Password</label>
+                <input
+                  type="password"
+                  value={smtpPass}
+                  onChange={(e) => setSmtpPass(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hello Email Address (Onboarding/Verify)</label>
+                <input
+                  type="email"
+                  value={emailFromHello}
+                  onChange={(e) => setEmailFromHello(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                  placeholder="hello@getstakd.co"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Support Email Address (Help/Queries)</label>
+                <input
+                  type="email"
+                  value={emailFromSupport}
+                  onChange={(e) => setEmailFromSupport(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                  placeholder="support@getstakd.co"
                 />
               </div>
             </div>

@@ -23,11 +23,36 @@ export const useRegister = () => {
       return res.data;
     },
     onSuccess: (data, variables) => {
-      toast.success(data?.message || "Registration successful! Check your email for OTP.");
-      navigate("/verify-otp", { state: { email: variables.email } });
+      toast.success(data?.message || "Registration successful! Check your email for the verification link.");
+      navigate("/verify-email", { state: { email: variables.email, isPending: true } });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Registration failed";
+      toast.error(msg);
+    },
+  });
+};
+
+/**
+ * useVerifyEmailToken — Verify email using token from link click
+ */
+export const useVerifyEmailToken = () => {
+  const axiosPublic = useAxiosPublic();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  return useMutation({
+    mutationFn: async ({ token }) => {
+      const res = await axiosPublic.post(AUTH.VERIFY_EMAIL, { token });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      dispatch(setCredentials({ token: data.accessToken, user: data.user }));
+      toast.success(data?.message || "Email verified successfully!");
+      navigate("/onboarding");
+    },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Verification failed";
       toast.error(msg);
     },
   });
@@ -60,6 +85,27 @@ export const useVerifyEmail = () => {
 };
 
 /**
+ * useResendVerificationLink — Request a new email verification link
+ */
+export const useResendVerificationLink = () => {
+  const axiosPublic = useAxiosPublic();
+
+  return useMutation({
+    mutationFn: async ({ email }) => {
+      const res = await axiosPublic.post(AUTH.RESEND_VERIFICATION_OTP, { email });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || "Verification link sent successfully!");
+    },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to resend verification link";
+      toast.error(msg);
+    },
+  });
+};
+
+/**
  * useLogin — Login user
  * On success, stores token + user in Redux and redirects to dashboard
  */
@@ -82,9 +128,12 @@ export const useLogin = () => {
         navigate("/dashboard");
       }
     },
-    onError: (error) => {
+    onError: (error, variables) => {
       const msg = error?.response?.data?.message || error.message || "Login failed";
       toast.error(msg);
+      if (error?.response?.status === 401 && msg.toLowerCase().includes("verify")) {
+        navigate("/verify-email", { state: { email: variables.email } });
+      }
     },
   });
 };
@@ -123,16 +172,14 @@ export const useGoogleLogin = () => {
  */
 export const useForgotPassword = () => {
   const axiosPublic = useAxiosPublic();
-  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: async ({ email }) => {
       const res = await axiosPublic.post(AUTH.FORGOT_PASSWORD, { email });
       return res.data;
     },
-    onSuccess: (data, variables) => {
-      toast.success(data?.message || "Reset OTP sent to your email.");
-      navigate("/verify-otp", { state: { email: variables.email, type: "FORGOT_PASSWORD" } });
+    onSuccess: (data) => {
+      toast.success(data?.message || "Reset link sent to your email.");
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to send OTP";
@@ -195,8 +242,8 @@ export const useResetPassword = () => {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: async ({ resetToken, newPassword }) => {
-      const res = await axiosPublic.post(AUTH.RESET_PASSWORD, { resetToken, newPassword });
+    mutationFn: async ({ token, resetToken, newPassword, confirmPassword }) => {
+      const res = await axiosPublic.post(AUTH.RESET_PASSWORD, { token, resetToken, newPassword, confirmPassword });
       return res.data;
     },
     onSuccess: (data) => {

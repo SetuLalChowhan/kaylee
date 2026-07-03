@@ -6,7 +6,7 @@ import { runSeeds } from "./seeds/index.js";
 
 const PORT = process.env.PORT || 3000;
 
-// ── Database Auto-seeding ─────────────────────────────────────────────────────
+
 runSeeds();
 
 app.listen(PORT, () => {

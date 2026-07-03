@@ -19,13 +19,14 @@ import {
   loginSchema,
   forgotPasswordSchema,
   verifyOtpSchema,
+  verifyEmailSchema,
   resetPasswordSchema,
 } from "../validations/user.validation.js";
 
 const router = express.Router();
 
 router.post("/register", validate(registerSchema), register);
-router.post("/verify-email", validate(verifyOtpSchema), verifyEmail);
+router.post("/verify-email", validate(verifyEmailSchema), verifyEmail);
 router.post("/login", validate(loginSchema), login);
 router.post("/google-login", googleLogin);
 router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);

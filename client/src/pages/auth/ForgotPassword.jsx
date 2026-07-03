@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import AuthInput from '@/components/ui/AuthInput';
 import CommonButton from '@/components/ui/CommonButton';
 import { useForgotPassword } from '@/api/apiHooks/useAuth';
+import { Mail } from 'lucide-react';
 
 const ForgotPassword = () => {
   const forgotPasswordMutation = useForgotPassword();
@@ -12,6 +13,27 @@ const ForgotPassword = () => {
   const onSubmit = (data) => {
     forgotPasswordMutation.mutate({ email: data.email });
   };
+
+  if (forgotPasswordMutation.isSuccess) {
+    return (
+      <div className="w-full text-center py-6">
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 bg-Primary/10 text-Primary rounded-full flex items-center justify-center animate-pulse">
+            <Mail className="w-8 h-8" />
+          </div>
+        </div>
+        <h2 className="text-[28px] lg:text-[32px] font-bold text-[#1A1A1A] mb-2 font-outfit">Check your email</h2>
+        <p className="text-[#666] text-sm lg:text-base mb-8 leading-relaxed font-outfit">
+          We've sent a secure password reset link to your email address. Please check your inbox and click the link to reset your password.
+        </p>
+        <div className="text-center">
+          <Link to="/login" className="text-sm font-bold text-Primary hover:underline font-outfit">
+            Back to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

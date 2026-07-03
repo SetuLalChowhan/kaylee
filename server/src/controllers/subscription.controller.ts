@@ -211,14 +211,12 @@ export const handleWebhook = catchAsync(async (req: Request, res: Response, next
   let event: Stripe.Event;
 
   try {
-    // req.body must be the raw Buffer of the request body
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
     return next(new AppError(`Webhook signature verification failed: ${err.message}`, 400));
   }
 
-  // Process completed checkout session event
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const { userId, planId } = session.metadata || {};
@@ -260,11 +258,56 @@ export const handleWebhook = catchAsync(async (req: Request, res: Response, next
     }
   }
 
+  // Handle subscription cancelled/deleted event from Stripe at period end
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+    const subscriptionId = subscription.id;
+
+    const user = await prisma.user.findFirst({
+      where: { stripeSubscriptionId: subscriptionId },
+    });
+
+    if (user) {
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            planId: null,
+            stripeSubscriptionId: null,
+          },
+        });
+
+        if (user.planId) {
+          const latestPurchase = await prisma.purchase.findFirst({
+            where: {
+              userId: user.id,
+              planId: user.planId,
+              status: "completed",
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          });
+
+          if (latestPurchase) {
+            await prisma.purchase.update({
+              where: { id: latestPurchase.id },
+              data: { status: "cancelled" },
+            });
+          }
+        }
+        console.log(`[Webhook] Successfully completed period-end cancellation for User ${user.id}`);
+      } catch (err: any) {
+        console.error("[Webhook Error] customer.subscription.deleted DB update failed:", err.message);
+      }
+    }
+  }
+
   res.status(200).json({ received: true });
 });
 
 /**
- * POST /api/subscriptions/cancel — Cancel user's subscription
+ * POST /api/subscriptions/cancel — Cancel user's subscription (at period end)
  */
 export const cancelSubscription = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = (req as AuthRequest).user;
@@ -279,13 +322,17 @@ export const cancelSubscription = catchAsync(async (req: Request, res: Response,
 
   if (user.stripeSubscriptionId) {
     try {
-      await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+      // Set cancel_at_period_end to true on Stripe so they retain access until period ends
+      await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
     } catch (err: any) {
-      console.error("[Cancel Error] Failed to cancel subscription on Stripe:", err.message);
+      console.error("[Cancel Error] Failed to update subscription on Stripe:", err.message);
+      return next(new AppError(`Stripe cancellation failed: ${err.message}`, 400));
     }
   }
 
-  // Find the user's latest completed purchase for their current plan and mark it as cancelled
+  // Mark latest completed purchase status as cancelled
   if (user.planId) {
     const latestPurchase = await prisma.purchase.findFirst({
       where: {
@@ -306,13 +353,9 @@ export const cancelSubscription = catchAsync(async (req: Request, res: Response,
     }
   }
 
-  // Downgrade user's plan in DB to null (starter/free plan)
-  const updatedUser = await prisma.user.update({
+  // Get user with current plan details (retained until period end webhook)
+  const updatedUser = await prisma.user.findUnique({
     where: { id: userId },
-    data: {
-      planId: null,
-      stripeSubscriptionId: null,
-    },
     select: {
       id: true,
       firstName: true,
@@ -324,7 +367,7 @@ export const cancelSubscription = catchAsync(async (req: Request, res: Response,
 
   res.status(200).json({
     status: "success",
-    message: "Subscription cancelled successfully",
+    message: "Subscription cancellation scheduled successfully at the end of the current billing cycle",
     data: updatedUser,
   });
 });
