@@ -36,18 +36,20 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoice }) => {
               visibility: hidden;
             }
             #printable-invoice-area, #printable-invoice-area * {
-              visibility: visible;
+              visibility: visible !important;
             }
             #printable-invoice-area {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              background: white;
-              color: black;
-              padding: 40px;
+              position: fixed !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              background: white !important;
+              color: black !important;
+              padding: 40px !important;
               box-shadow: none !important;
               border: none !important;
+              z-index: 999999 !important;
             }
             .no-print {
               display: none !important;
@@ -69,10 +71,10 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoice }) => {
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] no-print"
+          className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 md:p-8 border-b border-gray-50 bg-white relative z-20">
+          <div className="flex items-center justify-between p-6 md:p-8 border-b border-gray-50 bg-white relative z-20 no-print">
             <div className="flex items-center gap-2">
               <Receipt className="w-5 h-5 text-Primary" />
               <h2 className="text-lg font-bold text-[#1A1A1A]">Invoice Details</h2>

@@ -53,6 +53,7 @@ export const useCreateUgcCampaign = () => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to create campaign";
@@ -78,6 +79,7 @@ export const useUpdateUgcCampaign = () => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update campaign";
@@ -102,6 +104,7 @@ export const useDeleteUgcCampaign = () => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to delete campaign";

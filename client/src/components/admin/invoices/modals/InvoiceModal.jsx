@@ -155,12 +155,11 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
                   <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Issue Date</label>
                   <div className="relative group">
                     <input
-                      {...register('issueDate', type === 'create' ? { required: 'Required' } : {})}
+                      {...register('issueDate')}
                       type="date"
-                      className={`w-full bg-white border rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] text-xs md:text-sm ${type === 'create' && errors.issueDate ? 'border-red-500' : 'border-gray-100'}`}
+                      className="w-full bg-white border border-gray-100 rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] text-xs md:text-sm"
                     />
                   </div>
-                  {type === 'create' && errors.issueDate && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.issueDate.message}</p>}
                 </div>
                 <div>
                   <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Due Date</label>
