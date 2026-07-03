@@ -55,9 +55,8 @@ const Settings = () => {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-all whitespace-nowrap font-bold text-sm ${
-                isActive ? "border-Primary text-Primary" : "border-transparent text-slate-400 hover:text-slate-600"
-              }`}
+              className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-all whitespace-nowrap font-bold text-sm ${isActive ? "border-Primary text-Primary" : "border-transparent text-slate-400 hover:text-slate-600"
+                }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? "text-Primary" : "text-slate-400"}`} />
               {tab.name}
@@ -225,7 +224,7 @@ const AdminProfileTab = ({ user, axiosSecure, dispatch }) => {
           <button
             type="submit"
             disabled={loading}
-          className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50 cursor-pointer"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Profile Settings
@@ -342,7 +341,7 @@ const SecurityTab = ({ axiosSecure }) => {
           <button
             type="submit"
             disabled={loading}
-          className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto bg-Primary hover:bg-Primary/90 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-Primary/20 text-sm disabled:opacity-50 cursor-pointer"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Change Password
@@ -378,6 +377,7 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
   const [smtpPass, setSmtpPass] = useState("");
   const [emailFromHello, setEmailFromHello] = useState("");
   const [emailFromSupport, setEmailFromSupport] = useState("");
+  const [showSmtpPass, setShowSmtpPass] = useState(false);
 
   // Fetch CMS
   const { data: cmsData, isLoading, refetch } = useQuery({
@@ -552,7 +552,7 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
                 </div>
               )}
             </div>
-            
+
             <div className="flex-1 flex flex-col gap-2 text-center sm:text-left">
               <h3 className="font-bold text-sm text-slate-800">Website Logo Image</h3>
               <p className="text-xs text-slate-400 max-w-lg">This logo will be displayed on the header/footer of the main website and admin panel sidebar. JPEG/PNG/WEBP formats accepted.</p>
@@ -744,15 +744,26 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SMTP Password</label>
-                <input
-                  type="password"
-                  value={smtpPass}
-                  onChange={(e) => setSmtpPass(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
-                  placeholder="••••••••"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showSmtpPass ? "text" : "password"}
+                    value={smtpPass}
+                    onChange={(e) => setSmtpPass(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-4 pr-11 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSmtpPass(!showSmtpPass)}
+                    className="absolute right-4 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                  >
+                    {showSmtpPass ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                  </button>
+                </div>
               </div>
-              <div>
+
+
+              {/* <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hello Email Address (Onboarding/Verify)</label>
                 <input
                   type="email"
@@ -771,7 +782,7 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
                   className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
                   placeholder="support@getstakd.co"
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </form>

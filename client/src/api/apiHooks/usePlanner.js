@@ -59,6 +59,8 @@ export const useUpdateTask = () => {
       toast.success(data?.message || "Task updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaign"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update task";
