@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Instagram, Youtube, Link as LinkIcon, Upload, User, Globe } from 'lucide-react';
+import { FaTiktok } from 'react-icons/fa';
 import { motion } from 'motion/react';
 import CommonButton from '@/components/ui/CommonButton';
 import AuthInput from '@/components/ui/AuthInput';
@@ -21,10 +22,12 @@ const Onboarding = () => {
     defaultValues: {
       displayName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || '',
       bio: user?.shortBio || '',
-      instagram: user?.socialLinks?.instagram || '',
-      tiktok: user?.socialLinks?.website || '',
-      youtube: user?.socialLinks?.youtube || '',
-      otherLink: user?.socialLinks?.other || ''
+      otherLink: user?.socialLinks?.other || '',
+      socials: {
+        instagram: user?.socialLinks?.instagram || '',
+        tiktok: user?.socialLinks?.website || '',
+        youtube: user?.socialLinks?.youtube || '',
+      }
     }
   });
 
@@ -37,10 +40,12 @@ const Onboarding = () => {
       reset({
         displayName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
         bio: user?.shortBio || '',
-        instagram: user?.socialLinks?.instagram || '',
-        tiktok: user?.socialLinks?.website || '',
-        youtube: user?.socialLinks?.youtube || '',
-        otherLink: user?.socialLinks?.other || ''
+        otherLink: user?.socialLinks?.other || '',
+        socials: {
+          instagram: user?.socialLinks?.instagram || '',
+          tiktok: user?.socialLinks?.website || '',
+          youtube: user?.socialLinks?.youtube || '',
+        }
       });
       if (user.avatar) {
         setProfileImage(getImgUrl(user.avatar));
@@ -91,16 +96,14 @@ const Onboarding = () => {
   };
 
   const onSubmit = (data) => {
-    // Build FormData for file upload
     const formPayload = new FormData();
     formPayload.append('displayName', data.displayName);
     formPayload.append('shortBio', data.bio);
 
-    // Build socialLinks object (backend schema: { instagram, website, youtube, other })
     const socialLinks = {};
-    if (data.instagram) socialLinks.instagram = formatSocialUrl('instagram', data.instagram);
-    if (data.tiktok) socialLinks.website = formatSocialUrl('tiktok', data.tiktok); // map tiktok to website field
-    if (data.youtube) socialLinks.youtube = formatSocialUrl('youtube', data.youtube);
+    if (data.socials?.instagram) socialLinks.instagram = formatSocialUrl('instagram', data.socials.instagram);
+    if (data.socials?.tiktok) socialLinks.website = formatSocialUrl('tiktok', data.socials.tiktok);
+    if (data.socials?.youtube) socialLinks.youtube = formatSocialUrl('youtube', data.socials.youtube);
     if (data.otherLink) socialLinks.other = formatSocialUrl('other', data.otherLink);
     formPayload.append('socialLinks', JSON.stringify(socialLinks));
 
@@ -146,8 +149,8 @@ const Onboarding = () => {
                     </div>
                   )}
                 </div>
- 
-                 <h2 className="text-lg sm:text-2xl font-bold text-[#1A1A1A] mb-1">
+
+                <h2 className="text-lg sm:text-2xl font-bold text-[#1A1A1A] mb-1">
                   {formData.displayName || 'Display Name'}
                 </h2>
                 <p className="text-xs sm:text-sm font-bold text-Primary mb-2 sm:mb-4">
@@ -156,18 +159,18 @@ const Onboarding = () => {
                 <p className="text-gray-600 text-xs sm:text-base leading-relaxed mb-3 sm:mb-6">
                   {formData.bio || 'Tell brands about yourself...'}
                 </p>
- 
+
                 {/* Social Badges Preview */}
                 <div className="flex flex-wrap gap-3 sm:gap-4">
-                  <Instagram className={`w-4 h-4 md:w-5 md:h-5 ${formData.instagram ? 'text-Primary' : 'text-gray-300'}`} />
-                  <Globe className={`w-4 h-4 md:w-5 md:h-5 ${formData.otherLink ? 'text-Primary' : 'text-gray-300'}`} />
-                  <Youtube className={`w-4 h-4 md:w-5 md:h-5 ${formData.youtube ? 'text-Primary' : 'text-gray-300'}`} />
-                  <LinkIcon className="w-4 h-4 md:w-5 md:h-5 text-gray-300" />
+                  <Instagram className={`w-4 h-4 md:w-5 md:h-5 ${formData.socials?.instagram ? 'text-Primary' : 'text-gray-300'}`} />
+                  <Globe className={`w-4 h-4 md:w-5 md:h-5 ${formData.socials?.tiktok ? 'text-Primary' : 'text-gray-300'}`} />
+                  <Youtube className={`w-4 h-4 md:w-5 md:h-5 ${formData.socials?.youtube ? 'text-Primary' : 'text-gray-300'}`} />
+                  <LinkIcon className={`w-4 h-4 md:w-5 md:h-5 ${formData.otherLink ? 'text-Primary' : 'text-gray-300'}`} />
                 </div>
               </div>
             </motion.div>
           </div>
- 
+
           {/* Right Side: Form */}
           <div className="lg:col-span-7">
             <div className="bg-white p-4 sm:p-8 lg:p-12 rounded-2xl md:rounded-[40px] shadow-sm border border-gray-100">
@@ -175,7 +178,7 @@ const Onboarding = () => {
                 <h2 className="text-xl sm:text-2xl lg:text-[36px] font-bold text-[#1A1A1A] mb-2 leading-tight">Create your STAKD Media Card</h2>
                 <p className="text-[#666] text-xs sm:text-sm lg:text-base">This is how brands discover and remember you.</p>
               </div>
- 
+
               <form onSubmit={handleSubmit(onSubmit)}>
                 {/* Image Upload Section */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6 md:mb-10">
@@ -194,7 +197,7 @@ const Onboarding = () => {
                     </label>
                   </div>
                 </div>
- 
+
                 {/* Basic Info */}
                 <AuthInput 
                   label="Display name"
@@ -214,66 +217,71 @@ const Onboarding = () => {
                   />
                   {errors.bio && <p className="mt-1 text-xs text-red-500">{errors.bio.message}</p>}
                 </div>
- 
+
                 {/* Social Links */}
-                <div className="mb-6 md:mb-8">
-                  <label className="block text-[#1A1A1A] text-xs sm:text-sm font-semibold mb-3 md:mb-4">Social Links</label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="mb-1">
-                      <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                          <Instagram className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                <div className="space-y-4 md:space-y-6 mb-6">
+                  <label className="block text-[#1A1A1A] text-xs sm:text-sm font-semibold mb-2">Social Links</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Instagram className="w-5 h-5 md:w-6 md:h-6 text-[#1A1A1A]" />
                         </div>
-                        <input 
-                          {...register("instagram")}
+                        <input
+                          {...register('socials.instagram')}
+                          type="text"
                           placeholder="https://instagram.com/username"
-                          className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.instagram ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-xs sm:text-sm focus:outline-none focus:border-Primary transition-all`}
+                          className={`flex-1 bg-white border ${errors.socials?.instagram ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
                         />
                       </div>
-                      {errors.instagram && <p className="mt-1 text-xs text-red-500">{errors.instagram.message}</p>}
+                      {errors.socials?.instagram && <p className="mt-1 text-xs text-red-500 ml-[52px] md:ml-[60px]">{errors.socials.instagram.message}</p>}
                     </div>
-                    <div className="mb-1">
-                      <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                          <Globe className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <FaTiktok className="w-4 h-4 md:w-5 md:h-5 text-[#1A1A1A]" />
                         </div>
-                        <input 
-                          {...register("tiktok")}
+                        <input
+                          {...register('socials.tiktok')}
+                          type="text"
                           placeholder="https://tiktok.com/@username"
-                          className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.tiktok ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-xs sm:text-sm focus:outline-none focus:border-Primary transition-all`}
+                          className={`flex-1 bg-white border ${errors.socials?.tiktok ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
                         />
                       </div>
-                      {errors.tiktok && <p className="mt-1 text-xs text-red-500">{errors.tiktok.message}</p>}
+                      {errors.socials?.tiktok && <p className="mt-1 text-xs text-red-500 ml-[52px] md:ml-[60px]">{errors.socials.tiktok.message}</p>}
                     </div>
                   </div>
                   <div>
-                    <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                        <Youtube className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Youtube className="w-5 h-5 md:w-6 md:h-6 text-[#1A1A1A]" />
                       </div>
-                      <input 
-                        {...register("youtube")}
+                      <input
+                        {...register('socials.youtube')}
+                        type="text"
                         placeholder="https://youtube.com/@username"
-                        className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.youtube ? 'border-red-500' : 'border-[#E6E6E6]'} rounded-xl text-xs sm:text-sm focus:outline-none focus:border-Primary transition-all`}
+                        className={`flex-1 bg-white border ${errors.socials?.youtube ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-2.5 md:py-3.5 px-4 focus:border-Primary focus:outline-none text-xs md:text-sm`}
                       />
                     </div>
-                    {errors.youtube && <p className="mt-1 text-xs text-red-500">{errors.youtube.message}</p>}
+                    {errors.socials?.youtube && <p className="mt-1 text-xs text-red-500 ml-[52px] md:ml-[60px]">{errors.socials.youtube.message}</p>}
                   </div>
                 </div>
- 
-                 <div className="mb-5">
-                   <AuthInput 
-                     label="Other Link"
-                     name="otherLink"
-                     placeholder="https://example.com"
-                     register={register}
-                     error={errors.otherLink}
-                   />
-                   <p className="text-[10px] text-gray-400 mt-[-12px] font-semibold">
-                     E.g., https://example.com or example.com (prefix is added automatically)
-                   </p>
-                 </div>
- 
+
+                {/* Other Link */}
+                <div className="mb-5">
+                  <label className="block text-[#1A1A1A] text-xs sm:text-sm font-semibold mb-2">Other Link</label>
+                  <input
+                    {...register('otherLink')}
+                    type="text"
+                    placeholder="https://example.com"
+                    className={`w-full bg-white border ${errors.otherLink ? 'border-red-500' : 'border-gray-100'} rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm text-[#1A1A1A] mb-2`}
+                  />
+                  <p className="text-[10px] text-gray-400 font-semibold mb-2">
+                    E.g., https://example.com or example.com (prefix is added automatically)
+                  </p>
+                  {errors.otherLink && <p className="mt-1 text-xs text-red-500">{errors.otherLink.message}</p>}
+                </div>
+
                 <div className="mt-8 md:mt-12">
                   <CommonButton 
                     type="submit"
@@ -286,7 +294,7 @@ const Onboarding = () => {
               </form>
             </div>
           </div>
- 
+
         </div>
       </div>
     </div>

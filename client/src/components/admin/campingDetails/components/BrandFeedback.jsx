@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { MessageCircle, Paperclip, Play, X, FileText } from 'lucide-react';
+import { MessageCircle, Paperclip, Play, X, FileText, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUpdateUgcCampaign, useCreateFeedback } from '@/api/apiHooks/useUgcCampaign';
 import { getImgUrl } from '@/utils/image';
@@ -7,7 +7,7 @@ import { getImgUrl } from '@/utils/image';
 const BrandFeedback = ({ campaign }) => {
   const [newMessage, setNewMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
-  const [previewVideo, setPreviewVideo] = useState(null);
+  const [previewMedia, setPreviewMedia] = useState(null);
   const fileInputRef = useRef(null);
 
   const updateCampaignMutation = useUpdateUgcCampaign();
@@ -109,17 +109,24 @@ const BrandFeedback = ({ campaign }) => {
         {messages.length > 0 ? (
           messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.from === 'creator' ? 'justify-end' : 'justify-start'}`}>
-              <div className="max-w-[80%]">
+              <div className="max-w-[80%] flex flex-col">
                 {/* Media reference box */}
                 {msg.media && (
-                  <div className="bg-white border border-gray-100 rounded-xl p-2.5 mb-1.5 shadow-sm max-w-[200px] text-left">
-                    <div className="text-[10px] font-bold text-[#1A1A1A] truncate">{msg.media.name}</div>
-                    <div className="aspect-square rounded-lg overflow-hidden mt-1.5 bg-gray-50">
+                  <div 
+                    onClick={() => setPreviewMedia(msg.media)}
+                    className={`bg-white border border-gray-100 rounded-xl p-2 mb-1.5 shadow-sm w-[200px] cursor-pointer hover:opacity-95 transition-opacity text-left ${
+                      msg.from === 'creator' ? 'self-end' : 'self-start'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 px-1 mb-1">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[10px] font-bold text-[#1A1A1A] truncate">{msg.media.name}</div>
+                      </div>
+                      <Eye className="w-3.5 h-3.5 text-gray-400" />
+                    </div>
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden bg-gray-50 relative">
                       {msg.media.type === 'video' ? (
-                        <div
-                          className="relative w-full h-full cursor-pointer group/vid"
-                          onClick={() => setPreviewVideo(msg.media)}
-                        >
+                        <>
                           <video
                             src={getImgUrl(msg.media.url)}
                             className="w-full h-full object-cover"
@@ -127,12 +134,12 @@ const BrandFeedback = ({ campaign }) => {
                             playsInline
                             preload="metadata"
                           />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover/vid:bg-black/60 transition-all">
-                            <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow">
-                              <Play className="w-3.5 h-3.5 text-[#1A1A1A] ml-0.5" fill="#1A1A1A" />
+                          <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                            <div className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center shadow">
+                              <Play className="w-3 h-3 text-[#1A1A1A] ml-0.5" fill="#1A1A1A" />
                             </div>
                           </div>
-                        </div>
+                        </>
                       ) : (
                         <img src={getImgUrl(msg.media.url)} alt="" className="w-full h-full object-cover" loading="lazy" />
                       )}
@@ -140,12 +147,12 @@ const BrandFeedback = ({ campaign }) => {
                   </div>
                 )}
 
-                <div className={`px-4 py-3 rounded-2xl text-sm ${
+                <div className={`px-4 py-3 rounded-2xl text-sm break-words ${
                   msg.from === 'creator' 
                     ? 'bg-Primary text-white rounded-tr-none text-right' 
                     : 'bg-white text-[#1A1A1A] border border-gray-100 rounded-tl-none text-left'
                 }`}>
-                  <p>{msg.text}</p>
+                  <p className="whitespace-pre-wrap">{msg.text}</p>
                   
                   {msg.fileUrl && (
                     <a
@@ -157,7 +164,7 @@ const BrandFeedback = ({ campaign }) => {
                       }`}
                     >
                       <Paperclip className="w-3.5 h-3.5" />
-                      <span>Attachment ({msg.fileUrl.split('/').pop()})</span>
+                      <span>Attachment ({msg.fileUrl.split('?')[0].split('/').pop()})</span>
                     </a>
                   )}
                 </div>
@@ -213,13 +220,13 @@ const BrandFeedback = ({ campaign }) => {
           </button>
         </div>
       </div>
-      {/* Video Preview Modal */}
+      {/* Media Preview Modal */}
       <AnimatePresence>
-        {previewVideo && (
+        {previewMedia && (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setPreviewVideo(null)}
+              onClick={() => setPreviewMedia(null)}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
             <motion.div
@@ -229,25 +236,37 @@ const BrandFeedback = ({ campaign }) => {
               className="relative max-w-2xl w-full z-[1001]"
             >
               <button
-                onClick={() => setPreviewVideo(null)}
+                onClick={() => setPreviewMedia(null)}
                 className="absolute -top-10 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer border border-white/20 rounded-full bg-black/20"
               >
                 <X className="w-5 h-5" />
               </button>
-              <div className="rounded-2xl overflow-hidden bg-black">
-                <video
-                  src={getImgUrl(previewVideo.url)}
-                  className="w-full max-h-[75vh]"
-                  controls
-                  autoPlay
-                  controlsList="nodownload"
-                  disablePictureInPicture
-                  onContextMenu={(e) => e.preventDefault()}
-                  onDragStart={(e) => e.preventDefault()}
-                  draggable="false"
-                />
+              <div className="rounded-2xl overflow-hidden bg-black flex items-center justify-center relative">
+                {previewMedia.type === 'video' ? (
+                  <video
+                    src={getImgUrl(previewMedia.url)}
+                    className="w-full max-h-[75vh]"
+                    controls
+                    autoPlay
+                    controlsList="nodownload"
+                    disablePictureInPicture
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    draggable="false"
+                  />
+                ) : (
+                  <img
+                    src={getImgUrl(previewMedia.url)}
+                    alt={previewMedia.name}
+                    className="w-full max-h-[75vh] object-contain"
+                    loading="lazy"
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    draggable="false"
+                  />
+                )}
               </div>
-              <p className="mt-2 text-center text-white/70 text-xs font-medium">{previewVideo.name}</p>
+              <p className="mt-2 text-center text-white/70 text-xs font-medium">{previewMedia.name}</p>
             </motion.div>
           </div>
         )}

@@ -1,5 +1,4 @@
-import React from 'react';
-import { MessageCircle, Eye, Paperclip } from 'lucide-react';
+import { MessageCircle, Eye, Paperclip, Play } from 'lucide-react';
 import { getImgUrl } from '@/utils/image';
 
 const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewMedia, isPending }) => {
@@ -48,26 +47,29 @@ const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewM
 
                 {/* Media Attachment Attachment */}
                 {msg.media && (
-                  <div className="bg-white border border-gray-100 rounded-xl p-2 mb-1.5 shadow-sm">
+                  <div 
+                    onClick={() => onPreviewMedia && onPreviewMedia(msg.media)}
+                    className={`bg-white border border-gray-100 rounded-xl p-2 mb-1.5 shadow-sm w-[200px] cursor-pointer hover:opacity-95 transition-opacity text-left ${
+                      msg.from === 'creator' ? 'self-start' : 'self-end'
+                    }`}
+                  >
                     <div className="flex items-center justify-between gap-2 px-1 mb-1">
                       <div className="min-w-0 flex-1">
                         <div className="text-[10px] font-bold text-[#1A1A1A] truncate">{msg.media.name}</div>
                         <div className="text-[8px] text-gray-400">{formatDate(msg.media.createdAt)}</div>
                       </div>
-                      <button
-                        onClick={() => onPreviewMedia && onPreviewMedia(msg.media)}
-                        className="p-1 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-Primary cursor-pointer transition-colors"
-                        title="View attachment"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
+                      <Eye className="w-3.5 h-3.5 text-gray-400" />
                     </div>
-                    <div
-                      onClick={() => onPreviewMedia && onPreviewMedia(msg.media)}
-                      className="aspect-square w-24 rounded-lg overflow-hidden bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity"
-                    >
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden bg-gray-50 relative">
                       {msg.media.type === 'video' ? (
-                        <video src={getImgUrl(msg.media.url)} className="w-full h-full object-cover" muted />
+                        <>
+                          <video src={getImgUrl(msg.media.url)} className="w-full h-full object-cover" muted />
+                          <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                            <div className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center shadow">
+                              <Play className="w-3.5 h-3.5 text-[#1A1A1A] ml-0.5" fill="#1A1A1A" />
+                            </div>
+                          </div>
+                        </>
                       ) : (
                         <img src={getImgUrl(msg.media.url)} alt="" className="w-full h-full object-cover" loading="lazy" />
                       )}
@@ -76,7 +78,7 @@ const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewM
                 )}
 
                 {/* Bubble Text */}
-                <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm break-words ${
                   msg.from === 'creator'
                     ? 'bg-white border border-gray-100 text-[#1A1A1A] rounded-tl-none'
                     : 'bg-Primary text-white rounded-tr-none'

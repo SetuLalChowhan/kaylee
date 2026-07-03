@@ -35,10 +35,16 @@ const UploadContentModal = ({ isOpen, onClose, onUpload, isPending }) => {
     }
   }, [selectedFile, reset]);
 
+  // Reset form only when modal is closed (i.e. after successful upload)
+  useEffect(() => {
+    if (!isOpen) {
+      reset();
+      setPreview(null);
+    }
+  }, [isOpen, reset]);
+
   const handleFormSubmit = (data) => {
     onUpload({ ...data, file: data.file[0] });
-    reset();
-    setPreview(null);
   };
 
   const clearFile = (e) => {
