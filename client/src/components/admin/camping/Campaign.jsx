@@ -179,7 +179,7 @@ const Campaign = () => {
                 brand={campaign.brandName}
                 amount={campaign.amount}
                 dueDate={campaign.deadline}
-                status={campaign.status}
+                status={(campaign.paymentStatus === 'Paid' || campaign.paymentStatus === 'Overdue') ? campaign.paymentStatus : campaign.status}
                 progress={getProgress(campaign.status)}
                 onEdit={() => handleEdit(campaign)}
                 onDelete={() => handleDelete(campaign.id)}
@@ -202,7 +202,7 @@ const Campaign = () => {
                     brand={campaign.brandName}
                     amount={campaign.amount}
                     dueDate={campaign.deadline}
-                    status={campaign.status}
+                    status={(campaign.paymentStatus === 'Paid' || campaign.paymentStatus === 'Overdue') ? campaign.paymentStatus : campaign.status}
                     progress={getProgress(campaign.status)}
                     onEdit={() => handleEdit(campaign)}
                     onDelete={() => handleDelete(campaign.id)}

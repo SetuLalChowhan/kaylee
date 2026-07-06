@@ -1,7 +1,8 @@
 import { MessageCircle, Eye, Paperclip, Play } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getImgUrl } from '@/utils/image';
 
-const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewMedia, isPending }) => {
+const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewMedia, isPending, creator }) => {
   const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -30,19 +31,44 @@ const BrandComments = ({ comments, newComment, setNewComment, onSend, onPreviewM
               <div className="max-w-[80%] flex flex-col">
                 {/* Avatar and name */}
                 <div className={`flex items-center gap-2 mb-1 ${msg.from === 'creator' ? 'flex-row' : 'flex-row-reverse'}`}>
-                  <div className="w-7 h-7 rounded-full overflow-hidden border border-white bg-gray-100 shadow-sm shrink-0">
-                    <img src={
-                        msg.from === 'creator'
-                          ? "https://api.dicebear.com/7.x/adventurer/svg?seed=creator"
-                          : "https://api.dicebear.com/7.x/initials/svg?seed=Brand"
-                      }
-                      alt={msg.from}
-                      className="w-full h-full object-cover"
-                    loading="lazy" />
-                  </div>
-                  <span className="text-[10px] font-bold text-gray-400 capitalize">
-                    {msg.from === 'creator' ? 'Creator' : 'Brand Client'}
-                  </span>
+                  {msg.from === 'creator' ? (
+                    <Link 
+                      to={`/preview/${creator?.slug}`} 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-7 h-7 rounded-full overflow-hidden border border-white bg-gray-100 shadow-sm shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
+                    >
+                      <img src={
+                          getImgUrl(creator?.avatar) || "https://api.dicebear.com/7.x/adventurer/svg?seed=creator"
+                        }
+                        alt="creator"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </Link>
+                  ) : (
+                    <div className="w-7 h-7 rounded-full overflow-hidden border border-white bg-gray-100 shadow-sm shrink-0">
+                      <img src="https://api.dicebear.com/7.x/initials/svg?seed=Brand"
+                        alt="brand"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  {msg.from === 'creator' ? (
+                    <Link 
+                      to={`/preview/${creator?.slug}`} 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-bold text-gray-400 capitalize hover:text-Primary transition-colors cursor-pointer"
+                    >
+                      {creator ? `${creator.firstName} ${creator.lastName}` : 'Creator'}
+                    </Link>
+                  ) : (
+                    <span className="text-[10px] font-bold text-gray-400 capitalize">
+                      Brand Client
+                    </span>
+                  )}
                 </div>
 
                 {/* Media Attachment Attachment */}

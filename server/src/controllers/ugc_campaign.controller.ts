@@ -108,6 +108,14 @@ export const getUgcCampaignById = catchAsync(
     const campaign = await prisma.ugcCampaign.findFirst({
       where: isAdmin ? { id } : { id, userId },
       include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            avatar: true,
+            slug: true,
+          },
+        },
         deliverables: { orderBy: { createdAt: "asc" } },
         tasks: { orderBy: { createdAt: "asc" } },
         media: { orderBy: { createdAt: "asc" } },
@@ -306,6 +314,30 @@ export const updateUgcCampaign = catchAsync(
               },
             });
           }
+        }
+      }
+
+      // Sync back to invoices
+      if (paymentStatus !== undefined || amount !== undefined || campaignName !== undefined) {
+        const existingName = existing.name;
+        
+        // Find invoices linked to this campaign by campaignName and userId
+        const linkedInvoices = await tx.invoice.findMany({
+          where: {
+            campaignName: existingName,
+            userId: u.userId,
+          },
+        });
+        
+        for (const inv of linkedInvoices) {
+          await tx.invoice.update({
+            where: { id: inv.id },
+            data: {
+              ...(paymentStatus !== undefined && { status: paymentStatus === "Paid" ? "Paid" : (paymentStatus === "Overdue" ? "Overdue" : "Pending") }),
+              ...(amount !== undefined && { amount }),
+              ...(campaignName !== undefined && { campaignName }),
+            },
+          });
         }
       }
 
@@ -841,6 +873,14 @@ export const getPublicCampaignBySlug = catchAsync(
     const campaign = await prisma.ugcCampaign.findUnique({
       where: { slug },
       include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            avatar: true,
+            slug: true,
+          },
+        },
         deliverables: { orderBy: { createdAt: "asc" } },
         tasks: { orderBy: { createdAt: "asc" } },
         media: { orderBy: { createdAt: "asc" } },

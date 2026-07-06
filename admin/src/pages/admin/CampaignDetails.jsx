@@ -66,6 +66,9 @@ const CampaignDetails = () => {
     onSuccess: () => {
       toast.success("Campaign updated successfully");
       queryClient.invalidateQueries({ queryKey: ["adminCampaignDetails", id] });
+      queryClient.invalidateQueries({ queryKey: ["adminInvoices"] });
+      queryClient.invalidateQueries({ queryKey: ["adminCampaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to update campaign");
@@ -637,6 +640,16 @@ const CampaignDetails = () => {
                     }`}
                   >
                     Paid
+                  </button>
+                  <button
+                    onClick={() => handlePaymentStatusChange("Overdue")}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all ${
+                      campaign.paymentStatus === "Overdue"
+                        ? "bg-red-50 text-red-500 border-red-200"
+                        : "bg-white text-slate-400 border-slate-200"
+                    }`}
+                  >
+                    Overdue
                   </button>
                 </div>
               </div>

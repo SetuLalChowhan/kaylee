@@ -114,12 +114,14 @@ const CampaingDetails = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A]">{campaign.name}</h1>
-          <span className={`text-xs font-bold px-3 py-1 rounded-full ${campaign.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
-              campaign.status === 'Draft' ? 'bg-gray-100 text-gray-500' :
-                campaign.status === 'Under Review' ? 'bg-orange-50 text-orange-500' :
-                  campaign.status === 'Approved' ? 'bg-green-50 text-green-500' :
-                    'bg-blue-50 text-Primary'
-            }`}>{campaign.status}</span>
+          <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+            campaign.paymentStatus === 'Paid' ? 'bg-green-50 text-green-600' :
+            campaign.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
+            campaign.status === 'Draft' ? 'bg-gray-100 text-gray-500' :
+            campaign.status === 'Under Review' ? 'bg-orange-50 text-orange-500' :
+            campaign.status === 'Approved' ? 'bg-green-50 text-green-500' :
+            'bg-blue-50 text-Primary'
+          }`}>{campaign.paymentStatus === 'Paid' ? 'Paid' : campaign.status}</span>
         </div>
         {/* Progress Bar */}
         {/* <div className="w-full md:w-56 flex items-center justify-between gap-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">

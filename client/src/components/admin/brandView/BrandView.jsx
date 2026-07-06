@@ -178,6 +178,7 @@ const BrandView = () => {
                     onSend={handleSendComment}
                     onPreviewMedia={setPreviewItem}
                     isPending={feedbackMutation.isPending}
+                    creator={campaign.user}
                 />
             )}
 

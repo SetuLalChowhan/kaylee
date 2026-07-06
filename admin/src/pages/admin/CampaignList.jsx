@@ -52,6 +52,7 @@ const CampaignList = () => {
       toast.success("Campaign created successfully");
       queryClient.invalidateQueries({ queryKey: ["adminCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminInvoices"] });
       closeModal();
     },
     onError: (err) => {
@@ -69,6 +70,7 @@ const CampaignList = () => {
       toast.success("Campaign updated successfully");
       queryClient.invalidateQueries({ queryKey: ["adminCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminInvoices"] });
       closeModal();
     },
     onError: (err) => {
@@ -86,6 +88,7 @@ const CampaignList = () => {
       toast.success("Campaign deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["adminCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminInvoices"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to delete campaign");
@@ -247,7 +250,9 @@ const CampaignList = () => {
                     <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
                       <p className="font-bold text-slate-800">{c.amount}</p>
                       <span className={`text-[8px] md:text-[9px] font-bold px-1.5 md:py-0.5 rounded-full ${
-                        c.paymentStatus === "Paid" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
+                        c.paymentStatus === "Paid" ? "bg-green-50 text-green-600" :
+                        c.paymentStatus === "Overdue" ? "bg-red-50 text-red-600" :
+                        "bg-yellow-50 text-yellow-600"
                       }`}>
                         {c.paymentStatus || "Unpaid"}
                       </span>

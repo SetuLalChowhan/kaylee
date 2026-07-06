@@ -85,6 +85,14 @@ const InvoiceTracker = ({ campaign }) => {
             >
               Paid
             </button>
+            <button
+              onClick={() => handleStatusChange('Overdue')}
+              className={`text-xs font-bold px-4 py-1.5 rounded-full border transition-all cursor-pointer ${
+                campaign.paymentStatus === 'Overdue' ? 'bg-red-50 text-red-500 border-red-200' : 'bg-white text-gray-400 border-gray-100 hover:border-red-200'
+              }`}
+            >
+              Overdue
+            </button>
           </div>
         </div>
       </div>

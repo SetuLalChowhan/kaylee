@@ -111,7 +111,18 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
         </button>
       )}
 
-      <PreviewHeader profile={profile} />
+      <PreviewHeader 
+        profile={profile} 
+        onAvatarClick={() => {
+          if (profile.image) {
+            setPreviewItem({
+              url: profile.image,
+              type: 'image',
+              title: profile.name,
+            });
+          }
+        }} 
+      />
       <PreviewInfoSection profile={profile} />
       <PreviewMediaGrid items={mediaItems} onPreview={(item) => setPreviewItem(item)} />
 

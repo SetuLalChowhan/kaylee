@@ -50,6 +50,8 @@ const InvoiceList = () => {
       toast.success("Invoice created successfully");
       queryClient.invalidateQueries({ queryKey: ["adminInvoices"] });
       queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminCampaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["adminCampaignDetails"] });
       closeModal();
     },
     onError: (err) => {
@@ -67,6 +69,8 @@ const InvoiceList = () => {
       toast.success("Invoice updated successfully");
       queryClient.invalidateQueries({ queryKey: ["adminInvoices"] });
       queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminCampaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["adminCampaignDetails"] });
       closeModal();
     },
     onError: (err) => {
@@ -84,6 +88,8 @@ const InvoiceList = () => {
       toast.success("Invoice deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["adminInvoices"] });
       queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["adminCampaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["adminCampaignDetails"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to delete invoice");

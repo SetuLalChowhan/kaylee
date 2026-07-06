@@ -49,7 +49,7 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
     },
   });
 
-  // Sync UgcCampaign amount with invoice amount
+  // Sync UgcCampaign amount and payment status with invoice
   if (campaign) {
     const ugcCampaign = await prisma.ugcCampaign.findFirst({
       where: {
@@ -60,7 +60,10 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
     if (ugcCampaign) {
       await prisma.ugcCampaign.update({
         where: { id: ugcCampaign.id },
-        data: { amount },
+        data: {
+          amount,
+          paymentStatus: invoice.status === "Paid" ? "Paid" : (invoice.status === "Overdue" ? "Overdue" : "Pending"),
+        },
       });
     }
   }
@@ -206,9 +209,10 @@ export const updateInvoice = catchAsync(async (req: Request, res: Response, next
     },
   });
 
-  // Sync UgcCampaign amount with invoice amount
+  // Sync UgcCampaign amount and payment status with invoice
   const finalAmount = amount !== undefined ? amount : existingInvoice.amount;
   const finalCampaignName = campaign !== undefined ? campaign : existingInvoice.campaignName;
+  const finalStatus = status !== undefined ? status : updatedInvoice.status;
   if (finalCampaignName) {
     const ugcCampaign = await prisma.ugcCampaign.findFirst({
       where: {
@@ -219,7 +223,10 @@ export const updateInvoice = catchAsync(async (req: Request, res: Response, next
     if (ugcCampaign) {
       await prisma.ugcCampaign.update({
         where: { id: ugcCampaign.id },
-        data: { amount: finalAmount },
+        data: {
+          amount: finalAmount,
+          paymentStatus: finalStatus === "Paid" ? "Paid" : (finalStatus === "Overdue" ? "Overdue" : "Pending"),
+        },
       });
     }
   }

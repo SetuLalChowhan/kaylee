@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PreviewHeader = ({ profile }) => {
+const PreviewHeader = ({ profile, onAvatarClick }) => {
   return (
     <div className="relative w-full mb-10">
       {/* Banner */}
@@ -9,7 +9,10 @@ const PreviewHeader = ({ profile }) => {
       {/* Profile Overlap Info */}
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="flex flex-col items-start -mt-16 md:-mt-32 relative z-10">
-          <div className="w-28 h-28 md:w-48 md:h-48 rounded-full overflow-hidden border-4 md:border-8 border-white shadow-2xl bg-white mb-4 md:mb-6">
+          <div 
+            onClick={onAvatarClick}
+            className="w-28 h-28 md:w-48 md:h-48 rounded-full overflow-hidden border-4 md:border-8 border-white shadow-2xl bg-white mb-4 md:mb-6 cursor-pointer hover:opacity-90 transition-opacity"
+          >
             <img src={profile.image} alt="Profile" className="w-full h-full object-cover" loading="lazy" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-1">{profile.name}</h1>
