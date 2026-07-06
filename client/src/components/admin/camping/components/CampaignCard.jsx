@@ -99,8 +99,6 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
             status === 'Under Review' ? 'bg-orange-50 text-orange-500' :
             status === 'Approved' ? 'bg-green-50 text-green-500' :
             status === 'Completed' ? 'bg-blue-50 text-Primary' :
-            status === 'Paid' ? 'bg-green-50 text-green-600' :
-            status === 'Overdue' ? 'bg-red-50 text-red-500' :
             'bg-gray-100 text-gray-500'
           }`}>
             {status}

@@ -51,7 +51,7 @@ const CampaignGrid = ({ campaigns = [], onEdit }) => {
               brand={campaign.brandName}
               amount={campaign.amount}
               dueDate={campaign.deadline}
-              status={(campaign.paymentStatus === 'Paid' || campaign.paymentStatus === 'Overdue') ? campaign.paymentStatus : campaign.status}
+              status={campaign.status}
               progress={getProgress(campaign.status)}
               onEdit={() => onEdit && onEdit(campaign)}
               onDelete={() => handleDelete(campaign.id)}

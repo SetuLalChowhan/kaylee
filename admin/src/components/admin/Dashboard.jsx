@@ -369,8 +369,6 @@ const Dashboard = () => {
                     </div>
                     <div className="text-right">
                       <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                        campaign.paymentStatus === "Paid" ? "bg-green-50 text-green-600" :
-                        campaign.paymentStatus === "Overdue" ? "bg-red-50 text-red-500" :
                         campaign.status === "Pending" ? "bg-yellow-50 text-yellow-600" :
                         campaign.status === "Draft" ? "bg-slate-100 text-slate-500" :
                         campaign.status === "Under Review" ? "bg-orange-50 text-orange-500" :
@@ -378,7 +376,7 @@ const Dashboard = () => {
                         campaign.status === "Completed" ? "bg-blue-50 text-Primary" :
                         "bg-slate-100 text-slate-500"
                       }`}>
-                        {campaign.paymentStatus === "Paid" ? "Paid" : (campaign.paymentStatus === "Overdue" ? "Overdue" : campaign.status)}
+                        {campaign.status}
                       </span>
                     </div>
                   </div>
