@@ -13,6 +13,10 @@ import Onboarding from "@/pages/auth/Onboarding";
 import PricingPage from "@/pages/sites/PricingPage";
 import SubscriptionSuccess from "@/pages/sites/SubscriptionSuccess";
 import SubscriptionCancel from "@/pages/sites/SubscriptionCancel";
+import AcceptableUsePolicy from "@/pages/sites/AcceptableUsePolicy";
+import CookiePolicy from "@/pages/sites/CookiePolicy";
+import PrivacyPolicy from "@/pages/sites/PrivacyPolicy";
+import SubscriptionBillingPolicy from "@/pages/sites/SubscriptionBillingPolicy";
 import { createBrowserRouter } from "react-router-dom";
 import Planner from "@/components/admin/planner/Planner";
 import Invoices from "@/components/admin/invoices/Invoices";
@@ -35,6 +39,22 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: "acceptable-use-policy",
+        element: <AcceptableUsePolicy />,
+      },
+      {
+        path: "cookie-policy",
+        element: <CookiePolicy />,
+      },
+      {
+        path: "privacy-policy",
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: "subscription-billing-policy",
+        element: <SubscriptionBillingPolicy />,
       },
     ],
   },

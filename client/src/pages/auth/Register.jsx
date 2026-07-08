@@ -85,7 +85,10 @@ const Register = () => {
           />
           <div className="flex flex-col">
             <label htmlFor="terms" className="text-xs lg:text-sm text-[#666] leading-relaxed cursor-pointer">
-              I agree with the <Link to="/terms" className="text-Primary font-bold hover:underline">terms and conditions</Link>
+              I agree to the{" "}
+              <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-Primary font-bold hover:underline">
+                Privacy Policy
+              </Link>
             </label>
             {errors.terms && <span className="text-[10px] text-red-500 font-medium">{errors.terms.message}</span>}
           </div>

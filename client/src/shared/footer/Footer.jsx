@@ -85,11 +85,37 @@ const Footer = () => {
         {/* Divider */}
         <div className="h-[1px] bg-white/10 w-full mb-10" />
 
-        {/* Copyright */}
-        <div className="text-center mb-10">
+        {/* Copyright & Legal Links */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 text-center md:text-left">
           <p className="text-sm lg:text-base opacity-70 font-medium tracking-wide">
             {cms.footer_copyright || "© 2025 STAKD. All rights reserved."}
           </p>
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <Link
+              to="/acceptable-use-policy"
+              className="text-sm opacity-70 hover:opacity-100 transition-opacity font-medium"
+            >
+              Acceptable Use Policy
+            </Link>
+            <Link
+              to="/cookie-policy"
+              className="text-sm opacity-70 hover:opacity-100 transition-opacity font-medium"
+            >
+              Cookie Policy
+            </Link>
+            <Link
+              to="/privacy-policy"
+              className="text-sm opacity-70 hover:opacity-100 transition-opacity font-medium"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              to="/subscription-billing-policy"
+              className="text-sm opacity-70 hover:opacity-100 transition-opacity font-medium"
+            >
+              Subscription & Billing Policy
+            </Link>
+          </div>
         </div>
       </div>
 
