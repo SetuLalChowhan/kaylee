@@ -94,7 +94,7 @@ const SideBar = ({ open, setOpen }) => {
       <div className="p-6 mt-auto">
         <div className="bg-[#F8FAFC] rounded-2xl p-6 relative overflow-hidden group">
           <div className="relative z-10">
-            <h4 className="text-[#1A1A1A] font-bold text-base mb-1">Upgrade to Pro</h4>
+            <h4 className="text-[#1A1A1A] font-bold text-base mb-1">Upgrade Plan</h4>
             <p className="text-gray-500 text-xs mb-4 leading-relaxed">
               Unlock more features to grow faster
             </p>
@@ -102,7 +102,7 @@ const SideBar = ({ open, setOpen }) => {
               onClick={handleUpgrade}
               className="w-full bg-[#1A1A1A] text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-black transition-colors"
             >
-              Upgrade Pro <ChevronRight className="w-4 h-4" />
+              Upgrade Plan <ChevronRight className="w-4 h-4" />
             </button>
           </div>
           <div className="absolute -top-4 -right-4 w-20 h-20 bg-Primary/5 rounded-full blur-2xl group-hover:bg-Primary/10 transition-colors" />
