@@ -15,9 +15,21 @@ export const getPlans = catchAsync(async (req: Request, res: Response, next: Nex
     orderBy: { price: "asc" }
   });
 
+  const plansWithCounts = await Promise.all(
+    plans.map(async (p) => {
+      const usersCount = await prisma.user.count({
+        where: { planId: p.id },
+      });
+      return {
+        ...p,
+        usersCount,
+      };
+    })
+  );
+
   res.status(200).json({
     status: "success",
-    data: plans
+    data: plansWithCounts
   });
 });
 

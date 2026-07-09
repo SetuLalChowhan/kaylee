@@ -3,12 +3,12 @@ export declare const createInvoiceSchema: z.ZodObject<{
     body: z.ZodObject<{
         invoiceNo: z.ZodString;
         campaign: z.ZodString;
-        issueDate: z.ZodString;
+        issueDate: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
         dueDate: z.ZodString;
         amount: z.ZodString;
         status: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-            Pending: "Pending";
             Paid: "Paid";
+            Pending: "Pending";
             Overdue: "Overdue";
         }>>>;
     }, z.core.$strip>;
@@ -21,8 +21,8 @@ export declare const updateInvoiceSchema: z.ZodObject<{
         dueDate: z.ZodOptional<z.ZodString>;
         amount: z.ZodOptional<z.ZodString>;
         status: z.ZodOptional<z.ZodEnum<{
-            Pending: "Pending";
             Paid: "Paid";
+            Pending: "Pending";
             Overdue: "Overdue";
         }>>;
     }, z.core.$strip>;

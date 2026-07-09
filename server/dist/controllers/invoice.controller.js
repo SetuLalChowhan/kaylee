@@ -25,13 +25,13 @@ export const createInvoice = catchAsync(async (req, res, next) => {
             invoiceNo,
             campaignId: dbCampaign?.id || null,
             campaignName: campaign,
-            issueDate: new Date(issueDate),
+            issueDate: issueDate ? new Date(issueDate) : new Date(),
             dueDate: new Date(dueDate),
             amount,
             status: status || "Pending",
         },
     });
-    // Sync UgcCampaign amount with invoice amount
+    // Sync UgcCampaign amount and payment status with invoice
     if (campaign) {
         const ugcCampaign = await prisma.ugcCampaign.findFirst({
             where: {
@@ -42,7 +42,10 @@ export const createInvoice = catchAsync(async (req, res, next) => {
         if (ugcCampaign) {
             await prisma.ugcCampaign.update({
                 where: { id: ugcCampaign.id },
-                data: { amount },
+                data: {
+                    amount,
+                    paymentStatus: invoice.status === "Paid" ? "Paid" : (invoice.status === "Overdue" ? "Overdue" : "Pending"),
+                },
             });
         }
     }
@@ -80,12 +83,18 @@ export const getInvoices = catchAsync(async (req, res, next) => {
         let paidCount = 0;
         let outstandingAmount = 0;
         let outstandingCount = 0;
+        let earnedPast30Days = 0;
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         for (const inv of allInvoices) {
             const amt = parseFloat(inv.amount.replace(/[^0-9.]/g, "")) || 0;
             totalAmount += amt;
             if (inv.status === "Paid") {
                 paidCount++;
                 paidAmount += amt;
+                if (new Date(inv.issueDate) >= thirtyDaysAgo) {
+                    earnedPast30Days += amt;
+                }
             }
             else if (inv.status === "Pending" || inv.status === "Overdue") {
                 outstandingCount++;
@@ -103,6 +112,7 @@ export const getInvoices = catchAsync(async (req, res, next) => {
                     paidAmount,
                     outstandingCount,
                     outstandingAmount,
+                    earnedPast30Days,
                 }
             },
         });
@@ -149,15 +159,16 @@ export const updateInvoice = catchAsync(async (req, res, next) => {
             ...(invoiceNo !== undefined && { invoiceNo }),
             campaignId,
             campaignName,
-            ...(issueDate !== undefined && { issueDate: new Date(issueDate) }),
+            ...(issueDate !== undefined && { issueDate: issueDate ? new Date(issueDate) : new Date() }),
             ...(dueDate !== undefined && { dueDate: new Date(dueDate) }),
             ...(amount !== undefined && { amount }),
             ...(status !== undefined && { status }),
         },
     });
-    // Sync UgcCampaign amount with invoice amount
+    // Sync UgcCampaign amount and payment status with invoice
     const finalAmount = amount !== undefined ? amount : existingInvoice.amount;
     const finalCampaignName = campaign !== undefined ? campaign : existingInvoice.campaignName;
+    const finalStatus = status !== undefined ? status : updatedInvoice.status;
     if (finalCampaignName) {
         const ugcCampaign = await prisma.ugcCampaign.findFirst({
             where: {
@@ -168,7 +179,10 @@ export const updateInvoice = catchAsync(async (req, res, next) => {
         if (ugcCampaign) {
             await prisma.ugcCampaign.update({
                 where: { id: ugcCampaign.id },
-                data: { amount: finalAmount },
+                data: {
+                    amount: finalAmount,
+                    paymentStatus: finalStatus === "Paid" ? "Paid" : (finalStatus === "Overdue" ? "Overdue" : "Pending"),
+                },
             });
         }
     }

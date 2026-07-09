@@ -4,44 +4,64 @@ import { motion, AnimatePresence } from 'motion/react';
 import useAxiosSecure from '@/hooks/useAxiosSecure';
 import axios from 'axios';
 
-const PlanCard = ({ title, price, period, description, features, recommended, buttonText, isDark, onSelect, loading }) => (
-  <div className={`relative flex-1 p-6 sm:p-8 rounded-[32px] border ${isDark ? 'bg-[#0A0A0A] border-[#1A1A1A] text-white' : 'bg-white border-gray-100 text-[#1A1A1A]'} flex flex-col h-full shadow-sm`}>
-    {recommended && (
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-Primary text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-20 shadow-lg shadow-Primary/30">
-        Recommended
-      </div>
-    )}
-    
-    <div className="mb-6">
-      <h3 className={`text-sm font-bold uppercase tracking-tight mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{title}</h3>
-      <div className="flex items-baseline gap-1">
-        <span className="text-4xl font-bold">${price}</span>
-        {period && <span className={`text-sm font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/{period}</span>}
-      </div>
-      <p className={`text-xs mt-3 font-medium leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{description}</p>
-    </div>
+const PlanCard = ({ title, price, period, description, features, recommended, buttonText, isDark, onSelect, loading, usersCount }) => {
+  const isFoundingMember = title.toUpperCase() === "FOUNDING MEMBER";
+  const isSoldOut = isFoundingMember && usersCount >= 200;
 
-    <div className="flex-1 space-y-4 mb-10 pt-6 border-t border-gray-50/10">
-      {features.map((feature, idx) => (
-        <div key={idx} className="flex items-center gap-3">
-          <div className={`p-1 rounded-full ${isDark ? 'bg-white text-black' : 'bg-black text-white'}`}>
-            <Check className="w-3 h-3" />
-          </div>
-          <span className="text-xs font-bold">{feature}</span>
+  return (
+    <div className={`relative flex-1 p-6 sm:p-8 rounded-[32px] border flex flex-col h-full shadow-sm ${
+      isDark ? 'bg-[#0A0A0A] border-[#1A1A1A] text-white' : 'bg-white border-gray-100 text-[#1A1A1A]'
+    } ${isSoldOut ? 'border-red-200' : ''}`}>
+      {recommended && !isSoldOut && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-Primary text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-20 shadow-lg shadow-Primary/30">
+          Recommended
         </div>
-      ))}
-    </div>
+      )}
+      {isSoldOut && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-20 shadow-lg shadow-red-500/30 animate-pulse">
+          Sold Out
+        </div>
+      )}
+      
+      <div className="mb-6">
+        <h3 className={`text-sm font-bold uppercase tracking-tight mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{title}</h3>
+        <div className="flex items-baseline gap-1">
+          <span className="text-4xl font-bold">${price}</span>
+          {period && <span className={`text-sm font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/{period}</span>}
+        </div>
+        <p className={`text-xs mt-3 font-medium leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          {isSoldOut ? "Sold out! Reached the 200 member limit." : description}
+        </p>
+      </div>
 
-    <button 
-      onClick={onSelect}
-      disabled={loading}
-      className={`w-full py-4 rounded-2xl font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-Primary text-white hover:bg-Primary/90 shadow-lg shadow-Primary/10'} ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-    >
-      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-      {buttonText}
-    </button>
-  </div>
-);
+      <div className="flex-1 space-y-4 mb-10 pt-6 border-t border-gray-50/10">
+        {features.map((feature, idx) => (
+          <div key={idx} className="flex items-center gap-3">
+            <div className={`p-1 rounded-full ${isDark ? 'bg-white text-black' : 'bg-black text-white'}`}>
+              <Check className="w-3 h-3" />
+            </div>
+            <span className="text-xs font-bold">{feature}</span>
+          </div>
+        ))}
+      </div>
+
+      <button 
+        onClick={() => !isSoldOut && onSelect()}
+        disabled={loading || isSoldOut}
+        className={`w-full py-4 rounded-2xl font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+          isSoldOut
+            ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+            : isDark 
+              ? 'bg-white text-black hover:bg-gray-100' 
+              : 'bg-Primary text-white hover:bg-Primary/90 shadow-lg shadow-Primary/10'
+        } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+      >
+        {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {isSoldOut ? "Sold Out" : buttonText}
+      </button>
+    </div>
+  );
+};
 
 const PlanModal = ({ isOpen, onClose }) => {
   const [plans, setPlans] = useState([]);
@@ -51,43 +71,45 @@ const PlanModal = ({ isOpen, onClose }) => {
 
   const fallbackPlans = [
     {
-      title: "STATER",
+      title: "FREE",
       price: "0",
-      description: "Try STAKD risk-free for a short sprint.",
+      description: "Explore the platform with basic features.",
       buttonText: "Start Free Trial",
       features: [
-        "Up to 2 active campaigns",
+        "1 active campaign limit",
         "Limited brand review links",
         "Watermarked content previews",
         "Basic campaign planner"
       ]
     },
     {
-      title: "PRO",
-      price: "24",
+      title: "FOUNDING MEMBER",
+      price: "19.99",
       period: "monthly",
-      description: "Built for creators working with brands regularly.",
-      buttonText: "Get Started with Pro",
+      description: "Special introductory subscription rate for the first 200 users.",
+      buttonText: "Join as Founding Member",
       recommended: true,
       isDark: true,
       features: [
-        "Up to 20 active campaigns",
+        "Unlimited active campaigns",
         "Unlimited brand review links",
         "Full approval & feedback system",
-        "No STAKD branding on deliveries"
+        "No STAKD branding on deliveries",
+        "Priority support"
       ]
     },
     {
-      title: "GROWTH",
-      price: "100",
-      period: "yearly",
-      description: "Scale your creator business and save more.",
-      buttonText: "Go Yearly & Save",
+      title: "STANDARD",
+      price: "29.99",
+      period: "monthly",
+      description: "Regular plan for general creators to manage and scale their business.",
+      buttonText: "Get Standard Plan",
       features: [
         "Unlimited active campaigns",
         "Unlimited brand review links",
-        "Priority support",
-        "Best value pricing (save 20%)"
+        "Full approval & feedback system",
+        "No STAKD branding on deliveries",
+        "Priority support"
       ]
     }
   ];

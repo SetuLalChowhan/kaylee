@@ -28,6 +28,51 @@ export const createCheckoutSession = catchAsync(async (req: Request, res: Respon
     return next(new AppError("Plan not found", 404));
   }
 
+  if (plan.title.toUpperCase() === "FOUNDING MEMBER") {
+    // 1. Check if user already had a Founding Member subscription in the past
+    const previousFoundingPurchase = await prisma.purchase.findFirst({
+      where: {
+        userId,
+        plan: {
+          title: {
+            equals: "FOUNDING MEMBER",
+            mode: "insensitive"
+          }
+        }
+      }
+    });
+
+    if (previousFoundingPurchase) {
+      return next(
+        new AppError(
+          "You are not eligible for Founding Member pricing because you have previously cancelled or had a Founding Member subscription. Please subscribe to the Standard plan.",
+          400
+        )
+      );
+    }
+
+    // 2. Check the 200 member limit
+    const foundingMemberCount = await prisma.user.count({
+      where: {
+        plan: {
+          title: {
+            equals: "FOUNDING MEMBER",
+            mode: "insensitive"
+          }
+        }
+      }
+    });
+
+    if (foundingMemberCount >= 200) {
+      return next(
+        new AppError(
+          "Founding Member plan is no longer available. The limit of 200 members has been reached.",
+          400
+        )
+      );
+    }
+  }
+
   // 1. If it's a Free Plan, upgrade user instantly without Stripe
   if (plan.price === 0 || !plan.stripePriceId) {
     const updatedUser = await prisma.user.update({
@@ -54,7 +99,10 @@ export const createCheckoutSession = catchAsync(async (req: Request, res: Respon
   const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
   
   try {
-    const session = await stripe.checkout.sessions.create({
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const customerEmail = user?.email;
+
+    const sessionData: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [
@@ -69,7 +117,13 @@ export const createCheckoutSession = catchAsync(async (req: Request, res: Respon
         userId,
         planId: plan.id,
       },
-    });
+    };
+
+    if (customerEmail) {
+      sessionData.customer_email = customerEmail;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionData);
 
     res.status(200).json({
       status: "success",
@@ -171,12 +225,12 @@ export const getMyPlan = catchAsync(async (req: Request, res: Response, next: Ne
 
   // Default fallback if no plan associated in DB
   const defaultPlan = {
-    title: "STATER",
-    description: "Try STAKD risk-free for a short sprint.",
+    title: "FREE",
+    description: "Explore the platform with basic features.",
     price: 0,
     priceSuffix: "",
     features: [
-      "Up to 2 active campaigns",
+      "1 active campaign limit",
       "Limited brand review links",
       "Watermarked content previews",
       "Basic campaign planner"
@@ -184,7 +238,7 @@ export const getMyPlan = catchAsync(async (req: Request, res: Response, next: Ne
     buttonText: "Start Free Trial",
     isRecommended: false,
     isDark: false,
-    campaignLimit: 2,
+    campaignLimit: 1,
   };
 
   res.status(200).json({
@@ -192,7 +246,7 @@ export const getMyPlan = catchAsync(async (req: Request, res: Response, next: Ne
     data: {
       plan: user?.plan || defaultPlan,
       campaignCount,
-      campaignLimit: user?.plan?.campaignLimit ?? 2,
+      campaignLimit: user?.plan?.campaignLimit ?? 1,
     },
   });
 });

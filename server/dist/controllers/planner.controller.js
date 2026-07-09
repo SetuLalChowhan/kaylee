@@ -88,6 +88,27 @@ export const updateTask = catchAsync(async (req, res, next) => {
             ...(completed !== undefined && { completed }),
         },
     });
+    // Sync updates back to the UgcCampaignTask and parent UgcCampaign if linked
+    const campaignTasks = await prisma.ugcCampaignTask.findMany({
+        where: { plannerTaskId: id },
+    });
+    for (const cTask of campaignTasks) {
+        // 1. Sync UgcCampaignTask fields
+        await prisma.ugcCampaignTask.update({
+            where: { id: cTask.id },
+            data: {
+                ...(date !== undefined && { date }),
+                ...(completed !== undefined && { completed }),
+            },
+        });
+        // 2. If it is the main campaign due date, sync the parent campaign's deadline
+        if (cTask.name === "Campaign Due Date" && date !== undefined) {
+            await prisma.ugcCampaign.update({
+                where: { id: cTask.campaignId },
+                data: { deadline: date },
+            });
+        }
+    }
     res.status(200).json({
         status: "success",
         message: "Task updated successfully",

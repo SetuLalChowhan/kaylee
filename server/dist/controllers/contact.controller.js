@@ -1,6 +1,7 @@
 import prisma from "../config/db.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { AppError } from "../utils/AppError.js";
+import { sendEmail } from "../services/email.service.js";
 /**
  * GET /api/contact — Get all contact submissions (Admin only)
  */
@@ -21,6 +22,17 @@ export const createContact = catchAsync(async (req, res) => {
     const contact = await prisma.contact.create({
         data: { firstName, lastName, email, message },
     });
+    try {
+        await sendEmail(email, "We've received your message!", `<h1>Hello ${firstName || ""},</h1>
+       <p>Thank you for reaching out to STAKD Support. We have received your query and our team will get back to you shortly.</p>
+       <p style="border-left: 3px solid #ccc; padding-left: 10px; font-style: italic; color: #555;">
+         "${message || ""}"
+       </p>
+       <p>Best regards,<br/>STAKD Support Team</p>`, "support");
+    }
+    catch (err) {
+        console.error("Failed to send contact auto-reply:", err);
+    }
     res.status(201).json({
         status: "success",
         message: "Your message has been sent successfully!",

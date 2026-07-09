@@ -176,7 +176,7 @@ export const createUgcCampaign = catchAsync(
       include: { plan: true },
     });
 
-    const campaignLimit = userWithPlan?.plan?.campaignLimit ?? 2;
+    const campaignLimit = userWithPlan?.plan?.campaignLimit ?? 1;
 
     if (existingCount >= campaignLimit) {
       return next(

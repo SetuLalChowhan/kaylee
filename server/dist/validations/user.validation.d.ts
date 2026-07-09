@@ -25,9 +25,15 @@ export declare const verifyOtpSchema: z.ZodObject<{
         otp: z.ZodString;
     }, z.core.$strip>;
 }, z.core.$strip>;
+export declare const verifyEmailSchema: z.ZodObject<{
+    body: z.ZodObject<{
+        token: z.ZodString;
+    }, z.core.$strip>;
+}, z.core.$strip>;
 export declare const resetPasswordSchema: z.ZodObject<{
     body: z.ZodObject<{
-        resetToken: z.ZodString;
+        token: z.ZodOptional<z.ZodString>;
+        resetToken: z.ZodOptional<z.ZodString>;
         newPassword: z.ZodString;
         confirmPassword: z.ZodString;
     }, z.core.$strip>;
@@ -36,10 +42,10 @@ export declare const updateProfileSchema: z.ZodObject<{
     body: z.ZodObject<{
         shortBio: z.ZodOptional<z.ZodString>;
         socialLinks: z.ZodPreprocess<z.ZodOptional<z.ZodObject<{
-            instagram: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
-            website: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
-            youtube: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
-            other: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
+            instagram: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
+            website: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
+            youtube: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
+            other: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
         }, z.core.$strip>>>;
         servicesOffered: z.ZodOptional<z.ZodString>;
         brandLogos: z.ZodPreprocess<z.ZodOptional<z.ZodArray<z.ZodString>>>;
@@ -56,10 +62,10 @@ export declare const onboardingSchema: z.ZodObject<{
         displayName: z.ZodString;
         shortBio: z.ZodOptional<z.ZodString>;
         socialLinks: z.ZodPreprocess<z.ZodOptional<z.ZodObject<{
-            instagram: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
-            website: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
-            youtube: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
-            other: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
+            instagram: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
+            website: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
+            youtube: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
+            other: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
         }, z.core.$strip>>>;
     }, z.core.$strip>;
 }, z.core.$strip>;

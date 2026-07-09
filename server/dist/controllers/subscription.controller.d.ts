@@ -16,7 +16,7 @@ export declare const getMyPlan: (req: Request, res: Response, next: NextFunction
  */
 export declare const handleWebhook: (req: Request, res: Response, next: NextFunction) => void;
 /**
- * POST /api/subscriptions/cancel — Cancel user's subscription
+ * POST /api/subscriptions/cancel — Cancel user's subscription (at period end)
  */
 export declare const cancelSubscription: (req: Request, res: Response, next: NextFunction) => void;
 /**

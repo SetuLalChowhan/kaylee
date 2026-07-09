@@ -52,16 +52,26 @@ export const verifyOtpSchema = z.object({
         otp: z.string().length(6, "OTP must be 6 digits"),
     }),
 });
+export const verifyEmailSchema = z.object({
+    body: z.object({
+        token: z.string().min(1, "Verification token is required"),
+    }),
+});
 export const resetPasswordSchema = z.object({
     body: z
         .object({
-        resetToken: z.string().min(1, "Reset token is required"),
+        token: z.string().optional(),
+        resetToken: z.string().optional(),
         newPassword: passwordValidation,
         confirmPassword: z.string().min(1, "Confirm password is required"),
     })
         .refine((data) => data.newPassword === data.confirmPassword, {
         message: "Passwords do not match",
         path: ["confirmPassword"],
+    })
+        .refine((data) => data.token || data.resetToken, {
+        message: "Reset token is required",
+        path: ["token"],
     }),
 });
 const jsonArrayParser = z.preprocess((val) => {
@@ -75,6 +85,20 @@ const jsonArrayParser = z.preprocess((val) => {
     }
     return val;
 }, z.array(z.string()).optional());
+const urlPreprocess = (val) => {
+    if (typeof val !== "string")
+        return val;
+    const trimmed = val.trim();
+    if (!trimmed)
+        return trimmed;
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        return trimmed;
+    }
+    if (trimmed.includes(".")) {
+        return `https://${trimmed}`;
+    }
+    return trimmed;
+};
 export const updateProfileSchema = z.object({
     body: z.object({
         shortBio: z
@@ -93,22 +117,22 @@ export const updateProfileSchema = z.object({
             return val;
         }, z
             .object({
-            instagram: z
+            instagram: z.preprocess(urlPreprocess, z
                 .string()
                 .url("Invalid Instagram URL")
                 .optional()
-                .or(z.literal("")),
-            website: z
+                .or(z.literal(""))),
+            website: z.preprocess(urlPreprocess, z
                 .string()
                 .url("Invalid website URL")
                 .optional()
-                .or(z.literal("")),
-            youtube: z
+                .or(z.literal(""))),
+            youtube: z.preprocess(urlPreprocess, z
                 .string()
                 .url("Invalid YouTube URL")
                 .optional()
-                .or(z.literal("")),
-            other: z.string().url("Invalid URL").optional().or(z.literal("")),
+                .or(z.literal(""))),
+            other: z.preprocess(urlPreprocess, z.string().url("Invalid URL").optional().or(z.literal(""))),
         })
             .optional()),
         servicesOffered: z
@@ -147,22 +171,22 @@ export const onboardingSchema = z.object({
             return val;
         }, z
             .object({
-            instagram: z
+            instagram: z.preprocess(urlPreprocess, z
                 .string()
                 .url("Invalid Instagram URL")
                 .optional()
-                .or(z.literal("")),
-            website: z
+                .or(z.literal(""))),
+            website: z.preprocess(urlPreprocess, z
                 .string()
                 .url("Invalid website URL")
                 .optional()
-                .or(z.literal("")),
-            youtube: z
+                .or(z.literal(""))),
+            youtube: z.preprocess(urlPreprocess, z
                 .string()
                 .url("Invalid YouTube URL")
                 .optional()
-                .or(z.literal("")),
-            other: z.string().url("Invalid URL").optional().or(z.literal("")),
+                .or(z.literal(""))),
+            other: z.preprocess(urlPreprocess, z.string().url("Invalid URL").optional().or(z.literal(""))),
         })
             .optional()),
     }),
