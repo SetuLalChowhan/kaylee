@@ -8,6 +8,7 @@ import {
   getMyPayments,
   adminGetPayments,
   adminCancelPurchase,
+  downloadPurchaseInvoice,
 } from "../controllers/subscription.controller.js";
 import { authGuard, adminGuard } from "../middlewares/auth.middleware.js";
 
@@ -22,6 +23,7 @@ router.post("/verify", authGuard, verifySession);
 router.get("/my-plan", authGuard, getMyPlan);
 router.post("/cancel", authGuard, cancelSubscription);
 router.get("/my-payments", authGuard, getMyPayments);
+router.get("/purchase/:purchaseId/invoice", authGuard, downloadPurchaseInvoice);
 
 // Admin-only subscription and payment routes
 router.get("/admin/payments", authGuard, adminGuard, adminGetPayments);

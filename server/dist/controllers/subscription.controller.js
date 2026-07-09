@@ -500,4 +500,44 @@ export const adminCancelPurchase = catchAsync(async (req, res, next) => {
         data: updatedPurchase,
     });
 });
+/**
+ * GET /api/subscriptions/purchase/:purchaseId/invoice — Fetch Stripe invoice PDF URL
+ */
+export const downloadPurchaseInvoice = catchAsync(async (req, res, next) => {
+    const { userId, role } = req.user;
+    const { purchaseId } = req.params;
+    const purchase = await prisma.purchase.findUnique({
+        where: { id: purchaseId },
+    });
+    if (!purchase) {
+        return next(new AppError("Purchase record not found", 404));
+    }
+    // Authorize: Only the transaction owner or administrator can access
+    if (purchase.userId !== userId && role !== "admin") {
+        return next(new AppError("You are not authorized to view this invoice", 403));
+    }
+    if (!purchase.stripeSessionId) {
+        return next(new AppError("No Stripe checkout session associated with this purchase", 400));
+    }
+    try {
+        const session = await stripe.checkout.sessions.retrieve(purchase.stripeSessionId);
+        if (!session.invoice) {
+            return next(new AppError("No Stripe invoice associated with this transaction", 400));
+        }
+        const invoiceId = typeof session.invoice === "string" ? session.invoice : session.invoice.id;
+        const invoice = await stripe.invoices.retrieve(invoiceId);
+        const pdfUrl = invoice.invoice_pdf;
+        if (!pdfUrl) {
+            return next(new AppError("Direct invoice download link not available from Stripe", 400));
+        }
+        res.status(200).json({
+            status: "success",
+            url: pdfUrl,
+        });
+    }
+    catch (err) {
+        console.error("[Stripe Invoice Fetch Error]", err.message);
+        return next(new AppError(`Failed to fetch invoice: ${err.message}`, 500));
+    }
+});
 //# sourceMappingURL=subscription.controller.js.map

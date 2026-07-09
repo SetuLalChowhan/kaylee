@@ -31,4 +31,8 @@ export declare const adminGetPayments: (req: Request, res: Response, next: NextF
  * POST /api/subscriptions/admin/cancel — Admin cancels a user's purchase/subscription (Admin only)
  */
 export declare const adminCancelPurchase: (req: Request, res: Response, next: NextFunction) => void;
+/**
+ * GET /api/subscriptions/purchase/:purchaseId/invoice — Fetch Stripe invoice PDF URL
+ */
+export declare const downloadPurchaseInvoice: (req: Request, res: Response, next: NextFunction) => void;
 //# sourceMappingURL=subscription.controller.d.ts.map

@@ -66,6 +66,18 @@ const SubscriptionSettings = () => {
     }
   };
 
+  const handleDownloadInvoice = async (purchaseId) => {
+    try {
+      const res = await axiosSecure.get(`/subscriptions/purchase/${purchaseId}/invoice`);
+      if (res.data?.url) {
+        window.open(res.data.url, '_blank');
+      }
+    } catch (err) {
+      console.error("Failed to download invoice:", err);
+      alert(err.response?.data?.message || "Failed to download invoice. Please try again.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-20 flex items-center justify-center">
@@ -207,6 +219,7 @@ const SubscriptionSettings = () => {
                     <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400">Amount</th>
                     <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400">Transaction ID</th>
                     <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Status</th>
+                    <th className="py-2.5 px-3 md:py-3.5 md:px-5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Invoice</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -238,6 +251,18 @@ const SubscriptionSettings = () => {
                         }`}>
                           {payment.status}
                         </span>
+                      </td>
+                      <td className="py-2.5 px-3 md:py-3.5 md:px-5 text-center">
+                        {payment.status === 'completed' && payment.stripeSessionId ? (
+                          <button
+                            onClick={() => handleDownloadInvoice(payment.id)}
+                            className="inline-flex items-center gap-1.5 text-[10px] md:text-xs font-bold text-Primary hover:underline cursor-pointer"
+                          >
+                            <Receipt className="w-3.5 h-3.5" /> Download
+                          </button>
+                        ) : (
+                          <span className="text-[10px] md:text-xs text-gray-400 font-medium">N/A</span>
+                        )}
                       </td>
                     </tr>
                   ))}

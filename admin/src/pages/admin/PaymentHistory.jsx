@@ -10,7 +10,8 @@ import {
   Ban,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  FileText
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -50,6 +51,18 @@ const PaymentHistory = () => {
       )
     ) {
       cancelMutation.mutate(purchaseId);
+    }
+  };
+
+  const handleDownloadInvoice = async (purchaseId) => {
+    try {
+      const res = await axiosSecure.get(`/subscriptions/purchase/${purchaseId}/invoice`);
+      if (res.data?.url) {
+        window.open(res.data.url, '_blank');
+      }
+    } catch (err) {
+      console.error("Failed to download invoice:", err);
+      toast.error(err.response?.data?.message || "Failed to download invoice.");
     }
   };
 
@@ -180,6 +193,9 @@ const PaymentHistory = () => {
                     Status
                   </th>
                   <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 text-center">
+                    Invoice
+                  </th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 text-center">
                     Actions
                   </th>
                 </tr>
@@ -233,6 +249,18 @@ const PaymentHistory = () => {
                         )}
                         {payment.status}
                       </span>
+                    </td>
+                    <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-center">
+                      {payment.status === "completed" && payment.stripeSessionId ? (
+                        <button
+                          onClick={() => handleDownloadInvoice(payment.id)}
+                          className="inline-flex items-center gap-1 bg-Primary/5 hover:bg-Primary/10 border border-Primary/10 text-Primary px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:underline"
+                        >
+                          <FileText className="w-3.5 h-3.5 mr-1" /> PDF
+                        </button>
+                      ) : (
+                        <span className="text-xs font-semibold text-slate-400">N/A</span>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-center">
                       {payment.status === "completed" ? (

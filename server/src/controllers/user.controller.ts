@@ -579,7 +579,16 @@ export const adminGetAllUsers = catchAsync(async (req: Request, res: Response, n
       role: true,
       isVerified: true,
       createdAt: true,
-      slug: true
+      slug: true,
+      planId: true,
+      plan: {
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          campaignLimit: true
+        }
+      }
     }
   });
 
@@ -593,12 +602,13 @@ export const adminGetAllUsers = catchAsync(async (req: Request, res: Response, n
  * POST /api/user/admin/users — Admin creates a new user directly (Admin-only)
  */
 export const adminCreateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { firstName, lastName, email, password, role } = req.body as {
+  const { firstName, lastName, email, password, role, planId } = req.body as {
     firstName: string;
     lastName: string;
     email: string;
     password?: string;
     role?: string;
+    planId?: string | null;
   };
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -614,7 +624,8 @@ export const adminCreateUser = catchAsync(async (req: Request, res: Response, ne
       email,
       password: hashedPassword,
       role: role || "user",
-      isVerified: true
+      isVerified: true,
+      ...(planId && { planId })
     }
   });
 
@@ -630,12 +641,13 @@ export const adminCreateUser = catchAsync(async (req: Request, res: Response, ne
  */
 export const adminUpdateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params as { id: string };
-  const { firstName, lastName, displayName, role, isVerified } = req.body as {
+  const { firstName, lastName, displayName, role, isVerified, planId } = req.body as {
     firstName?: string;
     lastName?: string;
     displayName?: string;
     role?: string;
     isVerified?: boolean;
+    planId?: string | null;
   };
 
   const user = await prisma.user.findUnique({ where: { id } });
@@ -648,7 +660,8 @@ export const adminUpdateUser = catchAsync(async (req: Request, res: Response, ne
       ...(lastName !== undefined && { lastName }),
       ...(displayName !== undefined && { displayName }),
       ...(role !== undefined && { role }),
-      ...(isVerified !== undefined && { isVerified })
+      ...(isVerified !== undefined && { isVerified }),
+      ...(planId !== undefined && { planId })
     }
   });
 

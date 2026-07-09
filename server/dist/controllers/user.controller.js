@@ -496,7 +496,16 @@ export const adminGetAllUsers = catchAsync(async (req, res, next) => {
             role: true,
             isVerified: true,
             createdAt: true,
-            slug: true
+            slug: true,
+            planId: true,
+            plan: {
+                select: {
+                    id: true,
+                    title: true,
+                    price: true,
+                    campaignLimit: true
+                }
+            }
         }
     });
     res.status(200).json({
@@ -508,7 +517,7 @@ export const adminGetAllUsers = catchAsync(async (req, res, next) => {
  * POST /api/user/admin/users — Admin creates a new user directly (Admin-only)
  */
 export const adminCreateUser = catchAsync(async (req, res, next) => {
-    const { firstName, lastName, email, password, role } = req.body;
+    const { firstName, lastName, email, password, role, planId } = req.body;
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing)
         return next(new AppError("User already exists with this email", 400));
@@ -521,7 +530,8 @@ export const adminCreateUser = catchAsync(async (req, res, next) => {
             email,
             password: hashedPassword,
             role: role || "user",
-            isVerified: true
+            isVerified: true,
+            ...(planId && { planId })
         }
     });
     res.status(201).json({
@@ -535,7 +545,7 @@ export const adminCreateUser = catchAsync(async (req, res, next) => {
  */
 export const adminUpdateUser = catchAsync(async (req, res, next) => {
     const { id } = req.params;
-    const { firstName, lastName, displayName, role, isVerified } = req.body;
+    const { firstName, lastName, displayName, role, isVerified, planId } = req.body;
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user)
         return next(new AppError("User not found", 404));
@@ -546,7 +556,8 @@ export const adminUpdateUser = catchAsync(async (req, res, next) => {
             ...(lastName !== undefined && { lastName }),
             ...(displayName !== undefined && { displayName }),
             ...(role !== undefined && { role }),
-            ...(isVerified !== undefined && { isVerified })
+            ...(isVerified !== undefined && { isVerified }),
+            ...(planId !== undefined && { planId })
         }
     });
     res.status(200).json({
