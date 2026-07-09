@@ -12,7 +12,7 @@ export declare const createPlan: (req: Request, res: Response, next: NextFunctio
  */
 export declare const updatePlan: (req: Request, res: Response, next: NextFunction) => void;
 /**
- * DELETE /api/plans/:id — Delete a pricing plan (Admin only)
+ * DELETE /api/plans/:id — Deactivate a pricing plan (Admin only)
  */
 export declare const deletePlan: (req: Request, res: Response, next: NextFunction) => void;
 //# sourceMappingURL=plan.controller.d.ts.map

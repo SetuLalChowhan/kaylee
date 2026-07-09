@@ -5,6 +5,8 @@ model Purchase {
   planId          String
   plan            Plan     @relation(fields: [planId], references: [id])
   amount          Float
+  currency        String   @default("aud")
+  invoiceId       String?
   stripeSessionId String   @unique
   status          String   // e.g. "completed"
   createdAt       DateTime @default(now())

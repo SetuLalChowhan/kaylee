@@ -118,18 +118,6 @@ export const createUgcCampaign = catchAsync(async (req, res, next) => {
     const { userId, role } = req.user;
     const { campaignName, brandName, deadline, amount, status, notes, targetUserId, } = req.body;
     const campaignOwnerId = role === "admin" && targetUserId ? targetUserId : userId;
-    // Enforce campaign limit based on user subscription
-    const existingCount = await prisma.ugcCampaign.count({
-        where: { userId: campaignOwnerId },
-    });
-    const userWithPlan = await prisma.user.findUnique({
-        where: { id: campaignOwnerId },
-        include: { plan: true },
-    });
-    const campaignLimit = userWithPlan?.plan?.campaignLimit ?? 1;
-    if (existingCount >= campaignLimit) {
-        return next(new AppError(`Plan limit reached. This user can only create up to ${campaignLimit} campaigns. Please upgrade the subscription.`, 403));
-    }
     const baseSlug = `${brandName}-${campaignName}`
         .toLowerCase()
         .replace(/[^a-z0-9-]+/g, "-")

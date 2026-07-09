@@ -37,6 +37,7 @@ model User {
   plan              Plan?            @relation(fields: [planId], references: [id])
   stripeCustomerId  String?
   stripeSubscriptionId String?
+  subscription      Subscription?
 
   portfolioItems    PortfolioItem[]
   invoices          Invoice[]

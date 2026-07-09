@@ -43,12 +43,14 @@ router.patch("/public/:slug/media/:mediaId/status", updatePublicMediaStatus);
 router.post("/public/:slug/media/:mediaId/request-changes", requestChangesPublicMedia);
 router.post("/public/:slug/feedback", createPublicFeedback);
 
+import { requireCampaignLimit } from "../middlewares/subscription.middleware.js";
+
 // ── Creator Routes (Auth Guard Required) ─────────────────────────────────────
 router.use(authGuard);
 
 router.get("/", getUgcCampaigns);
 router.get("/:id", getUgcCampaignById);
-router.post("/", validate(createUgcCampaignSchema), createUgcCampaign);
+router.post("/", validate(createUgcCampaignSchema), requireCampaignLimit, createUgcCampaign);
 router.patch("/:id", validate(updateUgcCampaignSchema), updateUgcCampaign);
 router.delete("/:id", deleteUgcCampaign);
 

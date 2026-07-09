@@ -75,6 +75,7 @@ export async function seedPlans() {
     const targetPlans = [
         {
             title: "FREE",
+            slug: "free",
             description: "Explore the platform with basic features.",
             price: 0,
             priceSuffix: "",
@@ -89,9 +90,13 @@ export async function seedPlans() {
             isDark: false,
             stripePriceId: null,
             campaignLimit: 1,
+            billingCycle: "free",
+            isFounding: false,
+            isActive: true,
         },
         {
             title: "FOUNDING MEMBER",
+            slug: "founding",
             description: "Special introductory subscription rate for the first 200 users.",
             price: 19.99,
             priceSuffix: "/ monthly",
@@ -107,9 +112,13 @@ export async function seedPlans() {
             isDark: true,
             stripePriceId: foundingPriceId,
             campaignLimit: 999999,
+            billingCycle: "monthly",
+            isFounding: true,
+            isActive: true,
         },
         {
             title: "STANDARD",
+            slug: "standard",
             description: "Regular plan for general creators to manage and scale their business.",
             price: 29.99,
             priceSuffix: "/ monthly",
@@ -125,37 +134,19 @@ export async function seedPlans() {
             isDark: false,
             stripePriceId: standardPriceId,
             campaignLimit: 999999,
+            billingCycle: "monthly",
+            isFounding: false,
+            isActive: true,
         },
     ];
-    // Upsert target plans in database
+    // Upsert target plans in database by slug
     for (const planData of targetPlans) {
-        const existing = await prisma.plan.findFirst({
-            where: {
-                title: {
-                    equals: planData.title,
-                    mode: "insensitive"
-                }
-            }
+        const existing = await prisma.plan.findUnique({
+            where: { slug: planData.slug }
         });
         if (existing) {
             await prisma.plan.update({
                 where: { id: existing.id },
-                data: {
-                    description: planData.description,
-                    price: planData.price,
-                    priceSuffix: planData.priceSuffix,
-                    features: planData.features,
-                    buttonText: planData.buttonText,
-                    isRecommended: planData.isRecommended,
-                    isDark: planData.isDark,
-                    stripePriceId: planData.stripePriceId,
-                    campaignLimit: planData.campaignLimit,
-                }
-            });
-            console.log(`Plan "${planData.title}" updated successfully.`);
-        }
-        else {
-            await prisma.plan.create({
                 data: {
                     title: planData.title,
                     description: planData.description,
@@ -167,6 +158,30 @@ export async function seedPlans() {
                     isDark: planData.isDark,
                     stripePriceId: planData.stripePriceId,
                     campaignLimit: planData.campaignLimit,
+                    billingCycle: planData.billingCycle,
+                    isFounding: planData.isFounding,
+                    isActive: planData.isActive,
+                }
+            });
+            console.log(`Plan "${planData.title}" updated successfully.`);
+        }
+        else {
+            await prisma.plan.create({
+                data: {
+                    title: planData.title,
+                    slug: planData.slug,
+                    description: planData.description,
+                    price: planData.price,
+                    priceSuffix: planData.priceSuffix,
+                    features: planData.features,
+                    buttonText: planData.buttonText,
+                    isRecommended: planData.isRecommended,
+                    isDark: planData.isDark,
+                    stripePriceId: planData.stripePriceId,
+                    campaignLimit: planData.campaignLimit,
+                    billingCycle: planData.billingCycle,
+                    isFounding: planData.isFounding,
+                    isActive: planData.isActive,
                 }
             });
             console.log(`Plan "${planData.title}" created successfully.`);
@@ -174,8 +189,8 @@ export async function seedPlans() {
     }
     // Remove any legacy plans that are not part of targetPlans
     const allPlans = await prisma.plan.findMany();
-    const targetTitles = targetPlans.map(tp => tp.title.toLowerCase());
-    const legacyPlans = allPlans.filter(p => !targetTitles.includes(p.title.toLowerCase()));
+    const targetSlugs = targetPlans.map(tp => tp.slug);
+    const legacyPlans = allPlans.filter(p => !targetSlugs.includes(p.slug));
     for (const lp of legacyPlans) {
         console.log(`Cleaning up legacy plan: ${lp.title}...`);
         await prisma.user.updateMany({
@@ -189,6 +204,14 @@ export async function seedPlans() {
             where: { id: lp.id }
         });
         console.log(`Legacy plan "${lp.title}" removed.`);
+    }
+    // Initialize FoundingTracker if empty
+    const tracker = await prisma.foundingTracker.findFirst();
+    if (!tracker) {
+        await prisma.foundingTracker.create({
+            data: { totalClaimed: 0 }
+        });
+        console.log("Initialized FoundingTracker with 0 claimed slots.");
     }
     console.log("Database plans synchronization complete.");
 }
