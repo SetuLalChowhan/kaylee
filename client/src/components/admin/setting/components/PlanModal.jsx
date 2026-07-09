@@ -3,6 +3,7 @@ import { X, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import useAxiosSecure from '@/hooks/useAxiosSecure';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const PlanCard = ({ title, price, period, description, features, recommended, buttonText, isDark, onSelect, loading, usersCount }) => {
   const isFoundingMember = title.toUpperCase() === "FOUNDING MEMBER";
@@ -153,6 +154,13 @@ const PlanModal = ({ isOpen, onClose }) => {
       }
     } catch (err) {
       console.error("Checkout session creation failed:", err);
+      Swal.fire({
+        title: "Checkout Failed",
+        text: err.response?.data?.message || "Failed to initiate payment session. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#005BD6"
+      });
     } finally {
       setCheckoutLoadingId(null);
     }

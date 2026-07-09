@@ -69,6 +69,13 @@ const PlanSection = () => {
       }
     } catch (err) {
       console.error("Checkout session creation failed:", err);
+      Swal.fire({
+        title: "Checkout Failed",
+        text: err.response?.data?.message || "Failed to initiate payment session. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#005BD6"
+      });
     } finally {
       setCheckoutLoadingId(null);
     }
