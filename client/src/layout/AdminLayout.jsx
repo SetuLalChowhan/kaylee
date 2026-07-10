@@ -1,31 +1,15 @@
 import CommonNavbar from "@/pages/admin/CommonNavbar";
 import SideBar from "@/pages/admin/SideBar";
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, ScrollRestoration, useNavigate } from "react-router-dom";
 import { useUserProfile } from "@/hooks/fetchUserProfile";
-
-const PlatformDemoModal = lazy(() => import("@/components/admin/PlatformDemoModal"));
 
 const AdminLayout = () => {
   const { data: user } = useUserProfile();
   const [open, setOpen] = useState(false);
-  const [showTour, setShowTour] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user && user.role === "user" && !user.slug) {
-      navigate("/onboarding");
-    }
-  }, [user, navigate]);
 
-  useEffect(() => {
-    if (user) {
-      const hasSeen = localStorage.getItem("hasSeenDemoTour");
-      if (!hasSeen) {
-        setShowTour(true);
-      }
-    }
-  }, [user]);
 
   return (
     <>
@@ -53,16 +37,6 @@ const AdminLayout = () => {
           </main>
         </div>
       </div>
-
-      {showTour && (
-        <Suspense fallback={null}>
-          <PlatformDemoModal 
-            isOpen={showTour} 
-            onClose={() => setShowTour(false)} 
-            user={user} 
-          />
-        </Suspense>
-      )}
     </>
   );
 };
