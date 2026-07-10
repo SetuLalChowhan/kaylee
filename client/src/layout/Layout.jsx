@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import Footer from "@/shared/footer/Footer";
 import Navbar from "@/shared/navbar/Navbar";
 import { Outlet, ScrollRestoration } from "react-router-dom";
 import { useUserProfile } from "@/hooks/fetchUserProfile";
-import PlatformDemoModal from "@/components/admin/PlatformDemoModal";
+
+const PlatformDemoModal = lazy(() => import("@/components/admin/PlatformDemoModal"));
 
 const Layout = () => {
   const { data: user } = useUserProfile();
@@ -22,11 +23,15 @@ const Layout = () => {
       <Navbar />
       <Outlet />
       <Footer />
-      <PlatformDemoModal 
-        isOpen={showTour} 
-        onClose={() => setShowTour(false)} 
-        user={user} 
-      />
+      {showTour && (
+        <Suspense fallback={null}>
+          <PlatformDemoModal 
+            isOpen={showTour} 
+            onClose={() => setShowTour(false)} 
+            user={user} 
+          />
+        </Suspense>
+      )}
     </>
   );
 };
