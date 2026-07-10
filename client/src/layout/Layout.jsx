@@ -11,9 +11,13 @@ const Layout = () => {
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
-    const hasSeen = localStorage.getItem("hasSeenDemoTour");
-    if (!hasSeen) {
-      setShowTour(true);
+    if (user) {
+      const hasSeen = localStorage.getItem("hasSeenDemoTour");
+      if (!hasSeen) {
+        setShowTour(true);
+      }
+    } else {
+      setShowTour(false);
     }
   }, [user]);
 

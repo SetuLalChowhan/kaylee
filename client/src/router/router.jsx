@@ -5,6 +5,7 @@ import { createBrowserRouter } from "react-router-dom";
 import AdminLayout from "@/layout/AdminLayout";
 import Layout from "@/layout/Layout";
 import AuthLayout from "@/layout/AuthLayout";
+import Home from "@/pages/sites/Home";
 import PrivateRoute from "@/components/auth/PrivateRoute";
 
 // Helper wrapper for Suspense fallback
@@ -19,7 +20,6 @@ const withSuspense = (Component) => (
 );
 
 // Lazy Loaded Pages & Components
-const Home = lazy(() => import("@/pages/sites/Home"));
 const AcceptableUsePolicy = lazy(() => import("@/pages/sites/AcceptableUsePolicy"));
 const CookiePolicy = lazy(() => import("@/pages/sites/CookiePolicy"));
 const PrivacyPolicy = lazy(() => import("@/pages/sites/PrivacyPolicy"));

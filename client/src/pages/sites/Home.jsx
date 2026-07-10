@@ -19,6 +19,15 @@ const Home = () => {
     queryKey: ["publicCms"],
     url: "/cms",
     isPrivate: false,
+    initialData: {
+      status: "success",
+      data: {
+        banner_title: "Manage your campaigns. Deliver with confidence.",
+        banner_subtext: "Upload, share, and get approvals from brands - all in one simple workflow built for creators.",
+        banner_cta: "Get Started Free",
+        banner_image: "uploads/cms/heroImage.png",
+      }
+    }
   });
 
   const cms = data?.data || {};

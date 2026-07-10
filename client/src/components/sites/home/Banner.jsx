@@ -5,6 +5,16 @@ import DashLayout from "@/assets/images/dashLayout.png";
 import CommonButton from '@/components/ui/CommonButton';
 import { BannerTitle, Subtext } from '@/components/ui/Typography';
 
+const getBannerImage = (bannerImage) => {
+    if (!bannerImage || bannerImage === "uploads/cms/heroImage.png") {
+        return DashLayout;
+    }
+    if (bannerImage.startsWith("http") || bannerImage.startsWith("data:")) {
+        return bannerImage;
+    }
+    return `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${bannerImage}`;
+};
+
 const Banner = ({ cms }) => {
     return (
         <section
@@ -26,7 +36,7 @@ const Banner = ({ cms }) => {
                         transition={{ duration: 0.6 }}
                         className="flex items-center gap-3 bg-white border border-gray-100 rounded-full py-2 px-4 shadow-sm mb-6 lg:mb-10"
                     >
-                        <img src={UsersImage} alt="Creators" className="h-5 lg:h-6 w-auto" loading="lazy" />
+                        <img src={UsersImage} alt="Creators" className="h-5 lg:h-6 w-auto" />
                         <span className="text-[#1A1A1A] font-semibold text-xs lg:text-base">
                             +5,000 <span className="font-medium text-gray-500">Creators using STAKD</span>
                         </span>
@@ -63,14 +73,9 @@ const Banner = ({ cms }) => {
                     </motion.div>
 
                     {/* Dashboard Preview with White Bottom Overlay */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 80 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-                        className="mt-10 sm:mt-16 lg:mt-24 w-full relative group"
-                    >
-                        <div className="relative rounded-xl lg:rounded-[32px] overflow-hidden  border-2 lg:border-8 border-white/40">
-                            <img src={cms?.banner_image ? (cms.banner_image.startsWith("http") || cms.banner_image.startsWith("data:") ? cms.banner_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.banner_image}`) : DashLayout}
+                    <div className="mt-10 sm:mt-16 lg:mt-24 w-full relative group">
+                        <div className="relative rounded-xl lg:rounded-[32px] overflow-hidden border-2 lg:border-8 border-white/40">
+                            <img src={getBannerImage(cms?.banner_image)}
                                 alt="STAKD Dashboard Preview"
                                 className="w-full h-auto object-cover transition-transform duration-700"
                                 width="1300"
@@ -82,7 +87,7 @@ const Banner = ({ cms }) => {
                             {/* Bottom White Overlay to match image pixel-perfectly */}
                             <div className="absolute bottom-0 left-0 w-full h-[100px] sm:h-[150px] lg:h-[300px] bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" />
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </section>

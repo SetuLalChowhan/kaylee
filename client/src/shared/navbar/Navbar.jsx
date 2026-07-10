@@ -93,7 +93,7 @@ const Navbar = () => {
             }}
           >
             <div className="h-7 lg:h-9 flex items-center justify-center">
-              <img src={dynamicLogo} alt={logoText} className="max-h-full w-auto object-contain" loading="lazy" />
+              <img src={dynamicLogo} alt={logoText} className="max-h-full w-auto object-contain" />
             </div>
           </motion.div>
 
