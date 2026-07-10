@@ -16,7 +16,11 @@ const WorkflowCard = ({ image, title, description, index }) => {
           <img src={image} 
             alt={title} 
             className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700"
-          loading="lazy" />
+            width="400"
+            height="250"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </div>
       

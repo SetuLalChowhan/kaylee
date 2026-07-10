@@ -73,8 +73,8 @@ const PlatformDemoModal = ({ isOpen, onClose, user }) => {
       title: `Welcome to ${logoText}`,
       description: "The all-in-one workspace built for UGC creators. Let's take a quick tour of how to manage your entire creator business from one clean dashboard.",
       icon: <WelcomeIcon />,
-      gradient: "from-blue-600 to-indigo-600",
-      accentColor: "bg-blue-50 text-blue-700",
+      gradient: "from-[#005BD6] to-[#0047A5]",
+      accentColor: "bg-[#005BD6]/10 text-[#005BD6]",
       features: [
         "Manage all your brand campaigns in one place",
         "Generate professional invoices & track earnings",
@@ -85,8 +85,8 @@ const PlatformDemoModal = ({ isOpen, onClose, user }) => {
       title: "Campaign Management",
       description: "Track deliverables, share review links, and collect brand feedback all in one clean timeline. No more scattered email threads.",
       icon: <CampaignIcon />,
-      gradient: "from-emerald-600 to-teal-600",
-      accentColor: "bg-emerald-50 text-emerald-700",
+      gradient: "from-[#005BD6] to-[#0047A5]",
+      accentColor: "bg-[#005BD6]/10 text-[#005BD6]",
       features: [
         "Create brand campaigns with deadlines and budgets",
         "Upload draft videos and documents for client review",
@@ -97,8 +97,8 @@ const PlatformDemoModal = ({ isOpen, onClose, user }) => {
       title: "Planner & Calendar",
       description: "Visualize your content delivery pipeline month-by-month. Stay ahead of every deadline with structured task management.",
       icon: <PlannerIcon />,
-      gradient: "from-violet-600 to-purple-600",
-      accentColor: "bg-violet-50 text-violet-700",
+      gradient: "from-[#005BD6] to-[#0047A5]",
+      accentColor: "bg-[#005BD6]/10 text-[#005BD6]",
       features: [
         "Monthly calendar view of all campaign milestones",
         "Create and assign checklist tasks per campaign",
@@ -109,8 +109,8 @@ const PlatformDemoModal = ({ isOpen, onClose, user }) => {
       title: "Invoices & Payments",
       description: "Generate professional invoices, record what you've been paid, and download Stripe receipts in a click.",
       icon: <InvoiceIcon />,
-      gradient: "from-amber-500 to-orange-600",
-      accentColor: "bg-amber-50 text-amber-700",
+      gradient: "from-[#005BD6] to-[#0047A5]",
+      accentColor: "bg-[#005BD6]/10 text-[#005BD6]",
       features: [
         "Create and send branded invoice PDFs to clients",
         "Track completed and pending payment records",
@@ -121,8 +121,8 @@ const PlatformDemoModal = ({ isOpen, onClose, user }) => {
       title: "Creator Portfolio",
       description: "A beautiful public-facing profile page showcasing your niche, past work, and rates — built to impress brands and win new clients.",
       icon: <PortfolioIcon />,
-      gradient: "from-rose-500 to-pink-600",
-      accentColor: "bg-rose-50 text-rose-700",
+      gradient: "from-[#005BD6] to-[#0047A5]",
+      accentColor: "bg-[#005BD6]/10 text-[#005BD6]",
       features: [
         "Showcase UGC reels, photos, and brand work",
         "List services, niches, pricing, and social links",
@@ -146,10 +146,7 @@ const PlatformDemoModal = ({ isOpen, onClose, user }) => {
   };
 
   const handleComplete = () => {
-    const tourKey = user?.id
-      ? `hasSeenDemoTour_${user.id}`
-      : "hasSeenDemoTour_guest";
-    localStorage.setItem(tourKey, "true");
+    localStorage.setItem("hasSeenDemoTour", "true");
     onClose();
   };
 

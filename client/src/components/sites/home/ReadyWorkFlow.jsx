@@ -57,7 +57,11 @@ const ReadyWorkFlow = ({ cms }) => {
               <img src={cms?.ready_image ? (cms.ready_image.startsWith("http") || cms.ready_image.startsWith("data:") ? cms.ready_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.ready_image}`) : ImageDash}
                 alt="Dashboard Preview"
                 className="w-full h-auto rounded-2xl shadow-2xl object-cover"
-              loading="lazy" />
+                width="800"
+                height="550"
+                loading="lazy"
+                decoding="async"
+              />
             </motion.div>
           </div>
 

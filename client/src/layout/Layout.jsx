@@ -10,10 +10,7 @@ const Layout = () => {
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
-    const tourKey = user?.id
-      ? `hasSeenDemoTour_${user.id}`
-      : "hasSeenDemoTour_guest";
-    const hasSeen = localStorage.getItem(tourKey);
+    const hasSeen = localStorage.getItem("hasSeenDemoTour");
     if (!hasSeen) {
       setShowTour(true);
     }
