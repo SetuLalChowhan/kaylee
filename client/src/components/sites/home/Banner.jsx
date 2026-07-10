@@ -73,7 +73,11 @@ const Banner = ({ cms }) => {
                             <img src={cms?.banner_image ? (cms.banner_image.startsWith("http") || cms.banner_image.startsWith("data:") ? cms.banner_image : `${import.meta.env.VITE_IMG_URL || "http://localhost:3000/"}${cms.banner_image}`) : DashLayout}
                                 alt="STAKD Dashboard Preview"
                                 className="w-full h-auto object-cover transition-transform duration-700"
-                                loading="lazy" />
+                                width="1300"
+                                height="800"
+                                fetchpriority="high"
+                                decoding="async"
+                            />
 
                             {/* Bottom White Overlay to match image pixel-perfectly */}
                             <div className="absolute bottom-0 left-0 w-full h-[100px] sm:h-[150px] lg:h-[300px] bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" />

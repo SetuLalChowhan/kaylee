@@ -16,7 +16,11 @@ const FeatureCard = ({ image, title, description, className = "", index }) => {
           <img src={image}
             alt={title}
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-          loading="lazy" />
+            width="600"
+            height="400"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </div>
 
