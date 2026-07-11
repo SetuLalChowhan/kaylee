@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import StatsSection from './dashboard/StatsSection';
 import CampaignGrid from './dashboard/CampaignGrid';
@@ -6,12 +6,23 @@ import DeadlinesSidebar from './dashboard/DeadlinesSidebar';
 import CommonButton from '@/components/ui/CommonButton';
 import CreateCampaignModal from './camping/components/CreateCampaignModal';
 import { useUserProfile, useDashboardStats } from '@/api/apiHooks/useUser';
+import PlatformDemoModal from '@/components/admin/PlatformDemoModal';
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const { user, isLoading: isUserLoading } = useUserProfile();
   const { data: dashboardData, isLoading: isStatsLoading } = useDashboardStats();
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const hasSeen = localStorage.getItem("hasSeenDemoTour");
+      if (!hasSeen) {
+        setShowTour(true);
+      }
+    }
+  }, [user]);
 
   if (isUserLoading || isStatsLoading) {
     return (
@@ -67,6 +78,13 @@ const Dashboard = () => {
         onClose={() => setIsModalOpen(false)} 
         campaign={selectedCampaign}
       />
+
+      {showTour && (
+        <PlatformDemoModal 
+          isOpen={showTour} 
+          onClose={() => setShowTour(false)} 
+        />
+      )}
     </div>
   );
 };

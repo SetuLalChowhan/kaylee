@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy as reactLazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
 // Layouts and Guards (Keep eager for immediate routing structure)
@@ -7,6 +7,26 @@ import Layout from "@/layout/Layout";
 import AuthLayout from "@/layout/AuthLayout";
 import Home from "@/pages/sites/Home";
 import PrivateRoute from "@/components/auth/PrivateRoute";
+
+// Safe lazy loading wrapper to catch chunk errors and reload the page automatically
+const lazy = (importFunc) => {
+  return reactLazy(() =>
+    importFunc().catch((error) => {
+      const isChunkError = 
+        error.message?.includes("Failed to fetch dynamically imported module") ||
+        error.message?.includes("dynamically imported module") ||
+        error.message?.includes("Loading chunk") ||
+        error.message?.includes("Failed to fetch");
+
+      if (isChunkError) {
+        console.warn("Dynamic import failed, reloading the page...", error);
+        window.location.reload();
+        return new Promise(() => {}); // Return pending promise to prevent UI crash during reload
+      }
+      throw error;
+    })
+  );
+};
 
 // Helper wrapper for Suspense fallback
 const withSuspense = (Component) => (

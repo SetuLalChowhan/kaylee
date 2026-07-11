@@ -90,7 +90,8 @@ const PlatformDemoModal = ({ isOpen, onClose, user }) => {
       features: [
         "Create brand campaigns with deadlines and budgets",
         "Upload draft videos and documents for client review",
-        "Receive inline feedback directly from brands"
+        "Receive inline feedback directly from brands",
+        "Once released, brand can download files"
       ]
     },
     {
@@ -112,7 +113,6 @@ const PlatformDemoModal = ({ isOpen, onClose, user }) => {
       gradient: "from-[#005BD6] to-[#0047A5]",
       accentColor: "bg-[#005BD6]/10 text-[#005BD6]",
       features: [
-        "Create and send branded invoice PDFs to clients",
         "Track completed and pending payment records",
         "Download Stripe invoice receipts instantly"
       ]

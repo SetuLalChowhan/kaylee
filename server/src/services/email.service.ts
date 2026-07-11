@@ -24,7 +24,7 @@ export const getMailTransporter = async (type: "hello" | "support" = "hello") =>
     const port = Number(configMap.get("smtp_port") || process.env.EMAIL_PORT || 587);
     const user = configMap.get("smtp_user") || process.env.EMAIL_USER;
     const pass = configMap.get("smtp_pass") || process.env.EMAIL_PASS;
-    
+
     const fromHello = configMap.get("email_from_hello") || "hello@getstakd.co";
     const fromSupport = configMap.get("email_from_support") || "support@getstakd.co";
 

@@ -113,12 +113,18 @@ const CommonNavbar = ({ setOpen }) => {
               setIsProfileOpen(!isProfileOpen);
             }}
           >
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-white">
-              <img src={avatarUrl}
-                alt="User Profile"
-                className="w-full h-full object-cover"
-                loading="lazy" />
-            </div>
+            {user?.avatar ? (
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-white">
+                <img src={avatarUrl}
+                  alt="User Profile"
+                  className="w-full h-full object-cover"
+                  loading="lazy" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md bg-Primary/10 flex items-center justify-center text-Primary font-extrabold text-sm ring-2 ring-white select-none">
+                {(displayName || 'U')[0].toUpperCase()}
+              </div>
+            )}
             <div className="hidden md:flex items-center gap-1.5">
               <span className="text-sm font-bold text-[#1A1A1A]">{displayName}</span>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
