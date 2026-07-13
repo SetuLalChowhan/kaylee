@@ -85,10 +85,19 @@ const Register = () => {
           />
           <div className="flex flex-col">
             <label htmlFor="terms" className="text-xs lg:text-sm text-[#666] leading-relaxed cursor-pointer">
-              I agree to the{" "}
+              By creating an account, I acknowledge that I have read, understood, and agree to the{" "}
+              <Link to="/founding-creator-agreement" target="_blank" rel="noopener noreferrer" className="text-Primary font-bold hover:underline">
+                STAKD Founding Creator Agreement
+              </Link>
+              ,{" "}
+              <Link to="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-Primary font-bold hover:underline">
+                Terms of Service
+              </Link>
+              , and{" "}
               <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-Primary font-bold hover:underline">
                 Privacy Policy
               </Link>
+              .
             </label>
             {errors.terms && <span className="text-[10px] text-red-500 font-medium">{errors.terms.message}</span>}
           </div>

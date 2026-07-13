@@ -40,10 +40,12 @@ const withSuspense = (Component) => (
 );
 
 // Lazy Loaded Pages & Components
+import PrivacyPolicy from "@/pages/sites/PrivacyPolicy";
 const AcceptableUsePolicy = lazy(() => import("@/pages/sites/AcceptableUsePolicy"));
 const CookiePolicy = lazy(() => import("@/pages/sites/CookiePolicy"));
-const PrivacyPolicy = lazy(() => import("@/pages/sites/PrivacyPolicy"));
 const SubscriptionBillingPolicy = lazy(() => import("@/pages/sites/SubscriptionBillingPolicy"));
+const FoundingCreatorAgreement = lazy(() => import("@/pages/sites/FoundingCreatorAgreement"));
+const TermsOfService = lazy(() => import("@/pages/sites/TermsOfService"));
 
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Register = lazy(() => import("@/pages/auth/Register"));
@@ -90,11 +92,19 @@ const router = createBrowserRouter([
       },
       {
         path: "privacy-policy",
-        element: withSuspense(PrivacyPolicy),
+        element: <PrivacyPolicy />,
       },
       {
         path: "subscription-billing-policy",
         element: withSuspense(SubscriptionBillingPolicy),
+      },
+      {
+        path: "founding-creator-agreement",
+        element: withSuspense(FoundingCreatorAgreement),
+      },
+      {
+        path: "terms-of-service",
+        element: withSuspense(TermsOfService),
       },
     ],
   },

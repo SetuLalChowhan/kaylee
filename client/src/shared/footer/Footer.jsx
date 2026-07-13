@@ -104,6 +104,12 @@ const Footer = () => {
               Cookie Policy
             </Link>
             <Link
+              to="/founding-creator-agreement"
+              className="text-sm opacity-70 hover:opacity-100 transition-opacity font-medium"
+            >
+              Founding Creator Agreement
+            </Link>
+            <Link
               to="/privacy-policy"
               className="text-sm opacity-70 hover:opacity-100 transition-opacity font-medium"
             >
@@ -114,6 +120,12 @@ const Footer = () => {
               className="text-sm opacity-70 hover:opacity-100 transition-opacity font-medium"
             >
               Subscription & Billing Policy
+            </Link>
+            <Link
+              to="/terms-of-service"
+              className="text-sm opacity-70 hover:opacity-100 transition-opacity font-medium"
+            >
+              Terms of Service
             </Link>
           </div>
         </div>
