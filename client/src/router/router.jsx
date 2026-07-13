@@ -1,4 +1,4 @@
-import React, { lazy as reactLazy, Suspense } from "react";
+import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 
 // Layouts and Guards (Keep eager for immediate routing structure)
@@ -8,69 +8,38 @@ import AuthLayout from "@/layout/AuthLayout";
 import Home from "@/pages/sites/Home";
 import PrivateRoute from "@/components/auth/PrivateRoute";
 
-// Safe lazy loading wrapper to catch chunk errors and reload the page automatically
-const lazy = (importFunc) => {
-  return reactLazy(() =>
-    importFunc().catch((error) => {
-      const isChunkError = 
-        error.message?.includes("Failed to fetch dynamically imported module") ||
-        error.message?.includes("dynamically imported module") ||
-        error.message?.includes("Loading chunk") ||
-        error.message?.includes("Failed to fetch");
-
-      if (isChunkError) {
-        console.warn("Dynamic import failed, reloading the page...", error);
-        window.location.reload();
-        return new Promise(() => {}); // Return pending promise to prevent UI crash during reload
-      }
-      throw error;
-    })
-  );
-};
-
-// Helper wrapper for Suspense fallback
-const withSuspense = (Component, props = {}) => (
-  <Suspense fallback={
-    <div className="flex items-center justify-center min-h-[400px] w-full">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-Primary"></div>
-    </div>
-  }>
-    <Component {...props} />
-  </Suspense>
-);
-
-// Lazy Loaded Pages & Components
+// Pages & Components (Static Imports)
 import PrivacyPolicy from "@/pages/sites/PrivacyPolicy";
-const AcceptableUsePolicy = lazy(() => import("@/pages/sites/AcceptableUsePolicy"));
-const CookiePolicy = lazy(() => import("@/pages/sites/CookiePolicy"));
-const SubscriptionBillingPolicy = lazy(() => import("@/pages/sites/SubscriptionBillingPolicy"));
-const FoundingCreatorAgreement = lazy(() => import("@/pages/sites/FoundingCreatorAgreement"));
-const TermsOfService = lazy(() => import("@/pages/sites/TermsOfService"));
+import AcceptableUsePolicy from "@/pages/sites/AcceptableUsePolicy";
+import CookiePolicy from "@/pages/sites/CookiePolicy";
+import SubscriptionBillingPolicy from "@/pages/sites/SubscriptionBillingPolicy";
+import FoundingCreatorAgreement from "@/pages/sites/FoundingCreatorAgreement";
+import TermsOfService from "@/pages/sites/TermsOfService";
 
-const Login = lazy(() => import("@/pages/auth/Login"));
-const Register = lazy(() => import("@/pages/auth/Register"));
-const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
-const VerifyOTP = lazy(() => import("@/pages/auth/VerifyOTP"));
-const VerifyEmail = lazy(() => import("@/pages/auth/VerifyEmail"));
-const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
-const Onboarding = lazy(() => import("@/pages/auth/Onboarding"));
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import VerifyOTP from "@/pages/auth/VerifyOTP";
+import VerifyEmail from "@/pages/auth/VerifyEmail";
+import ResetPassword from "@/pages/auth/ResetPassword";
+import Onboarding from "@/pages/auth/Onboarding";
 
-const PricingPage = lazy(() => import("@/pages/sites/PricingPage"));
-const SubscriptionSuccess = lazy(() => import("@/pages/sites/SubscriptionSuccess"));
-const SubscriptionCancel = lazy(() => import("@/pages/sites/SubscriptionCancel"));
+import PricingPage from "@/pages/sites/PricingPage";
+import SubscriptionSuccess from "@/pages/sites/SubscriptionSuccess";
+import SubscriptionCancel from "@/pages/sites/SubscriptionCancel";
 
-const PortfolioPreview = lazy(() => import("@/pages/admin/PortfolioPreview"));
-const BrandView = lazy(() => import("@/components/admin/brandView/BrandView"));
+import PortfolioPreview from "@/pages/admin/PortfolioPreview";
+import BrandView from "@/components/admin/brandView/BrandView";
 
-const Dashboard = lazy(() => import("@/components/admin/Dashboard"));
-const Campaign = lazy(() => import("@/components/admin/camping/Campaign"));
-const CampaingDetails = lazy(() => import("@/components/admin/campingDetails/CampaingDetails"));
-const Planner = lazy(() => import("@/components/admin/planner/Planner"));
-const Invoices = lazy(() => import("@/components/admin/invoices/Invoices"));
-const Portfolio = lazy(() => import("@/components/admin/portfolio/Portfolio"));
-const FAQPage = lazy(() => import("@/components/admin/faq/FAQPage"));
-const Setting = lazy(() => import("@/components/admin/setting/Setting"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
+import Dashboard from "@/components/admin/Dashboard";
+import Campaign from "@/components/admin/camping/Campaign";
+import CampaingDetails from "@/components/admin/campingDetails/CampaingDetails";
+import Planner from "@/components/admin/planner/Planner";
+import Invoices from "@/components/admin/invoices/Invoices";
+import Portfolio from "@/components/admin/portfolio/Portfolio";
+import FAQPage from "@/components/admin/faq/FAQPage";
+import Setting from "@/components/admin/setting/Setting";
+import NotFound from "@/pages/NotFound";
 
 const router = createBrowserRouter([
   // Public site routes
@@ -80,15 +49,15 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: withSuspense(Home),
+        element: <Home />,
       },
       {
         path: "acceptable-use-policy",
-        element: withSuspense(AcceptableUsePolicy),
+        element: <AcceptableUsePolicy />,
       },
       {
         path: "cookie-policy",
-        element: withSuspense(CookiePolicy),
+        element: <CookiePolicy />,
       },
       {
         path: "privacy-policy",
@@ -96,15 +65,15 @@ const router = createBrowserRouter([
       },
       {
         path: "subscription-billing-policy",
-        element: withSuspense(SubscriptionBillingPolicy),
+        element: <SubscriptionBillingPolicy />,
       },
       {
         path: "founding-creator-agreement",
-        element: withSuspense(FoundingCreatorAgreement),
+        element: <FoundingCreatorAgreement />,
       },
       {
         path: "terms-of-service",
-        element: withSuspense(TermsOfService),
+        element: <TermsOfService />,
       },
     ],
   },
@@ -112,26 +81,26 @@ const router = createBrowserRouter([
   {
     element: <AuthLayout />,
     children: [
-      { path: "login", element: withSuspense(Login) },
-      { path: "signup", element: withSuspense(Register) },
-      { path: "forgot-password", element: withSuspense(ForgotPassword) },
-      { path: "verify-otp", element: withSuspense(VerifyOTP) },
-      { path: "verify-email", element: withSuspense(VerifyEmail) },
-      { path: "reset-password", element: withSuspense(ResetPassword) },
+      { path: "login", element: <Login /> },
+      { path: "signup", element: <Register /> },
+      { path: "forgot-password", element: <ForgotPassword /> },
+      { path: "verify-otp", element: <VerifyOTP /> },
+      { path: "verify-email", element: <VerifyEmail /> },
+      { path: "reset-password", element: <ResetPassword /> },
     ],
   },
   // Pricing
   {
     path: "pricing",
-    element: withSuspense(PricingPage),
+    element: <PricingPage />,
   },
   {
     path: "subscription/success",
-    element: withSuspense(SubscriptionSuccess),
+    element: <SubscriptionSuccess />,
   },
   {
     path: "subscription/cancel",
-    element: withSuspense(SubscriptionCancel),
+    element: <SubscriptionCancel />,
   },
   // Onboarding (protected)
   {
@@ -139,19 +108,19 @@ const router = createBrowserRouter([
     children: [
       {
         path: "onboarding",
-        element: withSuspense(Onboarding),
+        element: <Onboarding />,
       },
     ],
   },
   // Public Portfolio Preview route
   {
     path: "preview/:slug",
-    element: withSuspense(PortfolioPreview, { isPublic: true }),
+    element: <PortfolioPreview isPublic={true} />,
   },
   // Public Brand View route
   {
     path: "brand-view/:slug",
-    element: withSuspense(BrandView),
+    element: <BrandView />,
   },
   // Admin dashboard routes (protected)
   {
@@ -161,15 +130,15 @@ const router = createBrowserRouter([
       {
         element: <AdminLayout />,
         children: [
-          { index: true, element: withSuspense(Dashboard) },
-          { path: "campaigns", element: withSuspense(Campaign) },
-          { path: "campaigns/:id", element: withSuspense(CampaingDetails) },
-          { path: "campaigns/:id/brand-view", element: withSuspense(BrandView) },
-          { path: "planner", element: withSuspense(Planner) },
-          { path: "invoices", element: withSuspense(Invoices) },
-          { path: "portfolio", element: withSuspense(Portfolio) },
-          { path: "faq", element: withSuspense(FAQPage) },
-          { path: "settings", element: withSuspense(Setting) },
+          { index: true, element: <Dashboard /> },
+          { path: "campaigns", element: <Campaign /> },
+          { path: "campaigns/:id", element: <CampaingDetails /> },
+          { path: "campaigns/:id/brand-view", element: <BrandView /> },
+          { path: "planner", element: <Planner /> },
+          { path: "invoices", element: <Invoices /> },
+          { path: "portfolio", element: <Portfolio /> },
+          { path: "faq", element: <FAQPage /> },
+          { path: "settings", element: <Setting /> },
         ],
       },
     ],
@@ -179,13 +148,13 @@ const router = createBrowserRouter([
     path: "dashboard/portfolio/preview",
     element: <PrivateRoute />,
     children: [
-      { index: true, element: withSuspense(PortfolioPreview) },
+      { index: true, element: <PortfolioPreview /> },
     ],
   },
   // 404
   {
     path: "*",
-    element: withSuspense(NotFound),
+    element: <NotFound />,
   },
 ]);
 
