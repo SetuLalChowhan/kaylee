@@ -29,13 +29,13 @@ const lazy = (importFunc) => {
 };
 
 // Helper wrapper for Suspense fallback
-const withSuspense = (Component) => (
+const withSuspense = (Component, props = {}) => (
   <Suspense fallback={
     <div className="flex items-center justify-center min-h-[400px] w-full">
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-Primary"></div>
     </div>
   }>
-    <Component />
+    <Component {...props} />
   </Suspense>
 );
 
@@ -146,7 +146,7 @@ const router = createBrowserRouter([
   // Public Portfolio Preview route
   {
     path: "preview/:slug",
-    element: withSuspense(PortfolioPreview),
+    element: withSuspense(PortfolioPreview, { isPublic: true }),
   },
   // Public Brand View route
   {
