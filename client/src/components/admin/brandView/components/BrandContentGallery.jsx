@@ -22,7 +22,7 @@ const BrandContentGallery = ({
   const [activeTab, setActiveTab] = useState('All');
   const videoRefs = useRef({});
 
-  const assetTypes = ['All', 'Video', 'Raw Footage', 'B-Roll', 'Photo', 'Graphic', 'Audio', 'Other'];
+  const assetTypes = ['All', 'Video', 'Raw Footage', 'B-Roll', 'Photo', 'Graphic', 'Other'];
 
   const getNormalizedAssetType = (item) => {
     return item.assetType || (item.type === 'video' ? 'Video' : 'Photo');

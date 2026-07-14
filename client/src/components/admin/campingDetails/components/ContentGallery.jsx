@@ -430,7 +430,6 @@ const ContentGallery = ({ campaign }) => {
                             <option value="B-Roll" className="text-black bg-white">B-Roll</option>
                             <option value="Photo" className="text-black bg-white">Photo</option>
                             <option value="Graphic" className="text-black bg-white">Graphic</option>
-                            <option value="Audio" className="text-black bg-white">Audio</option>
                             <option value="Other" className="text-black bg-white">Other</option>
                           </select>
                           <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500">
@@ -579,7 +578,6 @@ const ContentGallery = ({ campaign }) => {
                         <option value="B-Roll" className="text-black bg-white">B-Roll</option>
                         <option value="Photo" className="text-black bg-white">Photo</option>
                         <option value="Graphic" className="text-black bg-white">Graphic</option>
-                        <option value="Audio" className="text-black bg-white">Audio</option>
                         <option value="Other" className="text-black bg-white">Other</option>
                       </select>
                       <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500">
