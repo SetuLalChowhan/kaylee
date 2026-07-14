@@ -19,7 +19,27 @@ const BrandContentGallery = ({
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
+  const [activeTab, setActiveTab] = useState('All');
   const videoRefs = useRef({});
+
+  const assetTypes = ['All', 'Video', 'Raw Footage', 'B-Roll', 'Photo', 'Graphic', 'Audio', 'Other'];
+
+  const getNormalizedAssetType = (item) => {
+    return item.assetType || (item.type === 'video' ? 'Video' : 'Photo');
+  };
+
+  const getCount = (type) => {
+    if (type === 'All') return mediaItems.length;
+    return mediaItems.filter(item => getNormalizedAssetType(item) === type).length;
+  };
+
+  const filteredItems = mediaItems.filter(item => {
+    if (activeTab === 'All') return true;
+    return getNormalizedAssetType(item) === activeTab;
+  });
+
+  const approvedItems = filteredItems.filter(item => item.status === 'approved');
+  const reviewItems = filteredItems.filter(item => item.status !== 'approved');
 
   const handleApprove = (id) => {
     onApproveFile(id);
@@ -48,9 +68,6 @@ const BrandContentGallery = ({
       year: 'numeric'
     });
   };
-
-  const approvedItems = mediaItems.filter(item => item.status === 'approved');
-  const reviewItems = mediaItems.filter(item => item.status !== 'approved');
 
   const renderGrid = (items) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -173,7 +190,7 @@ const BrandContentGallery = ({
             </div>
 
             {item.status && (
-              <div className="mt-2 flex items-center gap-1.5">
+              <div className="mt-2 flex items-center justify-between gap-1.5 flex-wrap">
                 {item.status === 'approved' ? (
                   <div className="flex items-center gap-1.5 text-Primary">
                     <CheckCircle className="w-3.5 h-3.5" />
@@ -190,6 +207,10 @@ const BrandContentGallery = ({
                     <span className="text-[10px] font-bold">Under Review</span>
                   </div>
                 )}
+                {/* Asset Type Tag */}
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
+                  {getNormalizedAssetType(item)}
+                </span>
               </div>
             )}
           </div>
@@ -218,6 +239,27 @@ const BrandContentGallery = ({
 
   return (
     <div className="space-y-8">
+      {/* Category Tabs - styled similarly to Campaign.jsx status tabs */}
+      <div className="flex items-center gap-1.5 p-1.5 bg-[#F8FAFC] border border-gray-100 rounded-2xl w-full overflow-x-auto scrollbar-hide">
+        {assetTypes.map((tab) => {
+          const count = getCount(tab);
+          const isActive = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`whitespace-nowrap lg:px-5 px-3.5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-white text-Primary shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              {tab} ({count})
+            </button>
+          );
+        })}
+      </div>
+
       {reviewItems.length > 0 && (
         <div className="bg-white border border-gray-50 rounded-2xl p-6">
           <h3 className="text-sm font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
@@ -238,9 +280,13 @@ const BrandContentGallery = ({
         </div>
       )}
 
-      {mediaItems.length === 0 && (
+      {filteredItems.length === 0 && (
         <div className="text-center py-16 bg-white border border-gray-100 rounded-[32px] shadow-sm">
-          <p className="text-gray-400 font-medium text-sm">No content has been uploaded to the gallery yet.</p>
+          <p className="text-gray-400 font-medium text-sm">
+            {mediaItems.length === 0
+              ? 'No content has been uploaded to the gallery yet.'
+              : `No items found under the "${activeTab}" category.`}
+          </p>
         </div>
       )}
 
@@ -277,7 +323,7 @@ const BrandContentGallery = ({
                 )}
               </div>
               <div className="mt-3 text-center">
-                <p className="text-white font-bold text-sm">{previewItem.name}</p>
+                <p className="text-white font-bold text-sm">{previewItem.name} ({getNormalizedAssetType(previewItem)})</p>
                 {previewItem.description && <p className="text-white/60 text-xs mt-1">{previewItem.description}</p>}
               </div>
             </motion.div>

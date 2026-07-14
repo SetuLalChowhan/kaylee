@@ -1,0 +1,1 @@
+ALTER TABLE "contacts" ADD COLUMN "isSubscribe" BOOLEAN NOT NULL DEFAULT false;

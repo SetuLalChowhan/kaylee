@@ -18,12 +18,14 @@ const ContentGallery = ({ campaign }) => {
   const [captionModal, setCaptionModal] = useState({ open: false, files: [] });
   const [captions, setCaptions] = useState({});
   const [titles, setTitles] = useState({});
+  const [assetTypes, setAssetTypes] = useState({});
   const [uploadProgress, setUploadProgress] = useState({});
 
   // Replace caption modal state (for individual replace)
   const [replaceModal, setReplaceModal] = useState({ open: false, itemId: null, file: null, url: null, type: null });
   const [replaceCaption, setReplaceCaption] = useState('');
   const [replaceTitle, setReplaceTitle] = useState('');
+  const [replaceAssetType, setReplaceAssetType] = useState('Video');
 
   // Preview modal
   const [previewItem, setPreviewItem] = useState(null);
@@ -61,6 +63,12 @@ const ContentGallery = ({ campaign }) => {
       type: f.type.startsWith('video') ? 'video' : 'image',
       url: URL.createObjectURL(f),
     }));
+    const initialAssetTypes = {};
+    validFiles.forEach(f => {
+      const isVideo = f.type.startsWith('video');
+      initialAssetTypes[f.name] = isVideo ? 'Video' : 'Photo';
+    });
+    setAssetTypes(initialAssetTypes);
     setCaptionModal({ open: true, files: mapped });
     setCaptions({});
     setTitles({});
@@ -74,6 +82,7 @@ const ContentGallery = ({ campaign }) => {
       formData.append('file', f.file);
       formData.append('title', titles[f.name] || f.name);
       formData.append('description', captions[f.name] || '');
+      formData.append('assetType', assetTypes[f.name] || (f.type === 'video' ? 'Video' : 'Photo'));
 
       setUploadProgress(prev => ({ ...prev, [f.name]: 0 }));
 
@@ -130,6 +139,7 @@ const ContentGallery = ({ campaign }) => {
 
     setReplaceCaption('');
     setReplaceTitle('');
+    setReplaceAssetType(type === 'video' ? 'Video' : 'Photo');
     setReplaceModal({
       open: true,
       itemId,
@@ -146,6 +156,7 @@ const ContentGallery = ({ campaign }) => {
     formData.append('file', replaceModal.file);
     formData.append('title', replaceTitle || replaceModal.file.name);
     formData.append('description', replaceCaption);
+    formData.append('assetType', replaceAssetType);
 
     replaceMutation.mutate({
       campaignId: campaign.id,
@@ -258,17 +269,24 @@ const ContentGallery = ({ campaign }) => {
                   </div>
                   {item.description && <p className="text-white text-xs leading-relaxed mb-1">{item.description}</p>}
                   <p className="text-white/60 text-[10px] truncate">{item.name}</p>
-                  {item.status && (
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full w-fit mt-1.5 ${
-                      item.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                      item.status === 'changes_requested' ? 'bg-red-500/20 text-red-400' :
-                      'bg-orange-500/20 text-orange-400'
-                    }`}>
-                      {item.status === 'approved' ? 'Approved' :
-                       item.status === 'changes_requested' ? 'Revision Requested' :
-                       'Pending Review'}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                    {item.assetType && (
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
+                        {item.assetType}
+                      </span>
+                    )}
+                    {item.status && (
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full w-fit ${
+                        item.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                        item.status === 'changes_requested' ? 'bg-red-500/20 text-red-400' :
+                        'bg-orange-500/20 text-orange-400'
+                      }`}>
+                        {item.status === 'approved' ? 'Approved' :
+                         item.status === 'changes_requested' ? 'Revision Requested' :
+                         'Pending Review'}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -333,14 +351,27 @@ const ContentGallery = ({ campaign }) => {
                         placeholder="File Title (e.g. 'OTWAY PASTURES PRODUCT PHOTO')"
                         value={titles[file.name] || ''}
                         onChange={(e) => setTitles(prev => ({ ...prev, [file.name]: e.target.value }))}
-                        className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+                        className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
                       />
+                      <select
+                        value={assetTypes[file.name] || 'Video'}
+                        onChange={(e) => setAssetTypes(prev => ({ ...prev, [file.name]: e.target.value }))}
+                        className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] cursor-pointer"
+                      >
+                        <option value="Video">Video</option>
+                        <option value="Raw Footage">Raw Footage</option>
+                        <option value="B-Roll">B-Roll</option>
+                        <option value="Photo">Photo</option>
+                        <option value="Graphic">Graphic</option>
+                        <option value="Audio">Audio</option>
+                        <option value="Other">Other</option>
+                      </select>
                       <input
                         type="text"
                         placeholder="e.g. 'Behind the scenes shot with product', etc."
                         value={captions[file.name] || ''}
                         onChange={(e) => setCaptions(prev => ({ ...prev, [file.name]: e.target.value }))}
-                        className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+                        className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
                       />
                     </div>
                   </div>
@@ -400,14 +431,27 @@ const ContentGallery = ({ campaign }) => {
                     placeholder="File Title (e.g. 'OTWAY PASTURES PRODUCT PHOTO')"
                     value={replaceTitle}
                     onChange={(e) => setReplaceTitle(e.target.value)}
-                    className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+                    className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
                   />
+                  <select
+                    value={replaceAssetType}
+                    onChange={(e) => setReplaceAssetType(e.target.value)}
+                    className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] cursor-pointer"
+                  >
+                    <option value="Video">Video</option>
+                    <option value="Raw Footage">Raw Footage</option>
+                    <option value="B-Roll">B-Roll</option>
+                    <option value="Photo">Photo</option>
+                    <option value="Graphic">Graphic</option>
+                    <option value="Audio">Audio</option>
+                    <option value="Other">Other</option>
+                  </select>
                   <input
                     type="text"
                     placeholder="e.g. 'Final version with logo', etc."
                     value={replaceCaption}
                     onChange={(e) => setReplaceCaption(e.target.value)}
-                    className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
+                    className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
                     autoFocus
                   />
                 </div>

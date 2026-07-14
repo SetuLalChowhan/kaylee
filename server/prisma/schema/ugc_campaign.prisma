@@ -1,24 +1,24 @@
 model UgcCampaign {
-  id            String                 @id @default(uuid())
+  id            String               @id @default(uuid())
   userId        String
-  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   name          String
   brandName     String
   deadline      String
   amount        String
-  status        String                 @default("Draft") // "Draft", "Under Review", "Approved", "Completed", "Pending", "Active"
-  releaseFiles  Boolean                @default(false)
+  status        String               @default("Draft")
+  releaseFiles  Boolean              @default(false)
   notes         String?
-  slug          String                 @unique
-  paymentStatus String                 @default("Pending") // "Pending", "Paid"
-  deliverables  UgcDeliverable[]
+  slug          String               @unique
+  paymentStatus String               @default("Pending")
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
   tasks         UgcCampaignTask[]
-  media         UgcMedia[]
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliverables  UgcDeliverable[]
   documents     UgcDocument[]
-  notesComments UgcNote[]
   feedback      UgcFeedbackMessage[]
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
+  media         UgcMedia[]
+  notesComments UgcNote[]
 
   @@map("ugc_campaigns")
 }
@@ -26,10 +26,10 @@ model UgcCampaign {
 model UgcDeliverable {
   id         String      @id @default(uuid())
   campaignId String
-  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   text       String
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("ugc_deliverables")
 }
@@ -37,43 +37,43 @@ model UgcDeliverable {
 model UgcCampaignTask {
   id            String      @id @default(uuid())
   campaignId    String
-  campaign      UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   name          String
   date          String
   completed     Boolean     @default(false)
   plannerTaskId String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  campaign      UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("ugc_campaign_tasks")
 }
 
 model UgcMedia {
-  id          String               @id @default(uuid())
-  campaignId  String
-  campaign    UgcCampaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  name        String
+  id           String               @id @default(uuid())
+  campaignId   String
+  name         String
   originalName String?
-  type        String               // "image" | "video"
-  url         String
-  description String?
-  status      String               @default("pending") // "pending", "approved", "changes_requested"
-  feedback    UgcFeedbackMessage[]
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  type         String
+  url          String
+  description  String?
+  status       String               @default("pending")
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  feedback     UgcFeedbackMessage[]
+  campaign     UgcCampaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("ugc_media")
 }
 
 model UgcDocument {
-  id         String      @id @default(uuid())
-  campaignId String
-  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  name       String
+  id           String      @id @default(uuid())
+  campaignId   String
+  name         String
   originalName String?
-  url        String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  url          String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  campaign     UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("ugc_documents")
 }
@@ -81,10 +81,10 @@ model UgcDocument {
 model UgcNote {
   id         String      @id @default(uuid())
   campaignId String
-  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   text       String
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("ugc_notes")
 }
@@ -92,14 +92,14 @@ model UgcNote {
 model UgcFeedbackMessage {
   id         String      @id @default(uuid())
   campaignId String
-  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   text       String
-  from       String      // "creator" | "brand"
+  from       String
   mediaId    String?
-  media      UgcMedia?   @relation(fields: [mediaId], references: [id], onDelete: SetNull)
-  fileUrl    String?     // Attached file for resolution
+  fileUrl    String?
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  media      UgcMedia?   @relation(fields: [mediaId], references: [id])
 
   @@map("ugc_feedback_messages")
 }

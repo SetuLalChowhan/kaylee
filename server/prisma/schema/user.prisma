@@ -1,53 +1,39 @@
-
-
 model User {
-  id                String   @id @default(uuid())
-  firstName         String
-  lastName          String
-  email             String   @unique
-  password          String
-  avatar            String?  // Profile image URL
-  
-  // Onboarding fields
-  displayName       String?
-  slug              String?  @unique
-  shortBio          String?
-  socialLinks       Json?    // { instagram: "", website: "", youtube: "", other: "" }
-  servicesOffered   String?
-  brandLogos        Json?    // ["uploads/brand-logos/logo1.jpg", "uploads/brand-logos/logo2.jpg"]
-
-  isVerified        Boolean  @default(false)
-  
-  // Verification & Security
-  verificationOtp   String?
-  otpExpires        DateTime?
-  
-  resetToken        String?  @unique
-  resetTokenExpires DateTime?
-
-  role              String   @default("user") // "user" | "admin"
-
-  // Notification Preferences
-  notifyDeadlineReminders Boolean @default(true)
-  notifyInvoiceUpdates    Boolean @default(true)
-  notifyContentApprovals  Boolean @default(false)
-  notifyTaskReminders     Boolean @default(false)
-
-  planId            String?
-  plan              Plan?            @relation(fields: [planId], references: [id])
-  stripeCustomerId  String?
-  stripeSubscriptionId String?
-  subscription      Subscription?
-
-  portfolioItems    PortfolioItem[]
-  invoices          Invoice[]
-  tasks             Task[]
-  ugcCampaigns      UgcCampaign[]
-  notifications     Notification[]
-  purchases         Purchase[]
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                      String          @id @default(uuid())
+  firstName               String
+  lastName                String
+  email                   String          @unique
+  password                String
+  avatar                  String?
+  displayName             String?
+  slug                    String?         @unique
+  shortBio                String?
+  socialLinks             Json?
+  servicesOffered         String?
+  brandLogos              Json?
+  isVerified              Boolean         @default(false)
+  verificationOtp         String?
+  otpExpires              DateTime?
+  resetToken              String?         @unique
+  resetTokenExpires       DateTime?
+  role                    String          @default("user")
+  notifyDeadlineReminders Boolean         @default(true)
+  notifyInvoiceUpdates    Boolean         @default(true)
+  notifyContentApprovals  Boolean         @default(false)
+  notifyTaskReminders     Boolean         @default(false)
+  planId                  String?
+  stripeCustomerId        String?
+  stripeSubscriptionId    String?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  invoices                Invoice[]
+  notifications           Notification[]
+  portfolioItems          PortfolioItem[]
+  purchases               Purchase[]
+  subscription            Subscription?
+  tasks                   Task[]
+  ugcCampaigns            UgcCampaign[]
+  plan                    Plan?           @relation(fields: [planId], references: [id])
 
   @@map("users")
 }

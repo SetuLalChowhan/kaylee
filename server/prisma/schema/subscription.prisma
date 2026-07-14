@@ -1,12 +1,10 @@
 model Subscription {
   id                   String    @id @default(uuid())
   userId               String    @unique
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   planId               String?
-  plan                 Plan?     @relation(fields: [planId], references: [id])
   stripeSubscriptionId String?   @unique
   stripeCustomerId     String?
-  status               String    @default("ACTIVE") // ACTIVE, PAST_DUE, CANCELLED, EXPIRED
+  status               String    @default("ACTIVE")
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean   @default(false)
@@ -14,6 +12,8 @@ model Subscription {
   expiresAt            DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+  plan                 Plan?     @relation(fields: [planId], references: [id])
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
 }

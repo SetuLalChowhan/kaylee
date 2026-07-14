@@ -569,12 +569,19 @@ export const uploadMedia = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = (req as AuthRequest).user;
     const { campaignId } = req.params as { campaignId: string };
-    const { title, description } = req.body as {
+    const { title, description, assetType } = req.body as {
       title?: string;
       description?: string;
+      assetType?: string;
     };
 
     if (!req.file) return next(new AppError("Media file is required", 400));
+
+    const ALLOWED_ASSET_TYPES = ["Video", "Raw Footage", "B-Roll", "Photo", "Graphic", "Audio", "Other"];
+    if (!assetType || !ALLOWED_ASSET_TYPES.includes(assetType)) {
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return next(new AppError("Invalid or missing asset type categorization", 400));
+    }
 
     const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign) {
@@ -602,6 +609,7 @@ export const uploadMedia = catchAsync(
         type,
         url,
         description: description ?? null,
+        assetType,
         status: "pending",
       },
     });
@@ -617,13 +625,20 @@ export const replaceMedia = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = (req as AuthRequest).user;
     const { campaignId, id } = req.params as { campaignId: string; id: string };
-    const { title, description } = req.body as {
+    const { title, description, assetType } = req.body as {
       title?: string;
       description?: string;
+      assetType?: string;
     };
 
     if (!req.file)
       return next(new AppError("Replacement file is required", 400));
+
+    const ALLOWED_ASSET_TYPES = ["Video", "Raw Footage", "B-Roll", "Photo", "Graphic", "Audio", "Other"];
+    if (assetType && !ALLOWED_ASSET_TYPES.includes(assetType)) {
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return next(new AppError("Invalid asset type categorization", 400));
+    }
 
     const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign) {
@@ -667,6 +682,7 @@ export const replaceMedia = catchAsync(
         url,
         description: description ?? existing.description,
         status: "pending",
+        assetType: assetType ?? (existing as any).assetType,
       },
     });
 
