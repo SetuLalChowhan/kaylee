@@ -682,7 +682,7 @@ export const replaceMedia = catchAsync(
         url,
         description: description ?? existing.description,
         status: "pending",
-        assetType: assetType ?? (existing as any).assetType,
+        assetType: assetType ?? existing.assetType,
       },
     });
 
