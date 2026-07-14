@@ -4,11 +4,9 @@ import {
   verifyEmail,
   login,
   forgotPassword,
-  resendOtp,
-  resendVerificationOtp,
-  resendForgotOtp,
+  resendVerificationLink,
+  resendForgotPasswordLink,
   resetPassword,
-  verifyResetOtp,
   refreshTokenHandler,
   logout,
   googleLogin,
@@ -18,7 +16,6 @@ import {
   registerSchema,
   loginSchema,
   forgotPasswordSchema,
-  verifyOtpSchema,
   verifyEmailSchema,
   resetPasswordSchema,
 } from "../validations/user.validation.js";
@@ -30,10 +27,8 @@ router.post("/verify-email", validate(verifyEmailSchema), verifyEmail);
 router.post("/login", validate(loginSchema), login);
 router.post("/google-login", googleLogin);
 router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
-router.post("/verify-reset-otp", validate(verifyOtpSchema), verifyResetOtp);
-router.post("/resend-otp", resendOtp); // Resend OTP usually just needs email, can use verifyOtpSchema with optional OTP or dedicated one
-router.post("/resend-verification-otp", resendVerificationOtp);
-router.post("/resend-forgot-otp", resendForgotOtp);
+router.post("/resend-verification-link", validate(forgotPasswordSchema), resendVerificationLink);
+router.post("/resend-forgot-link", validate(forgotPasswordSchema), resendForgotPasswordLink);
 router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
 router.post("/refresh-token", refreshTokenHandler);
 router.post("/logout", logout);

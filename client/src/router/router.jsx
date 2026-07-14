@@ -19,7 +19,6 @@ import TermsOfService from "@/pages/sites/TermsOfService";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
-import VerifyOTP from "@/pages/auth/VerifyOTP";
 import VerifyEmail from "@/pages/auth/VerifyEmail";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import Onboarding from "@/pages/auth/Onboarding";
@@ -84,7 +83,6 @@ const router = createBrowserRouter([
       { path: "login", element: <Login /> },
       { path: "signup", element: <Register /> },
       { path: "forgot-password", element: <ForgotPassword /> },
-      { path: "verify-otp", element: <VerifyOTP /> },
       { path: "verify-email", element: <VerifyEmail /> },
       { path: "reset-password", element: <ResetPassword /> },
     ],

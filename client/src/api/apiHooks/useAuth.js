@@ -59,32 +59,6 @@ export const useVerifyEmailToken = () => {
 };
 
 /**
- * useVerifyEmail — Verify email with OTP
- * On success, navigates to onboarding to complete the profile.
- */
-export const useVerifyEmail = () => {
-  const axiosPublic = useAxiosPublic();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  return useMutation({
-    mutationFn: async ({ email, otp }) => {
-      const res = await axiosPublic.post(AUTH.VERIFY_EMAIL, { email, otp });
-      return res.data;
-    },
-    onSuccess: (data) => {
-      dispatch(setCredentials({ token: data.accessToken, user: data.user }));
-      toast.success(data?.message || "Email verified successfully!");
-      navigate("/onboarding");
-    },
-    onError: (error) => {
-      const msg = error?.response?.data?.message || error.message || "Verification failed";
-      toast.error(msg);
-    },
-  });
-};
-
-/**
  * useResendVerificationLink — Request a new email verification link
  */
 export const useResendVerificationLink = () => {
@@ -92,7 +66,7 @@ export const useResendVerificationLink = () => {
 
   return useMutation({
     mutationFn: async ({ email }) => {
-      const res = await axiosPublic.post(AUTH.RESEND_VERIFICATION_OTP, { email });
+      const res = await axiosPublic.post(AUTH.RESEND_VERIFICATION_LINK, { email });
       return res.data;
     },
     onSuccess: (data) => {
@@ -189,61 +163,36 @@ export const useForgotPassword = () => {
 };
 
 /**
- * useVerifyResetOtp — Verify OTP for password reset
- * On success, stores resetToken in state for the next step
+ * useResendForgotLink — Request a new password reset link
  */
-export const useVerifyResetOtp = () => {
+export const useResendForgotLink = () => {
   const axiosPublic = useAxiosPublic();
-  const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: async ({ email, otp }) => {
-      const res = await axiosPublic.post(AUTH.VERIFY_RESET_OTP, { email, otp });
+    mutationFn: async ({ email }) => {
+      const res = await axiosPublic.post(AUTH.RESEND_FORGOT_LINK, { email });
       return res.data;
     },
     onSuccess: (data) => {
-      toast.success(data?.message || "OTP verified!");
-      navigate("/reset-password", { state: { resetToken: data.resetToken } });
+      toast.success(data?.message || "Password reset link sent successfully!");
     },
     onError: (error) => {
-      const msg = error?.response?.data?.message || error.message || "OTP verification failed";
+      const msg = error?.response?.data?.message || error.message || "Failed to resend reset link";
       toast.error(msg);
     },
   });
 };
 
 /**
- * useResendOtp — Resend OTP
- */
-export const useResendOtp = () => {
-  const axiosPublic = useAxiosPublic();
-
-  return useMutation({
-    mutationFn: async ({ email, type = "VERIFICATION" }) => {
-      const endpoint = type === "FORGOT_PASSWORD" ? AUTH.RESEND_FORGOT_OTP : AUTH.RESEND_VERIFICATION_OTP;
-      const res = await axiosPublic.post(endpoint, { email });
-      return res.data;
-    },
-    onSuccess: (data) => {
-      toast.success(data?.message || "OTP resent successfully!");
-    },
-    onError: (error) => {
-      const msg = error?.response?.data?.message || error.message || "Failed to resend OTP";
-      toast.error(msg);
-    },
-  });
-};
-
-/**
- * useResetPassword — Reset password with resetToken
+ * useResetPassword — Reset password
  */
 export const useResetPassword = () => {
   const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: async ({ token, resetToken, newPassword, confirmPassword }) => {
-      const res = await axiosPublic.post(AUTH.RESET_PASSWORD, { token, resetToken, newPassword, confirmPassword });
+    mutationFn: async ({ token, newPassword, confirmPassword }) => {
+      const res = await axiosPublic.post(AUTH.RESET_PASSWORD, { token, newPassword, confirmPassword });
       return res.data;
     },
     onSuccess: (data) => {

@@ -5,7 +5,6 @@ import {
   generateAccessToken,
   generateRefreshToken,
   hashPassword,
-  generateResetToken,
 } from "../utils/auth.util.js";
 import { sendEmail } from "../services/email.service.js";
 import jwt from "jsonwebtoken";
@@ -281,46 +280,14 @@ export const forgotPassword = catchAsync(
   },
 );
 
-export const resendOtp = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email, type } = req.body;
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return next(new AppError("User not found!", 404));
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
-
-    await prisma.user.update({
-      where: { email },
-      data: { verificationOtp: otp, otpExpires },
-    });
-
-    const subject =
-      type === "FORGOT_PASSWORD"
-        ? "Password Reset OTP"
-        : "Account Verification OTP";
-    const message = `<h1>Your OTP is: ${otp}</h1><p>This code will expire in 10 minutes.</p>`;
-
-    await sendEmail(email, subject, message);
-
-    res.status(200).json({
-      status: "success",
-      message: `A new ${type.toLowerCase().replace("_", " ")} OTP has been sent.`,
-    });
-  },
-);
-
-export const resendVerificationOtp = catchAsync(
+export const resendVerificationLink = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return next(new AppError("User not found!", 404));
 
     if (user.isVerified) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Email is already verified",
-      });
+      return next(new AppError("Email is already verified", 400));
     }
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -353,7 +320,7 @@ export const resendVerificationOtp = catchAsync(
   },
 );
 
-export const resendForgotOtp = catchAsync(
+export const resendForgotPasswordLink = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
@@ -389,72 +356,31 @@ export const resendForgotOtp = catchAsync(
   },
 );
 
-export const verifyResetOtp = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email, otp } = req.body;
-    const user = await prisma.user.findUnique({ where: { email } });
-
-    if (!user || user.verificationOtp !== otp)
-      return next(new AppError("Invalid OTP", 400));
-    if (user.otpExpires && new Date() > user.otpExpires)
-      return next(new AppError("OTP has expired", 400));
-
-    const resetToken = generateResetToken({ userId: user.id });
-
-    await prisma.user.update({
-      where: { email },
-      data: { verificationOtp: null, otpExpires: null },
-    });
-
-    res.status(200).json({
-      status: "success",
-      message: "OTP verified. You can now reset your password.",
-      resetToken,
-    });
-  },
-);
-
 export const resetPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { token, resetToken, newPassword } = req.body;
-    let userId: string;
+    const { token, newPassword } = req.body;
 
-    if (token) {
-      const user = await prisma.user.findFirst({
-        where: { verificationOtp: token },
-      });
+    const user = await prisma.user.findFirst({
+      where: { verificationOtp: token },
+    });
 
-      if (!user) {
-        return next(new AppError("Invalid or expired reset link", 400));
-      }
-
-      if (user.otpExpires && new Date() > user.otpExpires) {
-        return next(new AppError("Reset link has expired", 400));
-      }
-
-      userId = user.id;
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { verificationOtp: null, otpExpires: null },
-      });
-    } else {
-      let decoded: any;
-      try {
-        decoded = jwt.verify(
-          resetToken,
-          process.env.RESET_TOKEN_SECRET as string,
-        );
-        userId = decoded.userId;
-      } catch (err) {
-        return next(new AppError("Invalid or expired reset token", 400));
-      }
+    if (!user) {
+      return next(new AppError("Invalid or expired reset link", 400));
     }
+
+    if (user.otpExpires && new Date() > user.otpExpires) {
+      return next(new AppError("Reset link has expired", 400));
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verificationOtp: null, otpExpires: null },
+    });
 
     const hashedPassword = await hashPassword(newPassword);
 
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: user.id },
       data: { password: hashedPassword, isVerified: true },
     });
 
