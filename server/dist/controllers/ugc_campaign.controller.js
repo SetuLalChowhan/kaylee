@@ -435,9 +435,15 @@ export const deleteCampaignTask = catchAsync(async (req, res, next) => {
 export const uploadMedia = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId } = req.params;
-    const { title, description } = req.body;
+    const { title, description, assetType } = req.body;
     if (!req.file)
         return next(new AppError("Media file is required", 400));
+    const ALLOWED_ASSET_TYPES = ["Video", "Raw Footage", "B-Roll", "Photo", "Graphic", "Audio", "Other"];
+    if (!assetType || !ALLOWED_ASSET_TYPES.includes(assetType)) {
+        if (fs.existsSync(req.file.path))
+            fs.unlinkSync(req.file.path);
+        return next(new AppError("Invalid or missing asset type categorization", 400));
+    }
     const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign) {
         if (fs.existsSync(req.file.path))
@@ -464,6 +470,7 @@ export const uploadMedia = catchAsync(async (req, res, next) => {
             type,
             url,
             description: description ?? null,
+            assetType,
             status: "pending",
         },
     });
@@ -475,9 +482,15 @@ export const uploadMedia = catchAsync(async (req, res, next) => {
 export const replaceMedia = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
     const { campaignId, id } = req.params;
-    const { title, description } = req.body;
+    const { title, description, assetType } = req.body;
     if (!req.file)
         return next(new AppError("Replacement file is required", 400));
+    const ALLOWED_ASSET_TYPES = ["Video", "Raw Footage", "B-Roll", "Photo", "Graphic", "Audio", "Other"];
+    if (assetType && !ALLOWED_ASSET_TYPES.includes(assetType)) {
+        if (fs.existsSync(req.file.path))
+            fs.unlinkSync(req.file.path);
+        return next(new AppError("Invalid asset type categorization", 400));
+    }
     const campaign = await checkCampaignAccess(campaignId, req);
     if (!campaign) {
         if (fs.existsSync(req.file.path))
@@ -520,6 +533,7 @@ export const replaceMedia = catchAsync(async (req, res, next) => {
             url,
             description: description ?? existing.description,
             status: "pending",
+            assetType: assetType ?? existing.assetType,
         },
     });
     res.status(200).json({ status: "success", data: updated });

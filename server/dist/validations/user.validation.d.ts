@@ -19,12 +19,6 @@ export declare const forgotPasswordSchema: z.ZodObject<{
         email: z.ZodString;
     }, z.core.$strip>;
 }, z.core.$strip>;
-export declare const verifyOtpSchema: z.ZodObject<{
-    body: z.ZodObject<{
-        email: z.ZodString;
-        otp: z.ZodString;
-    }, z.core.$strip>;
-}, z.core.$strip>;
 export declare const verifyEmailSchema: z.ZodObject<{
     body: z.ZodObject<{
         token: z.ZodString;
@@ -32,8 +26,7 @@ export declare const verifyEmailSchema: z.ZodObject<{
 }, z.core.$strip>;
 export declare const resetPasswordSchema: z.ZodObject<{
     body: z.ZodObject<{
-        token: z.ZodOptional<z.ZodString>;
-        resetToken: z.ZodOptional<z.ZodString>;
+        token: z.ZodString;
         newPassword: z.ZodString;
         confirmPassword: z.ZodString;
     }, z.core.$strip>;

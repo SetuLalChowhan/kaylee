@@ -20,12 +20,14 @@ const ContentGallery = ({ campaign }) => {
   const [titles, setTitles] = useState({});
   const [assetTypes, setAssetTypes] = useState({});
   const [uploadProgress, setUploadProgress] = useState({});
+  const [errors, setErrors] = useState({});
 
   // Replace caption modal state (for individual replace)
   const [replaceModal, setReplaceModal] = useState({ open: false, itemId: null, file: null, url: null, type: null });
   const [replaceCaption, setReplaceCaption] = useState('');
   const [replaceTitle, setReplaceTitle] = useState('');
-  const [replaceAssetType, setReplaceAssetType] = useState('Video');
+  const [replaceAssetType, setReplaceAssetType] = useState('');
+  const [replaceError, setReplaceError] = useState(false);
 
   // Preview modal
   const [previewItem, setPreviewItem] = useState(null);
@@ -65,10 +67,10 @@ const ContentGallery = ({ campaign }) => {
     }));
     const initialAssetTypes = {};
     validFiles.forEach(f => {
-      const isVideo = f.type.startsWith('video');
-      initialAssetTypes[f.name] = isVideo ? 'Video' : 'Photo';
+      initialAssetTypes[f.name] = '';
     });
     setAssetTypes(initialAssetTypes);
+    setErrors({});
     setCaptionModal({ open: true, files: mapped });
     setCaptions({});
     setTitles({});
@@ -77,12 +79,28 @@ const ContentGallery = ({ campaign }) => {
   };
 
   const handleUpload = () => {
+    // Validation check first
+    const newErrors = {};
+    let hasError = false;
+    captionModal.files.forEach(f => {
+      if (!assetTypes[f.name]) {
+        newErrors[f.name] = true;
+        hasError = true;
+      }
+    });
+
+    if (hasError) {
+      setErrors(newErrors);
+      toast.error("Please select an asset category for all content.");
+      return;
+    }
+
     captionModal.files.forEach(f => {
       const formData = new FormData();
       formData.append('file', f.file);
       formData.append('title', titles[f.name] || f.name);
       formData.append('description', captions[f.name] || '');
-      formData.append('assetType', assetTypes[f.name] || (f.type === 'video' ? 'Video' : 'Photo'));
+      formData.append('assetType', assetTypes[f.name]);
 
       setUploadProgress(prev => ({ ...prev, [f.name]: 0 }));
 
@@ -139,7 +157,8 @@ const ContentGallery = ({ campaign }) => {
 
     setReplaceCaption('');
     setReplaceTitle('');
-    setReplaceAssetType(type === 'video' ? 'Video' : 'Photo');
+    setReplaceAssetType('');
+    setReplaceError(false);
     setReplaceModal({
       open: true,
       itemId,
@@ -152,6 +171,13 @@ const ContentGallery = ({ campaign }) => {
 
   const handleReplaceUpload = () => {
     if (!replaceModal.file || !replaceModal.itemId) return;
+
+    if (!replaceAssetType) {
+      setReplaceError(true);
+      toast.error("Please select an asset category.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', replaceModal.file);
     formData.append('title', replaceTitle || replaceModal.file.name);
@@ -317,70 +343,146 @@ const ContentGallery = ({ campaign }) => {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setCaptionModal({ open: false, files: [] })}
-              className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-2xl md:rounded-[32px] shadow-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto custom-scrollbar"
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-xl p-6 md:p-8 max-h-[85vh] overflow-y-auto custom-scrollbar border border-slate-100/50"
             >
               <button
                 onClick={() => setCaptionModal({ open: false, files: [] })}
-                className="absolute top-6 right-6 p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100"
+                className="absolute top-6 right-6 p-1.5 hover:bg-slate-100 rounded-full transition-all text-slate-400 border border-slate-150 shadow-sm cursor-pointer hover:text-slate-800"
               >
                 <X className="w-5 h-5" />
               </button>
-              <h2 className="text-lg md:text-xl font-bold text-[#1A1A1A] mb-1">Add Captions to Your Content</h2>
-              <p className="text-xs md:text-sm text-gray-400 mb-4 md:mb-6">Add descriptions to help the brand understand your content</p>
 
-              <div className="space-y-4 md:space-y-5">
+              <div className="relative pr-8 mb-4 text-left">
+                <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Add Captions to Your Content</h2>
+                <p className="text-xs md:text-sm text-slate-500 mt-1">Provide details to help the brand understand and categorize your media.</p>
+              </div>
+
+              <div className="divide-y divide-slate-100">
                 {captionModal.files.map((file) => (
-                  <div key={file.name} className="flex items-start gap-3 md:gap-4">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                  <div key={file.name} className="flex flex-col sm:flex-row items-start gap-6 py-6 first:pt-2 last:pb-2">
+                    {/* Preview Thumbnail */}
+                    <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-slate-50 flex-shrink-0 border border-slate-200/80 shadow-sm">
                       {file.type === 'video' ? (
                         <video src={file.url} className="w-full h-full object-cover" muted preload="metadata" />
                       ) : (
                         <img src={file.url} alt={file.name} className="w-full h-full object-cover" loading="lazy" />
                       )}
+                      <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[9px] font-bold bg-slate-900 text-white rounded">
+                        {file.type === 'video' ? 'Video' : 'Image'}
+                      </span>
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <p className="text-xs md:text-sm font-bold text-[#1A1A1A] mb-1 text-left">{file.name}</p>
-                      <input
-                        type="text"
-                        placeholder="File Title (e.g. 'OTWAY PASTURES PRODUCT PHOTO')"
-                        value={titles[file.name] || ''}
-                        onChange={(e) => setTitles(prev => ({ ...prev, [file.name]: e.target.value }))}
-                        className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
-                      />
-                      <select
-                        value={assetTypes[file.name] || 'Video'}
-                        onChange={(e) => setAssetTypes(prev => ({ ...prev, [file.name]: e.target.value }))}
-                        className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] cursor-pointer"
-                      >
-                        <option value="Video">Video</option>
-                        <option value="Raw Footage">Raw Footage</option>
-                        <option value="B-Roll">B-Roll</option>
-                        <option value="Photo">Photo</option>
-                        <option value="Graphic">Graphic</option>
-                        <option value="Audio">Audio</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="e.g. 'Behind the scenes shot with product', etc."
-                        value={captions[file.name] || ''}
-                        onChange={(e) => setCaptions(prev => ({ ...prev, [file.name]: e.target.value }))}
-                        className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
-                      />
+
+                    <div className="flex-1 w-full space-y-3.5 text-left">
+                      {/* File Name */}
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 truncate w-full max-w-[320px]" title={file.name}>
+                          {file.name}
+                        </p>
+                      </div>
+
+                      {/* File Title Input Group */}
+                      <div className="space-y-1">
+                        <label className="block text-[11px] font-semibold text-slate-800">
+                          File Title <span className="text-slate-400 font-normal">(Optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 'OTWAY PASTURES PRODUCT PHOTO'"
+                          value={titles[file.name] || ''}
+                          onChange={(e) => setTitles(prev => ({ ...prev, [file.name]: e.target.value }))}
+                          className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs text-slate-900 placeholder-slate-400 focus:border-Primary focus:ring-1 focus:ring-Primary/10 focus:outline-none transition-all shadow-sm font-medium"
+                        />
+                      </div>
+
+                      {/* Asset Category Dropdown Group */}
+                      <div className="space-y-1">
+                        <label className="block text-[11px] font-semibold text-slate-800">
+                          Asset Category <span className="text-red-500 font-bold">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={assetTypes[file.name] || ''}
+                            onChange={(e) => {
+                              setAssetTypes(prev => ({ ...prev, [file.name]: e.target.value }));
+                              if (e.target.value) {
+                                setErrors(prev => {
+                                  const next = { ...prev };
+                                  delete next[file.name];
+                                  return next;
+                                });
+                              }
+                            }}
+                            className={`w-full bg-white border rounded-lg py-2 pl-3 pr-8 text-xs cursor-pointer focus:outline-none transition-all shadow-sm appearance-none ${
+                              errors[file.name] 
+                                ? 'border-red-500 bg-red-50/10 focus:border-red-500' 
+                                : 'border-slate-200 focus:border-Primary'
+                            } ${!assetTypes[file.name] ? 'text-slate-400 font-medium' : 'text-slate-900 font-semibold'}`}
+                          >
+                            <option value="" disabled className="text-slate-400 bg-white">Select Asset Category...</option>
+                            <option value="Video" className="text-black bg-white">Video</option>
+                            <option value="Raw Footage" className="text-black bg-white">Raw Footage</option>
+                            <option value="B-Roll" className="text-black bg-white">B-Roll</option>
+                            <option value="Photo" className="text-black bg-white">Photo</option>
+                            <option value="Graphic" className="text-black bg-white">Graphic</option>
+                            <option value="Audio" className="text-black bg-white">Audio</option>
+                            <option value="Other" className="text-black bg-white">Other</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* Error message */}
+                        {errors[file.name] && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -2 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-[10px] text-red-500 font-bold mt-1 flex items-center gap-1"
+                          >
+                            <span>⚠ Category selection is required</span>
+                          </motion.p>
+                        )}
+                      </div>
+
+                      {/* File Description Input Group */}
+                      <div className="space-y-1">
+                        <label className="block text-[11px] font-semibold text-slate-800">
+                          Description <span className="text-slate-400 font-normal">(Optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 'Behind the scenes shot with product', etc."
+                          value={captions[file.name] || ''}
+                          onChange={(e) => setCaptions(prev => ({ ...prev, [file.name]: e.target.value }))}
+                          className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs text-slate-900 placeholder-slate-400 focus:border-Primary focus:ring-1 focus:ring-Primary/10 focus:outline-none transition-all shadow-sm font-medium"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-center justify-end gap-3 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-50">
-                <button onClick={handleUpload} className="text-xs md:text-sm text-gray-500 font-medium hover:text-[#1A1A1A] transition-colors">Skip Caption</button>
-                <button onClick={handleUpload} className="bg-Primary text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold hover:bg-Primary/90 transition-all">Upload</button>
+              <div className="flex items-center justify-end gap-2.5 mt-6 pt-4 border-t border-slate-100">
+                <button 
+                  onClick={() => setCaptionModal({ open: false, files: [] })}
+                  className="text-xs md:text-sm text-slate-500 hover:text-slate-800 font-semibold px-4 py-2 hover:bg-slate-50 rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleUpload} 
+                  className="bg-Primary text-white px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold hover:bg-Primary/95 shadow-md shadow-Primary/10 hover:shadow-lg transition-all cursor-pointer"
+                >
+                  Upload Content
+                </button>
               </div>
             </motion.div>
           </div>
@@ -394,79 +496,138 @@ const ContentGallery = ({ campaign }) => {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null })}
-              className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-2xl md:rounded-[32px] shadow-2xl p-6 md:p-8"
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100/50"
             >
               <button
                 onClick={() => setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null })}
-                className="absolute top-6 right-6 p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100"
+                className="absolute top-6 right-6 p-1.5 hover:bg-slate-100 rounded-full transition-all text-slate-400 border border-slate-150 shadow-sm cursor-pointer hover:text-slate-800"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center gap-2 mb-1">
-                <RefreshCw className="w-4 h-4 text-Primary" />
-                <h2 className="text-lg font-bold text-[#1A1A1A]">Replace Content</h2>
+              <div className="relative pr-8 mb-4 text-left">
+                <div className="flex items-center gap-2 text-Primary mb-1">
+                  <RefreshCw className="w-4 h-4 text-Primary" />
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Replace Content</h2>
+                </div>
+                <p className="text-xs md:text-sm text-slate-500 font-medium">Optionally update the title, category, and description for this replacement file.</p>
               </div>
-              <p className="text-xs text-gray-400 mb-5">Optionally update the title/description for this replacement file</p>
 
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col sm:flex-row items-start gap-6 py-4">
                 {/* Preview thumbnail of new file */}
-                <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-slate-50 flex-shrink-0 border border-slate-200/80 shadow-sm">
                   {replaceModal.type === 'video' ? (
                     <video src={replaceModal.url} className="w-full h-full object-cover" muted preload="metadata" />
                   ) : (
                     <img src={replaceModal.url} alt="replacement preview" className="w-full h-full object-cover" loading="lazy" />
                   )}
+                  <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[9px] font-bold bg-slate-900 text-white rounded">
+                    {replaceModal.type === 'video' ? 'Video' : 'Image'}
+                  </span>
                 </div>
-                <div className="flex-1 space-y-2">
-                  <p className="text-xs font-bold text-[#1A1A1A] mb-1 text-left truncate">{replaceModal.file?.name}</p>
-                  <input
-                    type="text"
-                    placeholder="File Title (e.g. 'OTWAY PASTURES PRODUCT PHOTO')"
-                    value={replaceTitle}
-                    onChange={(e) => setReplaceTitle(e.target.value)}
-                    className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
-                  />
-                  <select
-                    value={replaceAssetType}
-                    onChange={(e) => setReplaceAssetType(e.target.value)}
-                    className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] cursor-pointer"
-                  >
-                    <option value="Video">Video</option>
-                    <option value="Raw Footage">Raw Footage</option>
-                    <option value="B-Roll">B-Roll</option>
-                    <option value="Photo">Photo</option>
-                    <option value="Graphic">Graphic</option>
-                    <option value="Audio">Audio</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="e.g. 'Final version with logo', etc."
-                    value={replaceCaption}
-                    onChange={(e) => setReplaceCaption(e.target.value)}
-                    className="w-full bg-white border border-gray-100 rounded-xl py-2.5 px-3 text-xs focus:border-Primary focus:outline-none transition-all text-[#1A1A1A]"
-                    autoFocus
-                  />
+                
+                <div className="flex-1 w-full space-y-3.5 text-left">
+                  <div>
+                    <p className="text-xs font-bold text-slate-950 truncate w-full max-w-[320px]" title={replaceModal.file?.name}>
+                      {replaceModal.file?.name}
+                    </p>
+                  </div>
+                  
+                  {/* File Title Input Group */}
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-semibold text-slate-800">
+                      File Title <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 'OTWAY PASTURES PRODUCT PHOTO'"
+                      value={replaceTitle}
+                      onChange={(e) => setReplaceTitle(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs text-slate-905 placeholder-slate-400 focus:border-Primary focus:ring-1 focus:ring-Primary/10 focus:outline-none transition-all shadow-sm font-medium"
+                    />
+                  </div>
+
+                  {/* Category Dropdown Group */}
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-semibold text-slate-800">
+                      Asset Category <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={replaceAssetType}
+                        onChange={(e) => {
+                          setReplaceAssetType(e.target.value);
+                          if (e.target.value) {
+                            setReplaceError(false);
+                          }
+                        }}
+                        className={`w-full bg-white border rounded-lg py-2 pl-3 pr-8 text-xs cursor-pointer focus:outline-none transition-all shadow-sm appearance-none ${
+                          replaceError 
+                            ? 'border-red-500 bg-red-50/10 focus:border-red-500' 
+                            : 'border-slate-200 focus:border-Primary'
+                        } ${!replaceAssetType ? 'text-slate-400 font-semibold' : 'text-slate-955 font-bold'}`}
+                      >
+                        <option value="" disabled className="text-slate-400 bg-white">Select Asset Category...</option>
+                        <option value="Video" className="text-black bg-white">Video</option>
+                        <option value="Raw Footage" className="text-black bg-white">Raw Footage</option>
+                        <option value="B-Roll" className="text-black bg-white">B-Roll</option>
+                        <option value="Photo" className="text-black bg-white">Photo</option>
+                        <option value="Graphic" className="text-black bg-white">Graphic</option>
+                        <option value="Audio" className="text-black bg-white">Audio</option>
+                        <option value="Other" className="text-black bg-white">Other</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Error message */}
+                    {replaceError && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -2 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-[10px] text-red-500 font-bold mt-1 flex items-center gap-1"
+                      >
+                        <span>⚠ Category selection is required</span>
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* File Description Input Group */}
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-semibold text-slate-800">
+                      Description <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 'Final version with logo', etc."
+                      value={replaceCaption}
+                      onChange={(e) => setReplaceCaption(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs text-slate-900 placeholder-slate-400 focus:border-Primary focus:ring-1 focus:ring-Primary/10 focus:outline-none transition-all shadow-sm font-medium"
+                      autoFocus
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-50">
-                <button
-                  onClick={handleReplaceUpload}
-                  className="text-sm text-gray-500 font-medium hover:text-[#1A1A1A] transition-colors"
+              <div className="flex items-center justify-end gap-2.5 mt-6 pt-4 border-t border-slate-100">
+                <button 
+                  onClick={() => setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null })}
+                  className="text-xs md:text-sm text-slate-500 hover:text-slate-850 font-bold px-4 py-2 hover:bg-slate-50 rounded-xl transition-all"
                 >
-                  Skip & Replace
+                  Cancel
                 </button>
-                <button
-                  onClick={handleReplaceUpload}
-                  className="bg-Primary text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all"
+                <button 
+                  onClick={handleReplaceUpload} 
+                  className="bg-Primary text-white px-5 py-2 rounded-xl text-xs md:text-sm font-bold hover:bg-Primary/95 shadow-md shadow-Primary/10 hover:shadow-lg active:scale-[0.99] transition-all"
                 >
                   Replace Content
                 </button>

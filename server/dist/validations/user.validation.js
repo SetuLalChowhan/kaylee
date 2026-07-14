@@ -46,12 +46,6 @@ export const forgotPasswordSchema = z.object({
         email: z.string().email("Invalid email address"),
     }),
 });
-export const verifyOtpSchema = z.object({
-    body: z.object({
-        email: z.string().email("Invalid email address"),
-        otp: z.string().length(6, "OTP must be 6 digits"),
-    }),
-});
 export const verifyEmailSchema = z.object({
     body: z.object({
         token: z.string().min(1, "Verification token is required"),
@@ -60,18 +54,13 @@ export const verifyEmailSchema = z.object({
 export const resetPasswordSchema = z.object({
     body: z
         .object({
-        token: z.string().optional(),
-        resetToken: z.string().optional(),
+        token: z.string().min(1, "Reset token is required"),
         newPassword: passwordValidation,
         confirmPassword: z.string().min(1, "Confirm password is required"),
     })
         .refine((data) => data.newPassword === data.confirmPassword, {
         message: "Passwords do not match",
         path: ["confirmPassword"],
-    })
-        .refine((data) => data.token || data.resetToken, {
-        message: "Reset token is required",
-        path: ["token"],
     }),
 });
 const jsonArrayParser = z.preprocess((val) => {
