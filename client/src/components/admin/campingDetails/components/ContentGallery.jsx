@@ -352,8 +352,9 @@ const ContentGallery = ({ campaign }) => {
               className="relative w-full max-w-2xl bg-white rounded-3xl shadow-xl p-6 md:p-8 max-h-[85vh] overflow-y-auto custom-scrollbar border border-slate-100/50"
             >
               <button
+                type="button"
                 onClick={() => setCaptionModal({ open: false, files: [] })}
-                className="absolute top-6 right-6 p-1.5 hover:bg-slate-100 rounded-full transition-all text-slate-400 border border-slate-150 shadow-sm cursor-pointer hover:text-slate-800"
+                className="absolute top-6 right-6 z-10 p-1.5 hover:bg-slate-100 rounded-full transition-all text-slate-400 border border-slate-150 shadow-sm cursor-pointer hover:text-slate-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -504,8 +505,9 @@ const ContentGallery = ({ campaign }) => {
               className="relative w-full max-w-2xl bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100/50"
             >
               <button
+                type="button"
                 onClick={() => setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null })}
-                className="absolute top-6 right-6 p-1.5 hover:bg-slate-100 rounded-full transition-all text-slate-400 border border-slate-150 shadow-sm cursor-pointer hover:text-slate-800"
+                className="absolute top-6 right-6 z-10 p-1.5 hover:bg-slate-100 rounded-full transition-all text-slate-400 border border-slate-150 shadow-sm cursor-pointer hover:text-slate-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -651,8 +653,9 @@ const ContentGallery = ({ campaign }) => {
               className="relative max-w-3xl w-full"
             >
               <button
+                type="button"
                 onClick={() => setPreviewItem(null)}
-                className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors"
+                className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer z-10"
               >
                 <X className="w-5 h-5 md:w-6 md:h-6" />
               </button>
