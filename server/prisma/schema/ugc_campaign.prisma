@@ -27,6 +27,7 @@ model UgcDeliverable {
   id         String      @id @default(uuid())
   campaignId String
   text       String
+  progress   String[]    @default([])
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)

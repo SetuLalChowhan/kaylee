@@ -146,6 +146,21 @@ export const useDeleteDeliverable = () => {
   });
 };
 
+export const useUpdateDeliverable = () => {
+  const queryClient = useQueryClient();
+  const axiosSecure = useAxiosSecure();
+  return useMutation({
+    mutationFn: async ({ campaignId, id, progress }) => {
+      const res = await axiosSecure.patch(`${USER.UGC_CAMPAIGN}/${campaignId}/deliverables/${id}`, { progress });
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["publicCampaign"] });
+    },
+  });
+};
+
 /**
  * Campaign Tasks Hooks
  */

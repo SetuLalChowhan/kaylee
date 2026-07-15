@@ -6,6 +6,7 @@ import {
   updateUgcCampaign,
   deleteUgcCampaign,
   createDeliverable,
+  updateDeliverable,
   deleteDeliverable,
   createCampaignTask,
   updateCampaignTask,
@@ -30,6 +31,7 @@ import {
   createUgcCampaignSchema,
   updateUgcCampaignSchema,
   createDeliverableSchema,
+  updateDeliverableSchema,
   createCampaignTaskSchema,
   updateCampaignTaskSchema,
   createNoteSchema,
@@ -56,6 +58,7 @@ router.delete("/:id", deleteUgcCampaign);
 
 // Deliverables
 router.post("/:campaignId/deliverables", validate(createDeliverableSchema), createDeliverable);
+router.patch("/:campaignId/deliverables/:id", validate(updateDeliverableSchema), updateDeliverable);
 router.delete("/:campaignId/deliverables/:id", deleteDeliverable);
 
 // Tasks

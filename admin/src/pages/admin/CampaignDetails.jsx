@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
@@ -22,8 +22,29 @@ import {
   ChevronDown,
   X,
   Lock,
-  Unlock
+  Unlock,
+  Check
 } from "lucide-react";
+
+const STAGES = [
+  '📝 Scripted',
+  '🎥 Filmed',
+  '✂️ Edited',
+  '🎙️ Voiceover Complete',
+  '✅ Completed',
+  '📦 Delivered',
+  '👍 Approved'
+];
+
+const STAGE_CONFIGS = {
+  '📝 Scripted': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  '🎥 Filmed': { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  '✂️ Edited': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  '🎙️ Voiceover Complete': { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
+  '✅ Completed': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+  '📦 Delivered': { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' },
+  '👍 Approved': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' }
+};
 import { toast } from "react-toastify";
 
 const CampaignDetails = () => {
@@ -43,10 +64,27 @@ const CampaignDetails = () => {
 
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaAssetType, setMediaAssetType] = useState("");
+  const [mediaTitle, setMediaTitle] = useState("");
+  const [mediaDescription, setMediaDescription] = useState("");
 
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackMediaId, setFeedbackMediaId] = useState("");
   const [loadingApproveId, setLoadingApproveId] = useState(null);
+
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
+  const mediaFileRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.admin-progress-dropdown-container')) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Fetch campaign
   const { data: campaign, isLoading, refetch } = useQuery({
@@ -113,6 +151,21 @@ const CampaignDetails = () => {
       refetch();
     } catch (err) {
       toast.error("Failed to delete deliverable");
+    }
+  };
+
+  const handleToggleStage = async (itemId, stage, currentProgress) => {
+    let newProgress;
+    if (currentProgress.includes(stage)) {
+      newProgress = currentProgress.filter(s => s !== stage);
+    } else {
+      newProgress = [...currentProgress, stage];
+    }
+    try {
+      await axiosSecure.patch(`/ugc-campaigns/${id}/deliverables/${itemId}`, { progress: newProgress });
+      refetch();
+    } catch (err) {
+      toast.error("Failed to update deliverable progress");
     }
   };
 
@@ -195,20 +248,26 @@ const CampaignDetails = () => {
 
   const handleMediaUpload = async (e) => {
     e.preventDefault();
-    if (!mediaFile) return;
+    if (!mediaFile || !mediaAssetType) return;
     setMediaLoading(true);
     try {
       const formData = new FormData();
       formData.append("file", mediaFile);
-      formData.append("description", "Uploaded by Administrator");
+      formData.append("title", mediaTitle || mediaFile.name);
+      formData.append("description", mediaDescription || "Uploaded by Administrator");
+      formData.append("assetType", mediaAssetType);
+
       await axiosSecure.post(`/ugc-campaigns/${id}/media`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       toast.success("Media file uploaded successfully");
       setMediaFile(null);
+      setMediaAssetType("");
+      setMediaTitle("");
+      setMediaDescription("");
       refetch();
     } catch (err) {
-      toast.error("Failed to upload media");
+      toast.error(err.response?.data?.message || "Failed to upload media");
     } finally {
       setMediaLoading(false);
     }
@@ -433,21 +492,71 @@ const CampaignDetails = () => {
             </div>
 
             {/* Media Upload form for admin */}
-            <form onSubmit={handleMediaUpload} className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={(e) => setMediaFile(e.target.files[0])}
-                className="text-xs text-slate-600 flex-1 min-w-0"
-              />
-              <button
-                type="submit"
-                disabled={mediaLoading || !mediaFile}
-                className="bg-Primary text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-1.5 hover:bg-Primary/90 transition-all disabled:opacity-50 shrink-0"
-              >
-                {mediaLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                Upload Media
-              </button>
+            <form onSubmit={handleMediaUpload} className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-3 w-full">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+                <div 
+                  onClick={() => mediaFileRef.current?.click()}
+                  className="flex-1 bg-white border border-dashed border-slate-200 hover:border-Primary/35 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer transition-all hover:bg-Primary/[0.01]"
+                >
+                  <input
+                    ref={mediaFileRef}
+                    type="file"
+                    required
+                    accept="image/*,video/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      setMediaFile(file);
+                      if (file && !mediaTitle) {
+                        setMediaTitle(file.name);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  <Upload className="w-4 h-4 text-slate-400" />
+                  <span className="text-xs font-semibold text-slate-500 truncate max-w-[280px]">
+                    {mediaFile ? mediaFile.name : "Choose deliverable file (image/video)..."}
+                  </span>
+                </div>
+                <select
+                  required
+                  value={mediaAssetType}
+                  onChange={(e) => setMediaAssetType(e.target.value)}
+                  className="text-xs font-semibold px-3 py-2 rounded-xl bg-white border border-slate-200 focus:outline-none focus:border-Primary cursor-pointer text-slate-700"
+                >
+                  <option value="" disabled>Select Category...</option>
+                  <option value="Video">Video</option>
+                  <option value="Raw Footage">Raw Footage</option>
+                  <option value="B-Roll">B-Roll</option>
+                  <option value="Photo">Photo</option>
+                  <option value="Graphic">Graphic</option>
+                  <option value="Audio">Audio</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+                <input
+                  type="text"
+                  placeholder="Title (Optional)"
+                  value={mediaTitle}
+                  onChange={(e) => setMediaTitle(e.target.value)}
+                  className="flex-1 bg-white border border-slate-200 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
+                />
+                <input
+                  type="text"
+                  placeholder="Description (Optional)"
+                  value={mediaDescription}
+                  onChange={(e) => setMediaDescription(e.target.value)}
+                  className="flex-1 bg-white border border-slate-200 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-Primary"
+                />
+                <button
+                  type="submit"
+                  disabled={mediaLoading || !mediaFile || !mediaAssetType}
+                  className="bg-Primary text-white text-xs font-bold py-2 px-5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-Primary/90 transition-all disabled:opacity-50 shrink-0"
+                >
+                  {mediaLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                  Upload Media
+                </button>
+              </div>
             </form>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -469,7 +578,14 @@ const CampaignDetails = () => {
 
                   <div className="p-4 flex-1 flex flex-col justify-between">
                     <div>
-                      <h4 className="font-bold text-xs text-slate-800 line-clamp-1">{item.name}</h4>
+                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <h4 className="font-bold text-xs text-slate-800 line-clamp-1">{item.name}</h4>
+                        {item.assetType && (
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-Primary/10 text-Primary border border-Primary/10">
+                            {item.assetType}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
                         {item.description || "No description provided."}
                       </p>
@@ -676,13 +792,67 @@ const CampaignDetails = () => {
                 Add
               </button>
             </form>
-            <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
               {campaign.deliverables?.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-2.5 bg-slate-50/50 rounded-xl border border-slate-100">
-                  <span className="text-xs font-semibold text-slate-700">{item.text}</span>
-                  <button onClick={() => deleteDeliverable(item.id)} className="text-red-400 hover:text-red-600 transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                <div key={item.id} className="flex items-center justify-between p-2.5 bg-slate-50/50 rounded-xl border border-slate-100 gap-3 group relative">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-slate-700 break-words">{item.text}</span>
+                      {item.progress && item.progress.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {item.progress.map((stage) => {
+                            const config = STAGE_CONFIGS[stage] || { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200' };
+                            return (
+                              <span
+                                key={stage}
+                                className={`inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${config.bg} ${config.text} ${config.border} shadow-xs transition-all`}
+                              >
+                                {stage}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="relative admin-progress-dropdown-container">
+                      <button
+                        onClick={() => setActiveDropdown(activeDropdown === item.id ? null : item.id)}
+                        className="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-Primary bg-white border border-slate-200 hover:border-Primary/30 px-2 py-1 rounded-lg shadow-xs transition-all cursor-pointer select-none"
+                      >
+                        <span>Progress</span>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+
+                      {activeDropdown === item.id && (
+                        <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-100 rounded-xl shadow-lg z-50 p-1 animate-in fade-in slide-in-from-top-2 duration-150">
+                          {STAGES.map((stage) => {
+                            const isSelected = (item.progress || []).includes(stage);
+                            return (
+                              <button
+                                key={stage}
+                                onClick={() => handleToggleStage(item.id, stage, item.progress || [])}
+                                className="w-full flex items-center justify-between text-left px-2.5 py-1.5 text-[11px] font-semibold rounded-lg hover:bg-slate-50 transition-colors cursor-pointer text-slate-700 select-none"
+                              >
+                                <span className="flex items-center gap-1">{stage}</span>
+                                {isSelected ? (
+                                  <Check className="w-3 h-3 text-Primary" />
+                                ) : (
+                                  <div className="w-3.5 h-3.5 border border-slate-300 rounded-sm" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <button onClick={() => deleteDeliverable(item.id)} className="opacity-100 sm:opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-650 transition-all p-1 hover:bg-red-50 rounded-lg">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
               {(!campaign.deliverables || campaign.deliverables.length === 0) && (

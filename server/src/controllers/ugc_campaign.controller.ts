@@ -417,6 +417,32 @@ export const createDeliverable = catchAsync(
   },
 );
 
+export const updateDeliverable = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { campaignId, id } = req.params as { campaignId: string; id: string };
+    const { text, progress } = req.body as { text?: string; progress?: string[] };
+
+    const campaign = await checkCampaignAccess(campaignId, req);
+    if (!campaign)
+      return next(new AppError("Campaign not found or unauthorized", 404));
+
+    const existingDeliverable = await prisma.ugcDeliverable.findUnique({
+      where: { id },
+    });
+    if (!existingDeliverable) return next(new AppError("Deliverable not found", 404));
+
+    const updated = await prisma.ugcDeliverable.update({
+      where: { id },
+      data: {
+        ...(text !== undefined && { text }),
+        ...(progress !== undefined && { progress }),
+      },
+    });
+
+    res.status(200).json({ status: "success", data: updated });
+  },
+);
+
 export const deleteDeliverable = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = (req as AuthRequest).user;
