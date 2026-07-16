@@ -152,7 +152,7 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
                 )}
                 {/* STAKD Watermark */}
                 <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden bg-black/10">
-                  <span className="text-white/20 text-7xl font-black tracking-widest uppercase transform -rotate-45 drop-shadow-lg select-none">
+                  <span className="text-white/40 text-[100px] md:text-[140px] font-black tracking-[0.25em] uppercase transform -rotate-45 drop-shadow-2xl select-none">
                     STAKD
                   </span>
                 </div>

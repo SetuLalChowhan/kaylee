@@ -52,7 +52,7 @@ router.use(authGuard);
 
 router.get("/", getUgcCampaigns);
 router.get("/:id", getUgcCampaignById);
-router.post("/", validate(createUgcCampaignSchema), requireCampaignLimit, createUgcCampaign);
+router.post("/", validate(createUgcCampaignSchema), createUgcCampaign);
 router.patch("/:id", validate(updateUgcCampaignSchema), updateUgcCampaign);
 router.delete("/:id", deleteUgcCampaign);
 

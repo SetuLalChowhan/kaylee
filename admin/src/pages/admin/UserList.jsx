@@ -354,28 +354,25 @@ const UserList = () => {
                     </td>
                     <td className="py-2.5 px-3 md:py-4 md:px-6 font-semibold text-slate-600 text-xs md:text-sm">{user.email}</td>
                     <td className="py-2.5 px-3 md:py-4 md:px-6">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold uppercase ${
-                        user.role === "admin" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"
-                      }`}>
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold uppercase ${user.role === "admin" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"
+                        }`}>
                         {user.role === "admin" ? <Shield className="w-3 h-3 md:w-3.5 md:h-3.5" /> : <User className="w-3 h-3 md:w-3.5 md:h-3.5" />}
                         {user.role}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-semibold">
-                      <span className={`px-2 py-0.5 rounded-full font-bold ${
-                        user.plan?.title?.toUpperCase() === "FOUNDING MEMBER" 
-                          ? "bg-purple-50 text-purple-600 border border-purple-100" 
+                      <span className={`px-2 py-0.5 rounded-full font-bold ${user.plan?.title?.toUpperCase() === "FOUNDING MEMBER"
+                          ? "bg-purple-50 text-purple-600 border border-purple-100"
                           : user.plan?.title?.toUpperCase() === "STANDARD"
                             ? "bg-blue-50 text-blue-600 border border-blue-100"
                             : "bg-slate-100 text-slate-500"
-                      }`}>
+                        }`}>
                         {user.plan?.title || "FREE"}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 md:py-4 md:px-6">
-                      <span className={`text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full ${
-                        user.isVerified ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
-                      }`}>
+                      <span className={`text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full ${user.isVerified ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
+                        }`}>
                         {user.isVerified ? "Yes" : "No"}
                       </span>
                     </td>
@@ -524,7 +521,7 @@ const UserList = () => {
                   onChange={(e) => setPlanId(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
                 >
-                  <option value="">FREE (No Active Subscription)</option>
+
                   {plans.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.title} (${p.price} AUD {p.priceSuffix})
@@ -608,11 +605,10 @@ const UserList = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-3 md:py-4 text-xs md:text-sm font-bold border-b-2 transition-all whitespace-nowrap ${
-                    activeTab === tab.id
+                  className={`py-3 md:py-4 text-xs md:text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
                       ? "border-Primary text-Primary"
                       : "border-transparent text-slate-400 hover:text-slate-600"
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -642,13 +638,12 @@ const UserList = () => {
                   <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100/80 shadow-sm animate-fade-in">
                     <h3 className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 md:mb-3">Subscription Plan</h3>
                     <div className="flex items-center gap-3">
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                        viewedUser.plan?.title?.toUpperCase() === "FOUNDING MEMBER" 
-                          ? "bg-purple-50 text-purple-600 border border-purple-100" 
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${viewedUser.plan?.title?.toUpperCase() === "FOUNDING MEMBER"
+                          ? "bg-purple-50 text-purple-600 border border-purple-100"
                           : viewedUser.plan?.title?.toUpperCase() === "STANDARD"
                             ? "bg-blue-50 text-blue-600 border border-blue-100"
                             : "bg-slate-100 text-slate-500"
-                      }`}>
+                        }`}>
                         {viewedUser.plan?.title || "FREE"}
                       </span>
                       {viewedUser.plan && (
@@ -778,44 +773,44 @@ const UserList = () => {
               {activeTab === "campaigns" && (
                 <div className="bg-white rounded-2xl border border-slate-100/80 shadow-sm overflow-hidden">
                   {userCampaigns.length > 0 ? (
-                  <div className="overflow-x-auto w-full custom-scrollbar">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50/50">
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Brand</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Amount</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Deadline</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Status</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400 text-center">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {userCampaigns.map((c) => (
-                          <tr key={c.id}>
-                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{c.name}</td>
-                            <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{c.brandName}</td>
-                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{c.amount}</td>
-                            <td className="py-2 px-3 text-slate-500 text-[11px]">{c.deadline}</td>
-                            <td className="py-2 px-3">
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600`}>
-                                {c.status}
-                              </span>
-                            </td>
-                            <td className="py-2 px-3 text-center">
-                              <Link
-                                to={`/dashboard/campaigns/${c.id}`}
-                                className="inline-flex items-center justify-center p-1 text-slate-400 hover:text-Primary hover:bg-slate-100 rounded transition-all"
-                                title="View Campaign"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                              </Link>
-                            </td>
+                    <div className="overflow-x-auto w-full custom-scrollbar">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-100 bg-slate-50/50">
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Brand</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Amount</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Deadline</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Status</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400 text-center">Action</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {userCampaigns.map((c) => (
+                            <tr key={c.id}>
+                              <td className="py-2 px-3 font-bold text-slate-800 text-xs">{c.name}</td>
+                              <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{c.brandName}</td>
+                              <td className="py-2 px-3 font-bold text-slate-800 text-xs">{c.amount}</td>
+                              <td className="py-2 px-3 text-slate-500 text-[11px]">{c.deadline}</td>
+                              <td className="py-2 px-3">
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600`}>
+                                  {c.status}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-center">
+                                <Link
+                                  to={`/dashboard/campaigns/${c.id}`}
+                                  className="inline-flex items-center justify-center p-1 text-slate-400 hover:text-Primary hover:bg-slate-100 rounded transition-all"
+                                  title="View Campaign"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </Link>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   ) : (
                     <div className="text-center py-12">
                       <Folder className="w-8 h-8 text-slate-200 mx-auto mb-2" />
@@ -828,39 +823,38 @@ const UserList = () => {
               {activeTab === "tasks" && (
                 <div className="bg-white rounded-2xl border border-slate-100/80 shadow-sm overflow-hidden">
                   {userTasks.length > 0 ? (
-                  <div className="overflow-x-auto w-full custom-scrollbar">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50/50">
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Task Name</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Due Date</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Completed</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {userTasks.map((t) => (
-                          <tr key={t.id}>
-                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{t.name}</td>
-                            <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{t.campaign}</td>
-                            <td className="py-2 px-3 text-slate-500 text-[11px]">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                {new Date(t.date).toLocaleDateString()}
-                              </div>
-                            </td>
-                            <td className="py-2 px-3">
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                                t.completed ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
-                              }`}>
-                                {t.completed ? "Completed" : "Pending"}
-                              </span>
-                            </td>
+                    <div className="overflow-x-auto w-full custom-scrollbar">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-100 bg-slate-50/50">
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Task Name</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Due Date</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Completed</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {userTasks.map((t) => (
+                            <tr key={t.id}>
+                              <td className="py-2 px-3 font-bold text-slate-800 text-xs">{t.name}</td>
+                              <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{t.campaign}</td>
+                              <td className="py-2 px-3 text-slate-500 text-[11px]">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                  {new Date(t.date).toLocaleDateString()}
+                                </div>
+                              </td>
+                              <td className="py-2 px-3">
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${t.completed ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
+                                  }`}>
+                                  {t.completed ? "Completed" : "Pending"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   ) : (
                     <div className="text-center py-12">
                       <Calendar className="w-8 h-8 text-slate-200 mx-auto mb-2" />
@@ -873,38 +867,37 @@ const UserList = () => {
               {activeTab === "invoices" && (
                 <div className="bg-white rounded-2xl border border-slate-100/80 shadow-sm overflow-hidden">
                   {userInvoices.length > 0 ? (
-                  <div className="overflow-x-auto w-full custom-scrollbar">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50/50">
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Invoice No</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Amount</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Due Date</th>
-                          <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {userInvoices.map((i) => (
-                          <tr key={i.id}>
-                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{i.invoiceNo}</td>
-                            <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{i.campaignName}</td>
-                            <td className="py-2 px-3 font-bold text-slate-800 text-xs">{i.amount}</td>
-                            <td className="py-2 px-3 text-slate-500 text-[11px]">{new Date(i.dueDate).toLocaleDateString()}</td>
-                            <td className="py-2 px-3">
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                                i.status === "Paid" ? "bg-green-50 text-green-600" :
-                                i.status === "Overdue" ? "bg-red-50 text-red-600" :
-                                "bg-yellow-50 text-yellow-600"
-                              }`}>
-                                {i.status}
-                              </span>
-                            </td>
+                    <div className="overflow-x-auto w-full custom-scrollbar">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-100 bg-slate-50/50">
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Invoice No</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Campaign</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Amount</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Due Date</th>
+                            <th className="py-2.5 px-3 text-[10px] md:text-xs font-bold uppercase text-slate-400">Status</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {userInvoices.map((i) => (
+                            <tr key={i.id}>
+                              <td className="py-2 px-3 font-bold text-slate-800 text-xs">{i.invoiceNo}</td>
+                              <td className="py-2 px-3 font-semibold text-slate-600 text-xs">{i.campaignName}</td>
+                              <td className="py-2 px-3 font-bold text-slate-800 text-xs">{i.amount}</td>
+                              <td className="py-2 px-3 text-slate-500 text-[11px]">{new Date(i.dueDate).toLocaleDateString()}</td>
+                              <td className="py-2 px-3">
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${i.status === "Paid" ? "bg-green-50 text-green-600" :
+                                    i.status === "Overdue" ? "bg-red-50 text-red-600" :
+                                      "bg-yellow-50 text-yellow-600"
+                                  }`}>
+                                  {i.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   ) : (
                     <div className="text-center py-12">
                       <FileText className="w-8 h-8 text-slate-200 mx-auto mb-2" />
