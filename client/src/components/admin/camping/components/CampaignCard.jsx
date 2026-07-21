@@ -9,7 +9,7 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
   return (
     <Link to={`/dashboard/campaigns/${id || 1}`}
       onMouseLeave={() => setShowOptions(false)}
-      className="block bg-white border border-gray-100 rounded-[32px] p-5 sm:p-6 hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 relative group"
+      className="block bg-white border border-gray-100 rounded-[32px] p-5  hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 relative group"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -85,7 +85,7 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
       <div className="flex flex-wrap items-center justify-between gap-y-4 gap-x-2 pt-4 border-t border-gray-50 mt-4">
         <div>
           <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Amount</p>
-          <p className="text-sm font-bold text-[#1A1A1A]">{amount}</p>
+          <p className="text-sm font-bold text-[#1A1A1A]">${amount}</p>
         </div>
         <div className="text-center sm:text-left">
           <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Due Date</p>
@@ -93,14 +93,13 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
         </div>
         <div className="text-right">
           <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Status</p>
-          <span className={`inline-block text-[10px] font-bold px-3 py-1 rounded-full ${
-            status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
+          <span className={`inline-block text-[10px] font-bold px-3 py-1 rounded-full ${status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
             status === 'Draft' ? 'bg-gray-100 text-gray-500' :
-            status === 'Under Review' ? 'bg-orange-50 text-orange-500' :
-            status === 'Approved' ? 'bg-green-50 text-green-500' :
-            status === 'Completed' ? 'bg-blue-50 text-Primary' :
-            'bg-gray-100 text-gray-500'
-          }`}>
+              status === 'Under Review' ? 'bg-orange-50 text-orange-500' :
+                status === 'Approved' ? 'bg-green-50 text-green-500' :
+                  status === 'Completed' ? 'bg-blue-50 text-Primary' :
+                    'bg-gray-100 text-gray-500'
+            }`}>
             {status}
           </span>
         </div>

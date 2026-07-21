@@ -70,23 +70,28 @@ const CommonNavbar = ({ setOpen }) => {
     if (diffDays === 1) return 'Yesterday';
     return date.toLocaleDateString();
   };
-
+  const welcomeName = user?.firstName || user?.displayName || 'Jahan';
   return (
-    <header className="flex items-center justify-between w-full h-20 px-4 md:px-0">
+    <header className="flex items-center justify-between w-full h-20 ">
       {/* Search Bar */}
       <div className="flex items-center flex-1 max-w-md relative">
         <button
           onClick={() => setOpen(true)}
-          className="lg:hidden mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="lg:hidden mr-4  hover:bg-gray-100 rounded-lg transition-colors"
         >
           <Menu className="w-6 h-6 text-gray-600" />
         </button>
 
-
+        <div className="flex flex-col md:flex-row md:items-center justify-between md:gap-4 gap-2.5  ">
+          <div>
+            <h1 className="lg:text-xl text-base font-semibold  text-[#1A1A1A] mb-1.5 md:mb-2">Good Morning, {welcomeName}</h1>
+            <p className="text-gray-500 text-xs md:text-sm font-medium"> You have 2 deadlines to meet this week </p>
+          </div>
+        </div>
       </div>
 
       {/* Right Side Icons */}
-      <div className="flex items-center gap-4 lg:gap-6">
+      <div className="flex items-center gap-2 lg:gap-6">
         {/* Notifications Icon with Unseen Count Badge */}
         <div className="relative">
           <button

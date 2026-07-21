@@ -49,10 +49,12 @@ const Dashboard = () => {
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Welcome back, {welcomeName}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">
+            Dashboard
+          </h1>
           <p className="text-gray-500 text-xs md:text-sm">Here's what's happening with your campaigns.</p>
         </div>
-        <CommonButton 
+        <CommonButton
           onClick={handleCreateClick}
           className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full md:w-auto"
         >
@@ -62,27 +64,33 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Section */}
-      <StatsSection stats={dashboardData?.stats} />
+
 
       {/* Main Content Layout */}
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start w-full">
-        {/* Left Column: Campaigns */}
-        <CampaignGrid campaigns={dashboardData?.recentCampaigns} onEdit={handleEdit} />
+        <div className=' flex flex-col gap-8 flex-1 w-full'>
+          {/* Left Column: Campaigns */}
+          <StatsSection stats={dashboardData?.stats} />
+          <CampaignGrid campaigns={dashboardData?.recentCampaigns} onEdit={handleEdit} />
 
-        {/* Right Column: Deadlines & Tasks */}
-        <DeadlinesSidebar deadlines={dashboardData?.deadlines} tasks={dashboardData?.tasks} />
+        </div>
+        <div className='lg:w-auto w-full'>
+
+          {/* Right Column: Deadlines & Tasks */}
+          <DeadlinesSidebar deadlines={dashboardData?.deadlines} tasks={dashboardData?.tasks} />
+        </div>
       </div>
 
-      <CreateCampaignModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <CreateCampaignModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         campaign={selectedCampaign}
       />
 
       {showTour && (
-        <PlatformDemoModal 
-          isOpen={showTour} 
-          onClose={() => setShowTour(false)} 
+        <PlatformDemoModal
+          isOpen={showTour}
+          onClose={() => setShowTour(false)}
         />
       )}
     </div>

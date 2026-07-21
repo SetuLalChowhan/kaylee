@@ -28,11 +28,11 @@ const AdminLayout = () => {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-          <div className="px-6 lg:px-10">
+          <div className="px-6">
             <CommonNavbar setOpen={setOpen} />
           </div>
 
-          <main className="flex-1 overflow-y-auto px-4 lg:px-10 pb-10 custom-scrollbar bg-[#FAFAFA] pt-6">
+          <main className="flex-1 overflow-y-auto px-6 pb-10 custom-scrollbar bg-[#FAFAFA] pt-4">
             <Outlet />
           </main>
         </div>
