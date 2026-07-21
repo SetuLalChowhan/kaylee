@@ -70,11 +70,11 @@ const CampaingDetails = () => {
   const shareLink = `${window.location.origin}/brand-view/${campaign.slug}`;
 
   return (
-    <div className="">
+    <div className="py-2">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-500 hover:text-[#1A1A1A] transition-colors mb-6 group"
+        className="flex items-center gap-2 text-gray-500 hover:text-[#1A1A1A] transition-colors mb-6 group cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         <span className="text-sm font-medium">Back</span>
@@ -122,17 +122,10 @@ const CampaingDetails = () => {
             'bg-blue-50 text-Primary'
           }`}>{campaign.status}</span>
         </div>
-        {/* Progress Bar */}
-        {/* <div className="w-full md:w-56 flex items-center justify-between gap-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex-1">
-            <div className="h-full bg-Primary rounded-full transition-all duration-500" style={{ width: `${getProgress(campaign)}%` }} />
-          </div>
-          <span className="text-[10px] font-bold text-gray-400 shrink-0">{getProgressLabel(campaign)}</span>
-        </div> */}
       </div>
 
       <div className="flex items-center gap-3 mb-8">
-        <p className="text-sm text-gray-400">Due {campaign.deadline}</p>
+        <p className="text-gray-500 text-xs md:text-sm">Due {campaign.deadline}</p>
       </div>
 
       {/* Sections */}

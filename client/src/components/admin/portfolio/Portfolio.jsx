@@ -129,23 +129,23 @@ const Portfolio = () => {
   return (
     <div className="py-2">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
         <div>
-          <h1 className="text-3xl md:text-3xl font-bold text-[#1A1A1A] mb-1">Portfolio</h1>
-          <p className="text-gray-400 text-sm font-medium">Your public creator profile for brands</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Portfolio</h1>
+          <p className="text-gray-500 text-xs md:text-sm">Your public creator profile for brands.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 md:gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
           <button
             onClick={() => toggleModal('editPortfolio', true)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#F8FAFC] text-[#1A1A1A] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl text-xs md:text-sm font-bold hover:bg-gray-100 transition-all border border-gray-100"
+            className="bg-[#F8FAFC] text-[#1A1A1A] px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-100 transition-all border border-gray-100 text-xs md:text-sm w-full sm:w-auto"
           >
             <Edit3 className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
             Edit Portfolio
           </button>
           <button
             onClick={() => toggleModal('uploadContent', true)}
-            className="w-full md:w-auto flex items-center justify-center gap-2 bg-Primary text-white px-6 md:px-8 py-3.5 md:py-4 rounded-xl md:rounded-2xl text-xs md:text-sm font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20"
+            className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full sm:w-auto"
           >
             <CloudUpload className="w-4 h-4 md:w-5 md:h-5" />
             Upload media

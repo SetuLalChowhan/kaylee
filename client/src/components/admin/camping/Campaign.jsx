@@ -127,18 +127,18 @@ const Campaign = () => {
   }
 
   return (
-    <div className="py-4">
+    <div className="py-2">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">Campaigns</h1>
-          <p className="text-gray-400 text-sm font-medium tracking-tight">Track progress, deliverables, and brand feedback</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Campaigns</h1>
+          <p className="text-gray-500 text-xs md:text-sm">Track progress, deliverables, and brand feedback.</p>
         </div>
         <button
           onClick={() => { setSelectedCampaign(null); setIsModalOpen(true); }}
-          className="bg-Primary text-white flex justify-center items-center px-8 py-3.5 rounded-2xl font-bold gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all"
+          className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full md:w-auto"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 md:w-5 md:h-5" />
           Create Campaigns
         </button>
       </div>

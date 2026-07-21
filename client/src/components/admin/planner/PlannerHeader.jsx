@@ -3,10 +3,10 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 const PlannerHeader = ({ currentWeekRange, onPrevWeek, onNextWeek, onToday, onAddTask, viewMode = 'week', onToggleView, navLabel }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between lg:gap-6 gap-4 mb-8">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
       <div>
-        <h1 className="text-3xl font-bold text-[#1A1A1A] mb-1">Planner</h1>
-        <p className="text-gray-400 text-sm font-medium">{currentWeekRange}</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Planner</h1>
+        <p className="text-gray-500 text-xs md:text-sm">{currentWeekRange}</p>
       </div>
 
       <div className="flex items-center flex-wrap gap-3">
@@ -56,11 +56,9 @@ const PlannerHeader = ({ currentWeekRange, onPrevWeek, onNextWeek, onToday, onAd
         {/* Add Task Button */}
         <button
           onClick={onAddTask}
-          className="flex items-center gap-2 bg-Primary lg:text-base text-sm text-white lg:px-6 px-4 lg:py-3.5 py-2.5 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20"
+          className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full sm:w-auto"
         >
-          <div className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
-            <Plus className="w-3 h-3" />
-          </div>
+          <Plus className="w-4 h-4 md:w-5 md:h-5" />
           Add Task
         </button>
       </div>

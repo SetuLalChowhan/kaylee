@@ -25,11 +25,13 @@ const Setting = () => {
   ];
 
   return (
-    <div className="py-4">
+    <div className="py-2">
       {/* Header Section */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">Settings</h1>
-        <p className="text-gray-400 text-sm font-medium">Manage your account and subscription</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Settings</h1>
+          <p className="text-gray-500 text-xs md:text-sm">Manage your account and subscription.</p>
+        </div>
       </div>
 
       {/* Tabs */}

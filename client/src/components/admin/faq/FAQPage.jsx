@@ -88,31 +88,31 @@ const FAQPage = () => {
   }, [faqs, searchQuery]);
 
   return (
-    <div className="py-4">
+    <div className="py-2">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">FAQ</h1>
-          <p className="text-gray-400 text-sm font-medium">Everything you need to know about STAKD and other information.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">FAQ</h1>
+          <p className="text-gray-500 text-xs md:text-sm">Everything you need to know about STAKD and other information.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
           <div className="relative flex-1 w-full md:w-80">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search your questions.."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-gray-100 rounded-2xl py-3.5 pl-12 pr-6 focus:border-Primary focus:outline-none transition-all text-sm"
+              className="w-full bg-white border border-gray-100 rounded-xl md:rounded-2xl py-2.5 md:py-3 pl-11 pr-5 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm"
             />
           </div>
           {isAdmin && (
             <button
               onClick={handleAddFaq}
-              className="w-full sm:w-auto bg-Primary text-white px-6 py-3.5 rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 flex items-center justify-center gap-2 cursor-pointer"
+              className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full sm:w-auto cursor-pointer"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 md:w-5 md:h-5" />
               Add FAQ
             </button>
           )}
