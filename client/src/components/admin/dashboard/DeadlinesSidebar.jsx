@@ -51,9 +51,9 @@ const formatTimeAgo = (dateString) => {
 
 const ActivityItem = ({ title, sub, time, avatarBg, avatarContent, avatarText, dotColor }) => (
   <div className="flex items-center gap-3 mb-4 last:mb-0 group cursor-pointer">
-    <div className={`w-10 h-10 rounded-full ${avatarBg || 'bg-gray-100'} flex items-center justify-center shrink-0 overflow-hidden shadow-xs`}>
+    {/* <div className={`w-10 h-10 rounded-full ${avatarBg || 'bg-gray-100'} flex items-center justify-center shrink-0 overflow-hidden shadow-xs`}>
       {avatarContent || <span className="text-[9px] font-bold text-gray-700 tracking-tighter uppercase px-1 text-center">{avatarText || 'STAKD'}</span>}
-    </div>
+    </div> */}
     <div className="flex-1 min-w-0">
       <h4 className="text-[13px] font-semibold text-[#1A1A1A] leading-tight truncate">{title}</h4>
       {sub && <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">{sub}</p>}
@@ -102,7 +102,7 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
         ? optimisticCompleted[t.id]
         : t.completed
     }))
-  , [tasks, optimisticCompleted]);
+    , [tasks, optimisticCompleted]);
 
   const todayTasks = useMemo(() =>
     mergedTasks.filter(t => {
