@@ -1,5 +1,5 @@
-import React from 'react';
-import { CheckCircle2, Circle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { CheckCircle2, Circle, Calendar, CalendarDays } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateTask } from '@/api/apiHooks/usePlanner';
@@ -70,6 +70,9 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
   const queryClient = useQueryClient();
   const updateTaskMutation = useUpdateTask();
   const { data: dynamicActivities = [] } = useActivities(5);
+  const [showAllTasks, setShowAllTasks] = useState(false);
+  // Optimistic completed state: tracks which task IDs the user just toggled
+  const [optimisticCompleted, setOptimisticCompleted] = useState({});
 
   const displayActivities = dynamicActivities.map(act => ({
     id: act.id,
@@ -81,14 +84,64 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
     dotColor: act.dotColor
   }));
 
-  const handleToggleTask = (taskId, completed) => {
+  // Filter tasks: today only unless showAllTasks is true
+  // Use local date (NOT toISOString which is UTC and can be yesterday for UTC+ timezones)
+  const todayStr = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, []);
+
+  // Merge server tasks with optimistic completed overrides
+  const mergedTasks = useMemo(() =>
+    tasks.map(t => ({
+      ...t,
+      completed: optimisticCompleted.hasOwnProperty(t.id)
+        ? optimisticCompleted[t.id]
+        : t.completed
+    }))
+  , [tasks, optimisticCompleted]);
+
+  const todayTasks = useMemo(() =>
+    mergedTasks.filter(t => {
+      const raw = t.rawDate || t.date;
+      if (!raw) return false;
+      const taskLocalDate = raw.includes('T') || raw.includes('-')
+        ? new Date(raw).toLocaleDateString('en-CA')
+        : null;
+      return taskLocalDate === todayStr;
+    })
+    , [mergedTasks, todayStr]);
+  const displayTasks = showAllTasks ? mergedTasks : todayTasks;
+  const todayCount = todayTasks.filter(t => !t.completed).length;
+
+  const handleToggleTask = (taskId, currentCompleted) => {
     if (!taskId) return;
+    const newCompleted = !currentCompleted;
+    // Optimistically update UI immediately
+    setOptimisticCompleted(prev => ({ ...prev, [taskId]: newCompleted }));
     updateTaskMutation.mutate({
       id: taskId,
-      taskData: { completed: !completed }
+      taskData: { completed: newCompleted }
     }, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+        queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
+        // Clear optimistic override once server confirms — let real data take over
+        setOptimisticCompleted(prev => {
+          const next = { ...prev };
+          delete next[taskId];
+          return next;
+        });
+      },
+      onError: () => {
+        // Revert optimistic update on failure
+        setOptimisticCompleted(prev => {
+          const next = { ...prev };
+          delete next[taskId];
+          return next;
+        });
       }
     });
   };
@@ -141,18 +194,40 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
 
       {/* Pending Tasks */}
       <div className="bg-[#FFFFFF] border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-[#1A1A1A]">Todays Priorities</h2>
-          <button
-            onClick={() => navigate('/dashboard/planner')}
-            className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
-          >
-            See all <span className="text-sm">→</span>
-          </button>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Today's Priorities</h2>
+            {todayCount > 0 && (
+              <span className="text-[10px] font-bold bg-Primary/10 text-Primary px-2 py-0.5 rounded-full">
+                {todayCount} due
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {/* <button
+              onClick={() => setShowAllTasks(v => !v)}
+              title={showAllTasks ? 'Show today only' : 'Show all tasks'}
+              className={`p-1.5 rounded-lg transition-all border ${showAllTasks ? 'bg-Primary/10 border-Primary/20 text-Primary' : 'border-gray-100 text-gray-400 hover:text-Primary hover:bg-Primary/5'}`}
+            >
+              {showAllTasks ? <CalendarDays className="w-3.5 h-3.5" /> : <Calendar className="w-3.5 h-3.5" />}
+            </button> */}
+            <button
+              onClick={() => navigate('/dashboard/planner')}
+              className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
+            >
+              See all <span className="text-sm">→</span>
+            </button>
+          </div>
         </div>
+        {!showAllTasks && (
+          <p className="text-[10px] text-gray-400 font-medium mb-3 flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+          </p>
+        )}
         <div className="space-y-1">
-          {tasks.length > 0 ? (
-            tasks.map((task, index) => (
+          {displayTasks.length > 0 ? (
+            displayTasks.map((task, index) => (
               <TaskItem
                 key={task.id || index}
                 {...task}
@@ -160,7 +235,9 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
               />
             ))
           ) : (
-            <p className="text-gray-400 text-xs text-center py-4 font-medium">No pending tasks.</p>
+            <p className="text-gray-400 text-xs text-center py-4 font-medium">
+              {showAllTasks ? 'No pending tasks.' : 'No tasks due today ✨'}
+            </p>
           )}
         </div>
       </div>

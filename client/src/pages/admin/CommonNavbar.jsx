@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Bell, ChevronDown, Menu, User as UserIcon, Settings, LogOut, CheckCircle, Clock, MessageSquare, DollarSign, X, Trash2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Bell, ChevronDown, Menu, User as UserIcon, Settings, LogOut, CheckCircle, Clock, MessageSquare, DollarSign, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -7,6 +7,15 @@ import { selectCurrentUser } from '@/redux/slices/authSlice';
 import { useLogout } from '@/api/apiHooks/useAuth';
 import { getImgUrl } from '@/utils/image';
 import { useNotifications, useMarkAsSeen, useMarkAllAsSeen, useDeleteNotification } from '@/api/apiHooks/useNotification';
+import { useDashboardStats } from '@/api/apiHooks/useUser';
+
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Good Morning';
+  if (hour >= 12 && hour < 17) return 'Good Afternoon';
+  if (hour >= 17 && hour < 21) return 'Good Evening';
+  return 'Good Night';
+};
 
 const CommonNavbar = ({ setOpen }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -71,6 +80,45 @@ const CommonNavbar = ({ setOpen }) => {
     return date.toLocaleDateString();
   };
   const welcomeName = user?.firstName || user?.displayName || 'Jahan';
+  const greeting = useMemo(() => getGreeting(), []);
+  const { data: dashboardData, isLoading: isDashLoading } = useDashboardStats();
+
+  const weekSubtitle = useMemo(() => {
+    const now = new Date();
+    // Start of today (midnight local)
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // End of this week Sunday midnight
+    const endOfWeek = new Date(startOfToday);
+    endOfWeek.setDate(startOfToday.getDate() + (7 - startOfToday.getDay()));
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // Use rawDate (ISO date string stored on server) — d.date is display string like "Mon, Jul 21"
+    const weekCampaigns = (dashboardData?.deadlines || []).filter(d => {
+      const raw = d.rawDate || d.date;
+      if (!raw) return false;
+      const dd = new Date(raw);
+      if (isNaN(dd.getTime())) return false;
+      return dd >= startOfToday && dd <= endOfWeek;
+    }).length;
+
+    // Tasks: rawDate is the actual date, t.date is display string
+    const weekTasks = (dashboardData?.tasks || []).filter(t => {
+      if (t.completed) return false;
+      const raw = t.rawDate || t.date;
+      if (!raw) return false;
+      const td = new Date(raw);
+      if (isNaN(td.getTime())) return false;
+      return td >= startOfToday && td <= endOfWeek;
+    }).length;
+
+    const parts = [];
+    if (weekCampaigns > 0) parts.push(`${weekCampaigns} campaign${weekCampaigns !== 1 ? 's' : ''} due`);
+    if (weekTasks > 0) parts.push(`${weekTasks} task${weekTasks !== 1 ? 's' : ''} to meet`);
+    if (isDashLoading) return 'Loading your week...';
+    if (parts.length === 0) return 'All clear for this week ✨';
+    return `You have ${parts.join(' and ')} this week`;
+  }, [dashboardData, isDashLoading]);
+
   return (
     <header className="flex items-center justify-between w-full h-20 ">
       {/* Search Bar */}
@@ -84,8 +132,8 @@ const CommonNavbar = ({ setOpen }) => {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between md:gap-4 gap-2.5  ">
           <div>
-            <h1 className="lg:text-xl text-base font-semibold  text-[#1A1A1A] mb-1.5 md:mb-2">Good Morning, {welcomeName}</h1>
-            <p className="text-gray-500 text-xs md:text-sm font-medium"> You have 2 deadlines to meet this week </p>
+            <h1 className="lg:text-xl text-base font-semibold text-[#1A1A1A] mb-1.5 md:mb-2">{greeting}, {welcomeName} 👋</h1>
+            <p className="text-gray-500 text-xs md:text-sm font-medium">{weekSubtitle}</p>
           </div>
         </div>
       </div>

@@ -459,6 +459,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
         title: c.brandName,
         sub: c.name,
         date,
+        rawDate: c.deadline,
         day: isNaN(date.getTime()) ? "" : date.getDate().toString().padStart(2, "0"),
         month: isNaN(date.getTime()) ? "" : date.toLocaleString("en-US", { month: "short" })
       };
@@ -466,7 +467,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
     .filter((d: any) => d.day !== "")
     .sort((a: any, b: any) => a.date.getTime() - b.date.getTime())
     .slice(0, 5)
-    .map(({ id, title, sub, day, month }: any) => ({ id, title, sub, day, month }));
+    .map(({ id, title, sub, day, month, rawDate }: any) => ({ id, title, sub, day, month, rawDate }));
 
   // 4. Pending & Upcoming Tasks from Planner (up to 5)
   const tasks = await prisma.task.findMany({
