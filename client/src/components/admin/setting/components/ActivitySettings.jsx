@@ -50,13 +50,13 @@ const ActivitySettings = () => {
               className="flex items-center justify-between p-4 rounded-xl border border-gray-50 hover:border-gray-100 hover:bg-[#F8FAFC] transition-all"
             >
               <div className="flex items-center gap-4 min-w-0">
-                <div
+                {/* <div
                   className={`w-11 h-11 rounded-full ${item.avatarBg || 'bg-gray-100'} flex items-center justify-center shrink-0 overflow-hidden shadow-xs`}
                 >
                   <span className="text-[10px] font-bold text-gray-800 tracking-tight text-center uppercase px-1">
                     {item.avatarText || 'STAKD'}
                   </span>
-                </div>
+                </div> */}
                 <div className="min-w-0">
                   <h4 className="text-sm font-semibold text-[#1A1A1A] leading-tight truncate">
                     {item.title}
