@@ -5,7 +5,7 @@ import ImageDash from "@/assets/images/dashImage.png";
 
 const ReadyWorkFlow = ({ cms }) => {
   return (
-    <section className="section-padding lg:pb-[120px] pb-10">
+    <section className="section-padding pb-12 md:pb-16 lg:pb-20">
       <div className="bg-Primary rounded-[32px] lg:rounded-[48px] overflow-hidden relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
 

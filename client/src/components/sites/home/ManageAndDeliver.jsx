@@ -46,7 +46,7 @@ const ManageAndDeliver = ({ cms }) => {
         <section id="features" className="section-padding bg-white overflow-hidden">
             <div className="">
                 {/* Header Content */}
-                <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-10 lg:mb-24">
+                <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-8 md:mb-12 lg:mb-16">
                     <Label>Features</Label>
                     <SectionHeader className="mb-6">
                         {cms?.features_title || (

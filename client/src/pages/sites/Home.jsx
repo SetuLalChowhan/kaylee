@@ -33,7 +33,7 @@ const Home = () => {
   const cms = data?.data || {};
 
   return (
-    <div className=" flex flex-col lg:gap-[120px] gap-8 ">
+    <div className="flex flex-col gap-10 md:gap-16 lg:gap-24">
       <Banner cms={cms} />
       <ManageAndDeliver cms={cms} />
       <SimpleWorkFlow cms={cms} />

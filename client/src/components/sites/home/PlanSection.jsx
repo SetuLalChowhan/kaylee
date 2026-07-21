@@ -93,7 +93,7 @@ const PlanSection = () => {
     <section id="pricing" className="section-padding bg-white overflow-hidden">
       <div className="">
         {/* Header Content */}
-        <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-10 lg:mb-24 font-outfit">
+        <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-8 md:mb-12 lg:mb-16 font-outfit">
           <Label>Pricing</Label>
           <SectionHeader className="mb-4">
             Choose your plan
