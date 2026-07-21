@@ -247,6 +247,32 @@ export const updateInvoice = catchAsync(async (req: Request, res: Response, next
     message: "Invoice updated successfully",
     data: updatedInvoice,
   });
+
+  // Log activity for invoice status change or update
+  if (status !== undefined && status !== existingInvoice.status) {
+    const isPayment = status === "Paid";
+    logActivity({
+      userId,
+      title: isPayment
+        ? `Invoice ${updatedInvoice.invoiceNo} marked Paid`
+        : `Invoice ${updatedInvoice.invoiceNo} → ${status}`,
+      sub: updatedInvoice.campaignName || updatedInvoice.invoiceNo,
+      avatarBg: isPayment ? "bg-emerald-100" : "bg-orange-100",
+      avatarText: "INV",
+      dotColor: isPayment ? "bg-emerald-500" : "bg-orange-500",
+      type: "PAYMENT",
+    });
+  } else if (amount !== undefined || campaign !== undefined) {
+    logActivity({
+      userId,
+      title: `Invoice ${updatedInvoice.invoiceNo} updated`,
+      sub: updatedInvoice.campaignName || updatedInvoice.invoiceNo,
+      avatarBg: "bg-blue-100",
+      avatarText: "INV",
+      dotColor: "bg-blue-500",
+      type: "PAYMENT",
+    });
+  }
 });
 
 /**

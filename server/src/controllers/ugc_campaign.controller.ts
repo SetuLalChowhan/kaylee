@@ -340,6 +340,54 @@ export const updateUgcCampaign = catchAsync(
       message: "Campaign updated successfully",
       data: updated,
     });
+
+    // Log activity based on what changed
+    const ownerUserId = updated.userId;
+    const brandLabel = updated.brandName.substring(0, 5).toUpperCase();
+
+    if (status !== undefined && status !== existing.status) {
+      const statusColors: Record<string, { bg: string; dot: string }> = {
+        "Pending":      { bg: "bg-yellow-100", dot: "bg-yellow-500" },
+        "Active":       { bg: "bg-blue-100",   dot: "bg-blue-500" },
+        "Under Review": { bg: "bg-orange-100", dot: "bg-orange-500" },
+        "Approved":     { bg: "bg-green-100",  dot: "bg-green-500" },
+        "Completed":    { bg: "bg-emerald-100",dot: "bg-emerald-500" },
+        "Draft":        { bg: "bg-gray-100",   dot: "bg-gray-400" },
+      };
+      const color = statusColors[status] || { bg: "bg-gray-100", dot: "bg-gray-400" };
+      logActivity({
+        userId: ownerUserId,
+        title: `${updated.brandName} status → ${status}`,
+        sub: updated.name,
+        avatarBg: color.bg,
+        avatarText: brandLabel,
+        dotColor: color.dot,
+        type: "CAMPAIGN",
+        campaignId: updated.id,
+      });
+    } else if (paymentStatus !== undefined && paymentStatus !== existing.paymentStatus) {
+      logActivity({
+        userId: ownerUserId,
+        title: `${updated.brandName} payment → ${paymentStatus}`,
+        sub: updated.name,
+        avatarBg: "bg-emerald-100",
+        avatarText: brandLabel,
+        dotColor: "bg-emerald-500",
+        type: "PAYMENT",
+        campaignId: updated.id,
+      });
+    } else if (campaignName !== undefined || brandName !== undefined || deadline !== undefined || amount !== undefined) {
+      logActivity({
+        userId: ownerUserId,
+        title: `${updated.brandName} campaign updated`,
+        sub: updated.name,
+        avatarBg: "bg-[#F4EBE1]",
+        avatarText: brandLabel,
+        dotColor: "bg-[#005BD6]",
+        type: "CAMPAIGN",
+        campaignId: updated.id,
+      });
+    }
   },
 );
 
