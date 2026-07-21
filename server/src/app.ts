@@ -14,6 +14,7 @@ import cmsRoutes from "./routers/cms.route.js";
 import planRoutes from "./routers/plan.route.js";
 import subscriptionRoutes from "./routers/subscription.route.js";
 import contactRoutes from "./routers/contact.route.js";
+import activityRoutes from "./routers/activity.route.js";
 import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import { AppError } from "./utils/AppError.js";
 import { downloadInterceptor } from "./middlewares/download.middleware.js";
@@ -51,6 +52,7 @@ app.use("/api/cms", cmsRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/activities", activityRoutes);
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, _res, next) => {

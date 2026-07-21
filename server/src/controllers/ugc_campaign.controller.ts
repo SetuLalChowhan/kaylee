@@ -8,6 +8,7 @@ import {
   normalizeUploadPath,
   getAbsoluteUploadPath,
 } from "../utils/upload.util.js";
+import { logActivity } from "../utils/activity.util.js";
 
 interface AuthRequest extends Request {
   user: { userId: string; role: string };
@@ -211,6 +212,17 @@ export const createUgcCampaign = catchAsync(
       return c;
     });
 
+    logActivity({
+      userId: campaignOwnerId,
+      title: `${brandName} campaign created`,
+      sub: campaignName,
+      avatarBg: "bg-[#F4EBE1]",
+      avatarText: brandName.substring(0, 5).toUpperCase(),
+      dotColor: "bg-[#005BD6]",
+      type: "CAMPAIGN",
+      campaignId: campaign.id,
+    });
+
     res.status(201).json({
       status: "success",
       message: "Campaign created successfully",
@@ -411,6 +423,17 @@ export const createDeliverable = catchAsync(
 
     const deliverable = await prisma.ugcDeliverable.create({
       data: { campaignId, text },
+    });
+
+    logActivity({
+      userId,
+      title: "Deliverable added",
+      sub: text.substring(0, 50),
+      avatarBg: "bg-indigo-100",
+      avatarText: "DLVR",
+      dotColor: "bg-indigo-500",
+      type: "DELIVERABLE",
+      campaignId,
     });
 
     res.status(201).json({ status: "success", data: deliverable });
@@ -940,6 +963,16 @@ export const updatePublicMediaStatus = catchAsync(
         where: { campaignId: campaign.id },
         data: { status: "approved" },
       });
+      logActivity({
+        userId: campaign.userId,
+        title: `${campaign.brandName} approved all media`,
+        sub: campaign.name,
+        avatarBg: "bg-green-100",
+        avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+        dotColor: "bg-green-500",
+        type: "APPROVAL",
+        campaignId: campaign.id,
+      });
       return res
         .status(200)
         .json({ status: "success", message: "All media items approved" });
@@ -948,6 +981,17 @@ export const updatePublicMediaStatus = catchAsync(
     const updatedMedia = await prisma.ugcMedia.update({
       where: { id: mediaId },
       data: { status: "approved" },
+    });
+
+    logActivity({
+      userId: campaign.userId,
+      title: `${campaign.brandName} approved content`,
+      sub: campaign.name,
+      avatarBg: "bg-green-100",
+      avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+      dotColor: "bg-green-500",
+      type: "APPROVAL",
+      campaignId: campaign.id,
     });
 
     res.status(200).json({ status: "success", data: updatedMedia });
@@ -980,6 +1024,17 @@ export const requestChangesPublicMedia = catchAsync(
       include: { media: true },
     });
 
+    logActivity({
+      userId: campaign.userId,
+      title: `${campaign.brandName} requested changes`,
+      sub: text.substring(0, 60),
+      avatarBg: "bg-orange-100",
+      avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+      dotColor: "bg-orange-500",
+      type: "FEEDBACK",
+      campaignId: campaign.id,
+    });
+
     res.status(200).json({ status: "success", data: message });
   },
 );
@@ -1003,6 +1058,17 @@ export const createPublicFeedback = catchAsync(
         mediaId: mediaId || null,
       },
       include: { media: true },
+    });
+
+    logActivity({
+      userId: campaign.userId,
+      title: `${campaign.brandName} left feedback`,
+      sub: text.substring(0, 60),
+      avatarBg: "bg-purple-100",
+      avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+      dotColor: "bg-purple-500",
+      type: "FEEDBACK",
+      campaignId: campaign.id,
     });
 
     res.status(201).json({ status: "success", data: message });

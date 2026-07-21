@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { User, Crown, Bell, Shield } from 'lucide-react';
+import { User, Crown, Bell, Shield, Activity as ActivityIcon } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import PersonalSettings from './components/PersonalSettings';
 import SubscriptionSettings from './components/SubscriptionSettings';
 import NotificationSettings from './components/NotificationSettings';
 import SecuritySettings from './components/SecuritySettings';
+import ActivitySettings from './components/ActivitySettings';
 
 const Setting = () => {
   const [searchParams] = useSearchParams();
@@ -22,6 +23,7 @@ const Setting = () => {
     { name: 'Subscription', icon: Crown },
     { name: 'Notification', icon: Bell },
     { name: 'Security', icon: Shield },
+    { name: 'Activity', icon: ActivityIcon },
   ];
 
   return (
@@ -30,7 +32,7 @@ const Setting = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Settings</h1>
-          <p className="text-gray-500 text-xs md:text-sm">Manage your account and subscription.</p>
+          <p className="text-gray-500 text-xs md:text-sm">Manage your account, activity, and subscription.</p>
         </div>
       </div>
 
@@ -40,8 +42,8 @@ const Setting = () => {
           <button
             key={tab.name}
             onClick={() => setActiveTab(tab.name)}
-            className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-all whitespace-nowrap ${activeTab === tab.name
-              ? 'border-Primary text-Primary'
+            className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-all whitespace-nowrap cursor-pointer ${activeTab === tab.name
+              ? 'border-Primary text-Primary font-bold'
               : 'border-transparent text-gray-400 hover:text-gray-600'
               }`}
           >
@@ -57,6 +59,7 @@ const Setting = () => {
         {activeTab === 'Subscription' && <SubscriptionSettings />}
         {activeTab === 'Notification' && <NotificationSettings />}
         {activeTab === 'Security' && <SecuritySettings />}
+        {activeTab === 'Activity' && <ActivitySettings />}
       </div>
     </div>
   );

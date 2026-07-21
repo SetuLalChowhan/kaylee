@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
+import { logActivity } from "../utils/activity.util.js";
 
 interface AuthRequest extends Request {
   user: { userId: string; role: string };
@@ -63,6 +64,16 @@ export const createTask = catchAsync(async (req: Request, res: Response, next: N
     },
   });
 
+  logActivity({
+    userId: (role === "admin" && targetUserId) ? targetUserId : userId,
+    title: "New task added",
+    sub: name,
+    avatarBg: "bg-amber-100",
+    avatarText: "TASK",
+    dotColor: "bg-amber-500",
+    type: "TASK",
+  });
+
   res.status(201).json({
     status: "success",
     message: "Task created successfully",
@@ -116,6 +127,18 @@ export const updateTask = catchAsync(async (req: Request, res: Response, next: N
       ...(completed !== undefined && { completed }),
     },
   });
+
+  if (completed === true && existingTask.completed !== true) {
+    logActivity({
+      userId: existingTask.userId,
+      title: "Task completed",
+      sub: updatedTask.name,
+      avatarBg: "bg-emerald-100",
+      avatarText: "TASK",
+      dotColor: "bg-emerald-500",
+      type: "TASK",
+    });
+  }
 
   // Sync updates back to the UgcCampaignTask and parent UgcCampaign if linked
   const campaignTasks = await prisma.ugcCampaignTask.findMany({

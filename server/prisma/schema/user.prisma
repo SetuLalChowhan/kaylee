@@ -26,6 +26,7 @@ model User {
   stripeSubscriptionId    String?
   createdAt               DateTime        @default(now())
   updatedAt               DateTime        @updatedAt
+  activities              Activity[]
   invoices                Invoice[]
   notifications           Notification[]
   portfolioItems          PortfolioItem[]

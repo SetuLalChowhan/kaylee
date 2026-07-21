@@ -5,6 +5,7 @@ import { catchAsync } from "../utils/catchAsync.js";
 import { comparePassword, hashPassword } from "../utils/auth.util.js";
 import fs from "fs";
 import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
+import { logActivity } from "../utils/activity.util.js";
 
 // Typed request with authenticated user payload
 interface AuthRequest extends Request {
@@ -179,6 +180,16 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
     message: "Profile updated successfully",
     data: updatedUser,
   });
+
+  logActivity({
+    userId,
+    title: "Profile updated",
+    sub: updatedUser.displayName || `${updatedUser.firstName} ${updatedUser.lastName}`,
+    avatarBg: "bg-teal-100",
+    avatarText: "PROF",
+    dotColor: "bg-teal-500",
+    type: "PROFILE",
+  });
 });
 
 
@@ -297,6 +308,16 @@ export const changePassword = catchAsync(async (req: Request, res: Response, nex
   await prisma.user.update({
     where: { id: userId },
     data: { password: hashedPassword },
+  });
+
+  logActivity({
+    userId,
+    title: "Password changed",
+    sub: "Security credentials updated",
+    avatarBg: "bg-purple-100",
+    avatarText: "PASS",
+    dotColor: "bg-purple-500",
+    type: "SECURITY",
   });
 
   res.status(200).json({

@@ -1,0 +1,17 @@
+model Activity {
+  id         String   @id @default(uuid())
+  userId     String
+  title      String
+  sub        String?
+  avatarBg   String?
+  avatarText String?
+  dotColor   String?
+  type       String   @default("GENERAL")
+  campaignId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activities")
+}

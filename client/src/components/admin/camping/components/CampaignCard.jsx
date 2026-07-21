@@ -69,14 +69,14 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
       {/* Progress Bar */}
       <div className="lg:mb-8 mb-6">
         <div className="flex items-center justify-between mb-2">
-          <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden mr-3">
+          <div className="h-2 flex-1 bg-gray-100 rounded-full overflow-hidden mr-3">
             <div
               className="h-full bg-Primary rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${typeof progress === 'number' ? Math.round(progress) : 0}%` }}
             />
           </div>
-          <span className="text-[10px] font-bold text-gray-400">
-            {progress === 100 ? '6/6' : (progress > 80 ? '5/6' : (progress > 50 ? '2/6' : '1/2'))}
+          <span className="text-xs font-bold text-Primary whitespace-nowrap">
+            {typeof progress === 'number' ? `${Math.round(progress)}%` : `${progress || 0}%`}
           </span>
         </div>
       </div>
@@ -92,15 +92,8 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
           <p className="text-sm font-bold text-[#1A1A1A]">{dueDate}</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider font-bold">Status</p>
-          <span className={`inline-block text-[10px] font-bold px-3 py-1 rounded-full ${status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
-            status === 'Draft' ? 'bg-gray-100 text-gray-500' :
-              status === 'Under Review' ? 'bg-orange-50 text-orange-500' :
-                status === 'Approved' ? 'bg-green-50 text-green-500' :
-                  status === 'Completed' ? 'bg-blue-50 text-Primary' :
-                    'bg-gray-100 text-gray-500'
-            }`}>
-            {status}
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-Primary hover:underline group-hover:translate-x-0.5 transition-transform">
+            View Campaign Details <span className="text-sm">→</span>
           </span>
         </div>
       </div>

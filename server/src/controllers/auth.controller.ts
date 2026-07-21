@@ -12,6 +12,7 @@ import { catchAsync } from "../utils/catchAsync.js";
 import { AppError } from "../utils/AppError.js";
 import { OAuth2Client } from "google-auth-library";
 import crypto from "crypto";
+import { logActivity } from "../utils/activity.util.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const register = catchAsync(
@@ -137,6 +138,16 @@ export const login = catchAsync(
       secure: isSecureCookie,
       sameSite: isSecureCookie ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    logActivity({
+      userId: user.id,
+      title: "Logged in successfully",
+      sub: `Authenticated as ${user.email}`,
+      avatarBg: "bg-blue-100",
+      avatarText: "AUTH",
+      dotColor: "bg-blue-500",
+      type: "SECURITY",
     });
 
     res.status(200).json({

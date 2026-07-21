@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
+import { logActivity } from "../utils/activity.util.js";
 
 interface AuthRequest extends Request {
   user: { userId: string; role: string };
@@ -47,6 +48,16 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
       amount,
       status: status || "Pending",
     },
+  });
+
+  logActivity({
+    userId: invoice.userId,
+    title: `Invoice #${invoiceNo} created`,
+    sub: campaign ? `${campaign} ($${amount})` : `$${amount}`,
+    avatarBg: "bg-blue-100",
+    avatarText: "INV",
+    dotColor: "bg-blue-500",
+    type: "INVOICE",
   });
 
   // Sync UgcCampaign amount and payment status with invoice
