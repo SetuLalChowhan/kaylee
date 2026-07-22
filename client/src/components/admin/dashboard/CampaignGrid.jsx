@@ -31,7 +31,7 @@ const CampaignGrid = ({ campaigns = [], onEdit }) => {
   };
 
   return (
-    <div className="flex-1 bg-white border border-gray-100 rounded-2xl p-4 md:p-6 w-full shadow-sm">
+    <div className="flex-1 bg-white border border-gray-100 rounded-2xl p-4  w-full shadow-sm">
       <div className="flex items-center justify-between mb-6 ">
         <h2 className="text-xl font-bold text-[#1A1A1A]">Active Campaigns</h2>
         <button
@@ -41,7 +41,7 @@ const CampaignGrid = ({ campaigns = [], onEdit }) => {
           See all <span className="text-lg">→</span>
         </button>
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {campaigns.length > 0 ? (
           campaigns.map((campaign) => (
             <CampaignCard

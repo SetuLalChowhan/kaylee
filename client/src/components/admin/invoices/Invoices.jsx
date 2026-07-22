@@ -110,10 +110,10 @@ const Invoices = () => {
   return (
     <div className="py-2">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Invoices</h1>
-          <p className="text-gray-500 text-xs md:text-sm">Track payments across all your campaigns.</p>
+          <p className="text-gray-500 text-xs md:text-sm font-medium">Track payments across all your campaigns.</p>
         </div>
 
         <button
@@ -126,47 +126,47 @@ const Invoices = () => {
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {/* Card 1: Paid Invoices (Blue Card) */}
-        <div className="bg-Primary text-white rounded-2xl md:rounded-[32px] p-5 md:p-6 lg:p-8 shadow-xl shadow-Primary/20 relative overflow-hidden flex flex-col justify-between min-h-[140px] md:min-h-[170px]">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-white/15 rounded-xl md:rounded-2xl flex items-center justify-center">
-            <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-white" />
+        <div className="bg-Primary border-Primary text-white shadow-xl shadow-Primary/30 rounded-2xl p-4 flex flex-col justify-between h-36 border transition-all duration-300">
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+            <DollarSign className="w-5 h-5 text-white" />
           </div>
-          <div className="mt-4">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+          <div>
+            <h2 className="text-2xl font-bold mb-0.5">
               {formatCurrency(stats.paidAmount)}
             </h2>
-            <p className="text-white/80 text-xs md:text-sm font-semibold mt-1">
+            <p className="text-white/80 text-xs font-medium">
               {stats.paidCount || 0} Paid invoice{stats.paidCount !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
         {/* Card 2: Outstanding Invoices (White Card) */}
-        <div className="bg-white border border-gray-100 rounded-2xl md:rounded-[32px] p-5 md:p-6 lg:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[140px] md:min-h-[170px]">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-Primary/5 rounded-xl md:rounded-2xl flex items-center justify-center">
-            <Clock className="w-5 h-5 md:w-6 md:h-6 text-Primary" />
+        <div className="bg-white border border-gray-100 hover:border-Primary/30 text-[#1A1A1A] rounded-2xl p-4 flex flex-col justify-between h-36 border transition-all duration-300">
+          <div className="w-10 h-10 bg-[#F8FAFC] rounded-xl flex items-center justify-center">
+            <Clock className="w-5 h-5 text-Primary" />
           </div>
-          <div className="mt-4">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1A1A1A]">
+          <div>
+            <h2 className="text-2xl font-bold mb-0.5 text-[#1A1A1A]">
               {formatCurrency(stats.outstandingAmount)}
             </h2>
-            <p className="text-gray-400 text-xs md:text-sm font-semibold mt-1">
+            <p className="text-gray-500 text-xs font-medium">
               {stats.outstandingCount || 0} Outstanding invoice{stats.outstandingCount !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
         {/* Card 3: Past 30 Days (White Card) */}
-        <div className="bg-white border border-gray-100 rounded-2xl md:rounded-[32px] p-5 md:p-6 lg:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[140px] md:min-h-[170px]">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-Primary/5 rounded-xl md:rounded-2xl flex items-center justify-center">
-            <Receipt className="w-5 h-5 md:w-6 md:h-6 text-Primary" />
+        <div className="bg-white border border-gray-100 hover:border-Primary/30 text-[#1A1A1A] rounded-2xl p-4 flex flex-col justify-between h-36 border transition-all duration-300">
+          <div className="w-10 h-10 bg-[#F8FAFC] rounded-xl flex items-center justify-center">
+            <Receipt className="w-5 h-5 text-Primary" />
           </div>
-          <div className="mt-4">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1A1A1A]">
+          <div>
+            <h2 className="text-2xl font-bold mb-0.5 text-[#1A1A1A]">
               {formatCurrency(stats.earnedPast30Days || 0)}
             </h2>
-            <p className="text-gray-400 text-xs md:text-sm font-semibold mt-1">
+            <p className="text-gray-500 text-xs font-medium">
               Past 30 days (total earned)
             </p>
           </div>
@@ -174,17 +174,17 @@ const Invoices = () => {
       </div>
 
       {/* Tabs Filter */}
-      <div className="flex gap-4 mb-8 overflow-x-auto custom-scrollbar">
+      <div className="flex items-center gap-1.5 p-1.5 bg-[#F8FAFC] border border-gray-100 rounded-2xl w-full overflow-x-auto mb-6 scrollbar-hide">
         {tabs.map((tab) => {
           const isActive = statusFilter === tab.key;
           return (
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`px-6 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all duration-200 ${
+              className={`whitespace-nowrap lg:px-5 px-3.5 py-2.5 rounded-xl font-bold text-sm transition-all ${
                 isActive
-                  ? 'bg-white border border-gray-200 text-Primary shadow-sm'
-                  : 'text-gray-400 hover:text-gray-600'
+                  ? 'bg-white text-Primary shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               {tab.label}

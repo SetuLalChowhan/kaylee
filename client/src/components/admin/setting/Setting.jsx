@@ -29,15 +29,15 @@ const Setting = () => {
   return (
     <div className="py-2">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Settings</h1>
-          <p className="text-gray-500 text-xs md:text-sm">Manage your account, activity, and subscription.</p>
+          <p className="text-gray-500 text-xs md:text-sm font-medium">Manage your account, activity, and subscription.</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-6 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex items-center gap-6 mb-6 overflow-x-auto pb-2 scrollbar-hide">
         {tabs.map((tab) => (
           <button
             key={tab.name}

@@ -12,18 +12,18 @@ const StatsCard = ({ title, value, label, icon: Icon, isPrimary, index }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, delay: index * 0.1 }}
-    className={`lg:p-6 p-4 rounded-[32px] flex flex-col justify-between xl:h-48 lg:h-40 h-36 border transition-all duration-300 ${isPrimary
+    className={`p-4 rounded-2xl flex flex-col justify-between h-36 border transition-all duration-300 ${isPrimary
       ? 'bg-Primary border-Primary text-white shadow-xl shadow-Primary/30'
       : 'bg-white border-gray-100 text-[#1A1A1A] hover:border-Primary/30'
       }`}
   >
-    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isPrimary ? 'bg-white/20' : 'bg-[#F8FAFC]'
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isPrimary ? 'bg-white/20' : 'bg-[#F8FAFC]'
       }`}>
-      <Icon className={`w-6 h-6 ${isPrimary ? 'text-white' : 'text-Primary'}`} color={isPrimary ? '#ffffff' : undefined} />
+      <Icon className={`w-5 h-5 ${isPrimary ? 'text-white' : 'text-Primary'}`} color={isPrimary ? '#ffffff' : undefined} />
     </div>
-    <div className='mt-2'>
-      <h2 className="xl:text-4xl text-3xl font-bold mb-1">{value}</h2>
-      <p className={`text-sm font-medium ${isPrimary ? 'text-white/80' : 'text-gray-500'}`}>
+    <div>
+      <h2 className="text-2xl font-bold mb-0.5">{value}</h2>
+      <p className={`text-xs font-medium ${isPrimary ? 'text-white/80' : 'text-gray-500'}`}>
         {label}
       </p>
     </div>
@@ -129,10 +129,10 @@ const Campaign = () => {
   return (
     <div className="py-2">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Campaigns</h1>
-          <p className="text-gray-500 text-xs md:text-sm">Track progress, deliverables, and brand feedback.</p>
+          <p className="text-gray-500 text-xs md:text-sm font-medium">Track progress, deliverables, and brand feedback.</p>
         </div>
         <button
           onClick={() => { setSelectedCampaign(null); setIsModalOpen(true); }}
@@ -144,14 +144,14 @@ const Campaign = () => {
       </div>
 
       {/* Stats Summary Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, index) => (
           <StatsCard key={stat.title} {...stat} index={index} />
         ))}
       </div>
 
-      {/* Filter Tabs - matching Invoices style */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-[#F8FAFC] border border-gray-100 rounded-2xl w-full overflow-x-auto mb-8 scrollbar-hide">
+      {/* Filter Tabs - matching standard tabs style */}
+      <div className="flex items-center gap-1.5 p-1.5 bg-[#F8FAFC] border border-gray-100 rounded-2xl w-full overflow-x-auto mb-6 scrollbar-hide">
         {tabs.map((tab) => (
           <button
             key={tab.key}

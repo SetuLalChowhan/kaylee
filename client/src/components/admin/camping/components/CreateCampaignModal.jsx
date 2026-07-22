@@ -72,7 +72,7 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
           onClick={onClose}
           className="absolute inset-0 bg-black/20 backdrop-blur-sm"
         />
-        
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -81,7 +81,7 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
         >
           {/* Header - Fixed */}
           <div className="p-4 md:p-10 pb-0 bg-white relative z-20">
-            <button 
+            <button
               onClick={onClose}
               className="absolute top-6 right-6 md:top-8 md:right-8 p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 bg-white"
             >
@@ -137,7 +137,7 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
                   <label className="block text-xs md:text-sm font-bold text-[#1A1A1A] mb-2 md:mb-3">Amount</label>
                   <input
                     {...register('amount', { required: 'Required' })}
-                    type="text"
+                    type="number"
                     placeholder="Enter amount"
                     className={`w-full bg-white border rounded-xl md:rounded-2xl py-3 md:py-4 px-4 md:px-6 focus:border-Primary focus:outline-none transition-all text-xs md:text-sm ${errors.amount ? 'border-red-500' : 'border-gray-100'}`}
                   />
@@ -190,14 +190,14 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
               </div>
 
               <div className="flex items-center gap-3 md:gap-4 pt-2 md:pt-4">
-                <button 
+                <button
                   type="button"
                   onClick={onClose}
                   className="flex-1 bg-gray-50 text-gray-500 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-gray-100 transition-all text-xs md:text-sm"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={createCampaignMutation.isPending || updateCampaignMutation.isPending}
                   className="flex-1 bg-Primary text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm disabled:opacity-60 disabled:cursor-not-allowed"

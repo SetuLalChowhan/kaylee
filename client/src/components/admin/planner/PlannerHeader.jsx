@@ -3,10 +3,10 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 const PlannerHeader = ({ currentWeekRange, onPrevWeek, onNextWeek, onToday, onAddTask, viewMode = 'week', onToggleView, navLabel }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Planner</h1>
-        <p className="text-gray-500 text-xs md:text-sm">{currentWeekRange}</p>
+        <p className="text-gray-500 text-xs md:text-sm font-medium">{currentWeekRange}</p>
       </div>
 
       <div className="flex items-center flex-wrap gap-3">

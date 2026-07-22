@@ -47,7 +47,7 @@ const Dashboard = () => {
   return (
     <div className="py-2">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 ">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">
             Dashboard
@@ -67,8 +67,8 @@ const Dashboard = () => {
 
 
       {/* Main Content Layout */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start w-full">
-        <div className=' flex flex-col gap-8 flex-1 w-full'>
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start w-full">
+        <div className=' flex flex-col gap-6 flex-1 w-full'>
           {/* Left Column: Campaigns */}
           <StatsSection stats={dashboardData?.stats} />
           <CampaignGrid campaigns={dashboardData?.recentCampaigns} onEdit={handleEdit} />
