@@ -8,17 +8,22 @@ interface AuthRequest extends Request {
 }
 
 /**
- * GET /api/activities - Fetch recent activities for authenticated user
+ * GET /api/activities - Fetch recent activities for authenticated user with pagination
  */
 export const getUserActivities = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const { userId } = (req as AuthRequest).user;
-  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
+  const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 15;
+  const skip = (page - 1) * limit;
 
   let activities: any[] = [];
+  let total = 0;
   try {
+    total = await (prisma as any).activity.count({ where: { userId } });
     activities = await (prisma as any).activity.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
+      skip,
       take: limit,
     });
   } catch (err) {
@@ -26,9 +31,17 @@ export const getUserActivities = catchAsync(async (req: Request, res: Response, 
     activities = [];
   }
 
+  const hasMore = skip + activities.length < total;
+
   res.status(200).json({
     status: "success",
     data: activities,
+    pagination: {
+      page,
+      limit,
+      total,
+      hasMore,
+    },
   });
 });
 

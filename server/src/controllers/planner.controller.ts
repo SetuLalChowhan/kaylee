@@ -191,6 +191,16 @@ export const deleteTask = catchAsync(async (req: Request, res: Response, next: N
     where: { id },
   });
 
+  logActivity({
+    userId: existingTask.userId,
+    title: "Task deleted",
+    sub: existingTask.name,
+    avatarBg: "bg-red-100",
+    avatarText: "TASK",
+    dotColor: "bg-red-500",
+    type: "TASK",
+  });
+
   res.status(200).json({
     status: "success",
     message: "Task deleted successfully",

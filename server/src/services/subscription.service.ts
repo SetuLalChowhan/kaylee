@@ -2,6 +2,7 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { StripeService } from "./stripe.service.js";
 import { PlanService } from "./plan.service.js";
+import { logActivity } from "../utils/activity.util.js";
 
 export class SubscriptionService {
   static async getUserSubscription(userId: string) {
@@ -199,6 +200,16 @@ export class SubscriptionService {
       },
     });
 
+    logActivity({
+      userId,
+      title: "Subscription cancelled",
+      sub: "Cancellation scheduled for period end",
+      avatarBg: "bg-red-100",
+      avatarText: "SUB",
+      dotColor: "bg-red-500",
+      type: "SUBSCRIPTION",
+    });
+
     return { message: "Your subscription cancellation has been scheduled successfully." };
   }
 
@@ -340,6 +351,17 @@ export class SubscriptionService {
           stripeCustomerId: details.stripeCustomerId,
           stripeSubscriptionId: details.stripeSubscriptionId,
         },
+      });
+
+      // 6. Log activity for subscription upgrade
+      logActivity({
+        userId: details.userId,
+        title: `Subscription upgraded → ${plan.title || plan.slug}`,
+        sub: `$${details.amount} ${details.currency.toUpperCase()}`,
+        avatarBg: "bg-purple-100",
+        avatarText: "SUB",
+        dotColor: "bg-purple-500",
+        type: "SUBSCRIPTION",
       });
 
       // 5. Founding tracker increment if first time purchase

@@ -68,15 +68,15 @@ const ActivityItem = ({ title, sub, time, avatarBg, avatarContent, avatarText, d
 const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const updateTaskMutation = useUpdateTask();
-  const { data: dynamicActivities = [] } = useActivities(5);
+  const { data: activityRes } = useActivities(1, 5);
+  const dynamicActivities = activityRes?.activities || (Array.isArray(activityRes) ? activityRes : []);
   const [showAllTasks, setShowAllTasks] = useState(false);
   // Optimistic completed state: tracks which task IDs the user just toggled
   const [optimisticCompleted, setOptimisticCompleted] = useState({});
 
   const displayActivities = dynamicActivities.map(act => ({
     id: act.id,
-    title: act.title,
+    title: act.title?.replace(' → undefined', '') || 'Activity logged',
     sub: act.sub,
     time: formatTimeAgo(act.createdAt),
     avatarBg: act.avatarBg,

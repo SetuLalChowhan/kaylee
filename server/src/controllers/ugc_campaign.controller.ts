@@ -449,6 +449,17 @@ export const deleteUgcCampaign = catchAsync(
       await tx.ugcCampaign.delete({ where: { id } });
     });
 
+    const brandLabel = (existing.brandName || "CAMP").substring(0, 5).toUpperCase();
+    logActivity({
+      userId: existing.userId,
+      title: `${existing.brandName} campaign deleted`,
+      sub: existing.name,
+      avatarBg: "bg-red-100",
+      avatarText: brandLabel,
+      dotColor: "bg-red-500",
+      type: "CAMPAIGN",
+    });
+
     res.status(200).json({
       status: "success",
       message: "Campaign deleted successfully",
@@ -473,12 +484,13 @@ export const createDeliverable = catchAsync(
       data: { campaignId, text },
     });
 
+    const brandLabel = (campaign.brandName || "DLVR").substring(0, 5).toUpperCase();
     logActivity({
       userId,
-      title: "Deliverable added",
-      sub: text.substring(0, 50),
+      title: `${campaign.brandName} - Deliverable added`,
+      sub: `${campaign.name}: ${text.substring(0, 50)}`,
       avatarBg: "bg-indigo-100",
-      avatarText: "DLVR",
+      avatarText: brandLabel,
       dotColor: "bg-indigo-500",
       type: "DELIVERABLE",
       campaignId,

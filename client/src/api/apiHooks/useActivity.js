@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAxiosSecure from '@/hooks/useAxiosSecure';
 
-export const useActivities = (limit = 20) => {
+export const useActivities = (page = 1, limit = 15) => {
   const axiosSecure = useAxiosSecure();
   return useQuery({
-    queryKey: ['activities', limit],
+    queryKey: ['activities', page, limit],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/activities?limit=${limit}`);
-      return res.data?.data || [];
+      const res = await axiosSecure.get(`/activities?page=${page}&limit=${limit}`);
+      return {
+        activities: res.data?.data || [],
+        pagination: res.data?.pagination || { page, limit, total: 0, hasMore: false },
+      };
     },
   });
 };

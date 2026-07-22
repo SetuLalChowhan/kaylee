@@ -295,6 +295,16 @@ export const deleteInvoice = catchAsync(async (req: Request, res: Response, next
     where: { id },
   });
 
+  logActivity({
+    userId: existingInvoice.userId,
+    title: `Invoice ${existingInvoice.invoiceNo} deleted`,
+    sub: existingInvoice.campaignName || existingInvoice.invoiceNo,
+    avatarBg: "bg-red-100",
+    avatarText: "INV",
+    dotColor: "bg-red-500",
+    type: "PAYMENT",
+  });
+
   res.status(200).json({
     status: "success",
     message: "Invoice deleted successfully",
