@@ -54,50 +54,54 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
         />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-lg bg-white rounded-[24px] md:rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10 border border-gray-100"
         >
           {/* Header - Fixed */}
-          <div className="flex items-center justify-center p-4 md:p-8 border-b border-gray-50 bg-white relative z-20">
-            <h2 className="text-lg md:text-xl font-bold text-[#1A1A1A] text-center w-full">{type === 'create' ? 'Create Invoice' : 'Edit Invoice'}</h2>
+          <div className="p-6 md:p-8 pb-4 bg-white relative z-20">
             <button 
               onClick={onClose}
-              className="absolute right-4 md:right-8 p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 bg-white"
+              className="absolute top-6 right-6 w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all cursor-pointer shadow-sm"
             >
-              <X className="w-4 h-4 md:w-5 md:h-5" />
+              <X className="w-5 h-5" />
             </button>
+            <div className="pr-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] tracking-tight">{type === 'create' ? 'Create Invoice' : 'Edit Invoice'}</h2>
+              <p className="text-sm text-gray-500 font-medium mt-1">Track payment details for your campaign invoice.</p>
+              <div className="w-full border-b border-gray-100 mt-4" />
+            </div>
           </div>
 
           {/* Form - Scrollable */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <form onSubmit={handleSubmit(onSubmit)} className={`p-4 md:p-8 space-y-4 md:space-y-6 transition-all duration-200 ${isOpenDropdown ? 'pb-36' : ''}`}>
+          <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-6 md:pb-8 custom-scrollbar">
+            <form onSubmit={handleSubmit(onSubmit)} className={`space-y-4 transition-all duration-200 ${isOpenDropdown ? 'pb-36' : ''}`}>
               {/* Invoice No */}
               <div>
-                <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Invoice No</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Invoice No</label>
                 <input
                   {...register('invoiceNo', type === 'create' ? { required: 'Invoice number is required' } : {})}
                   type="text"
                   placeholder="e.g. INV-1026"
-                  className={`w-full bg-white border rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] placeholder:text-gray-300 text-xs md:text-sm ${type === 'create' && errors.invoiceNo ? 'border-red-500' : 'border-gray-100'}`}
+                  className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] placeholder-gray-400 font-medium ${type === 'create' && errors.invoiceNo ? 'border-red-500' : 'border-gray-200'}`}
                 />
-                {type === 'create' && errors.invoiceNo && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.invoiceNo.message}</p>}
+                {type === 'create' && errors.invoiceNo && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.invoiceNo.message}</p>}
               </div>
 
               {/* Campaign */}
               <div>
-                <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Campaign</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Campaign</label>
                 <div className="relative" ref={dropdownRef}>
                   <input
                     {...register('campaign', type === 'create' ? { required: 'Please select or type a campaign' } : {})}
@@ -105,9 +109,9 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
                     placeholder="Select or type a campaign"
                     onFocus={() => setIsOpenDropdown(true)}
                     autoComplete="off"
-                    className={`w-full bg-white border rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] placeholder:text-gray-300 text-xs md:text-sm ${type === 'create' && errors.campaign ? 'border-red-500' : 'border-gray-100'}`}
+                    className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] placeholder-gray-400 font-medium ${type === 'create' && errors.campaign ? 'border-red-500' : 'border-gray-200'}`}
                   />
-                  <ChevronDown className={`absolute right-3 md:right-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-300 pointer-events-none transition-transform duration-200 ${isOpenDropdown ? 'rotate-180 text-Primary' : ''}`} />
+                  <ChevronDown className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none transition-transform duration-200 ${isOpenDropdown ? 'rotate-180 text-Primary' : ''}`} />
                   
                   <AnimatePresence>
                     {isOpenDropdown && (
@@ -116,7 +120,7 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-gray-100 rounded-lg md:rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar"
+                        className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar"
                       >
                         {filteredCampaigns.length > 0 ? (
                           <div className="py-1">
@@ -134,14 +138,14 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
                                   }
                                   setIsOpenDropdown(false);
                                 }}
-                                className="w-full text-left px-3 md:px-4 py-2 hover:bg-gray-50 text-xs md:text-sm text-[#1A1A1A] font-medium transition-colors"
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-[#1A1A1A] font-medium transition-colors cursor-pointer"
                               >
                                 {c.title}
                               </button>
                             ))}
                           </div>
                         ) : (
-                          <div className="px-3 md:px-4 py-3 text-xs md:text-sm text-gray-400 font-medium italic">
+                          <div className="px-4 py-3 text-sm text-gray-400 font-medium italic">
                             No matching campaigns. Keep typing to add manually.
                           </div>
                         )}
@@ -149,77 +153,73 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
                     )}
                   </AnimatePresence>
                 </div>
-                {type === 'create' && errors.campaign && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.campaign.message}</p>}
+                {type === 'create' && errors.campaign && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.campaign.message}</p>}
               </div>
 
               {/* Dates Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Issue Date</label>
-                  <div className="relative group">
-                    <input
-                      {...register('issueDate')}
-                      type="date"
-                      className="w-full bg-white border border-gray-100 rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] text-xs md:text-sm"
-                    />
-                  </div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Issue Date</label>
+                  <input
+                    {...register('issueDate')}
+                    type="date"
+                    className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] font-medium"
+                  />
                 </div>
                 <div>
-                  <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Due Date</label>
-                  <div className="relative group">
-                    <input
-                      {...register('dueDate', type === 'create' ? { required: 'Required' } : {})}
-                      type="date"
-                      className={`w-full bg-white border rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] text-xs md:text-sm ${type === 'create' && errors.dueDate ? 'border-red-500' : 'border-gray-100'}`}
-                    />
-                  </div>
-                  {type === 'create' && errors.dueDate && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.dueDate.message}</p>}
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Due Date</label>
+                  <input
+                    {...register('dueDate', type === 'create' ? { required: 'Required' } : {})}
+                    type="date"
+                    className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] font-medium ${type === 'create' && errors.dueDate ? 'border-red-500' : 'border-gray-200'}`}
+                  />
+                  {type === 'create' && errors.dueDate && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.dueDate.message}</p>}
                 </div>
               </div>
 
               {/* Amount & Status Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Amount</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Amount</label>
                   <input
                     {...register('amount', type === 'create' ? { required: 'Required' } : {})}
                     type="text"
                     placeholder="Enter amount"
-                    className={`w-full bg-white border rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] placeholder:text-gray-300 text-xs md:text-sm ${type === 'create' && errors.amount ? 'border-red-500' : 'border-gray-100'}`}
+                    className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] placeholder-gray-400 font-medium ${type === 'create' && errors.amount ? 'border-red-500' : 'border-gray-200'}`}
                   />
-                  {type === 'create' && errors.amount && <p className="text-[10px] text-red-500 font-bold mt-2 ml-2">{errors.amount.message}</p>}
+                  {type === 'create' && errors.amount && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.amount.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-[10px] md:text-xs font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Status</label>
-                  <div className="relative group">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Status</label>
+                  <div className="relative">
                     <select
                       {...register('status')}
-                      className="w-full bg-white border border-gray-100 rounded-lg md:rounded-xl py-2 md:py-3 px-3 md:px-4 focus:border-Primary focus:outline-none transition-all text-[#1A1A1A] appearance-none text-xs md:text-sm"
+                      className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 pl-3.5 pr-10 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] appearance-none font-semibold cursor-pointer"
                     >
                       <option value="Pending">Pending</option>
                       <option value="Paid">Paid</option>
                       <option value="Overdue">Overdue</option>
                     </select>
-                    <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-300 pointer-events-none group-focus-within:text-Primary transition-colors" />
+                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 bg-gray-50 text-gray-500 py-2.5 md:py-3.5 rounded-lg md:rounded-xl font-bold hover:bg-gray-100 transition-colors text-xs md:text-sm"
+                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex-1 bg-Primary text-white py-2.5 md:py-3.5 rounded-lg md:rounded-xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-xs md:text-sm"
+                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {isPending ? (type === 'create' ? 'Creating...' : 'Saving...') : (type === 'create' ? 'Create' : 'Save Changes')}
+                  {isPending ? (type === 'create' ? 'Creating...' : 'Saving...') : (type === 'create' ? 'Create Invoice' : 'Save Changes')}
                 </button>
               </div>
             </form>
