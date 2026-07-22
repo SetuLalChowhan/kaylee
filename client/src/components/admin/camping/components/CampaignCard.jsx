@@ -99,7 +99,7 @@ const CampaignCard = ({ id, title, brand, amount, dueDate, status, progress, onE
         <CommonButton
           type='link'
           path={`/dashboard/campaigns/${id}`}
-          className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm  w-full"
+          className="bg-Primary text-white px-4 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm  w-full"
         >
           View Campaign Details <span className="text-sm">→</span>
         </CommonButton>

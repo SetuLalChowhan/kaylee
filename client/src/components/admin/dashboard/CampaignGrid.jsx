@@ -41,7 +41,7 @@ const CampaignGrid = ({ campaigns = [], onEdit }) => {
           See all <span className="text-lg">→</span>
         </button>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 xlg:grid-cols-2 gap-4">
         {campaigns.length > 0 ? (
           campaigns.map((campaign) => (
             <CampaignCard

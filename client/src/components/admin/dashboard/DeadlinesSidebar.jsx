@@ -147,7 +147,57 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
   };
 
   return (
-    <div className="w-full lg:w-[320px] space-y-6 ">
+    <div className="w-full xlg:w-[320px] md:w-[300px] space-y-6 ">
+
+      {/* Pending Tasks */}
+      <div className="bg-[#FFFFFF] border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Today's Priorities</h2>
+            {/* {todayCount > 0 && (
+              <span className="text-[10px] font-bold bg-Primary/10 text-Primary px-2 py-0.5 rounded-full">
+                {todayCount} due
+              </span>
+            )} */}
+          </div>
+          <div className="flex items-center gap-2">
+            {/* <button
+              onClick={() => setShowAllTasks(v => !v)}
+              title={showAllTasks ? 'Show today only' : 'Show all tasks'}
+              className={`p-1.5 rounded-lg transition-all border ${showAllTasks ? 'bg-Primary/10 border-Primary/20 text-Primary' : 'border-gray-100 text-gray-400 hover:text-Primary hover:bg-Primary/5'}`}
+            >
+              {showAllTasks ? <CalendarDays className="w-3.5 h-3.5" /> : <Calendar className="w-3.5 h-3.5" />}
+            </button> */}
+            <button
+              onClick={() => navigate('/dashboard/planner')}
+              className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
+            >
+              See all <span className="text-sm">→</span>
+            </button>
+          </div>
+        </div>
+        {!showAllTasks && (
+          <p className="text-[10px] text-gray-400 font-medium mb-3 flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+          </p>
+        )}
+        <div className="space-y-1">
+          {displayTasks.length > 0 ? (
+            displayTasks.map((task, index) => (
+              <TaskItem
+                key={task.id || index}
+                {...task}
+                onToggle={() => handleToggleTask(task.id, task.completed)}
+              />
+            ))
+          ) : (
+            <p className="text-gray-400 text-xs text-center py-4 font-medium">
+              {showAllTasks ? 'No pending tasks.' : 'No tasks due today ✨'}
+            </p>
+          )}
+        </div>
+      </div>
       {/* Upcoming Deadlines */}
       <div className="bg-white border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
         <div className="flex items-center justify-between mb-6">
@@ -192,55 +242,7 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
         </div>
       </div>
 
-      {/* Pending Tasks */}
-      <div className="bg-[#FFFFFF] border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Today's Priorities</h2>
-            {todayCount > 0 && (
-              <span className="text-[10px] font-bold bg-Primary/10 text-Primary px-2 py-0.5 rounded-full">
-                {todayCount} due
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {/* <button
-              onClick={() => setShowAllTasks(v => !v)}
-              title={showAllTasks ? 'Show today only' : 'Show all tasks'}
-              className={`p-1.5 rounded-lg transition-all border ${showAllTasks ? 'bg-Primary/10 border-Primary/20 text-Primary' : 'border-gray-100 text-gray-400 hover:text-Primary hover:bg-Primary/5'}`}
-            >
-              {showAllTasks ? <CalendarDays className="w-3.5 h-3.5" /> : <Calendar className="w-3.5 h-3.5" />}
-            </button> */}
-            <button
-              onClick={() => navigate('/dashboard/planner')}
-              className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
-            >
-              See all <span className="text-sm">→</span>
-            </button>
-          </div>
-        </div>
-        {!showAllTasks && (
-          <p className="text-[10px] text-gray-400 font-medium mb-3 flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-          </p>
-        )}
-        <div className="space-y-1">
-          {displayTasks.length > 0 ? (
-            displayTasks.map((task, index) => (
-              <TaskItem
-                key={task.id || index}
-                {...task}
-                onToggle={() => handleToggleTask(task.id, task.completed)}
-              />
-            ))
-          ) : (
-            <p className="text-gray-400 text-xs text-center py-4 font-medium">
-              {showAllTasks ? 'No pending tasks.' : 'No tasks due today ✨'}
-            </p>
-          )}
-        </div>
-      </div>
+
     </div>
   );
 };

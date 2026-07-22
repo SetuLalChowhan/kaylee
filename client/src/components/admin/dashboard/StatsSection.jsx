@@ -44,7 +44,7 @@ const StatsSection = ({ stats }) => {
   ];
 
   return (
-    <div className="grid lg:grid-cols-4  sm:grid-cols-4 grid-cols-2 gap-4 w-full ">
+    <div className="grid xlg:grid-cols-4 lg:grid-cols-2  sm:grid-cols-4 grid-cols-2 gap-4 w-full ">
       {statsList.map((stat, index) => (
         <StatsCard key={stat.title} {...stat} index={index} />
       ))}
