@@ -6,6 +6,7 @@ import 'swiper/css';
 import CampaignCard from './components/CampaignCard';
 import CreateCampaignModal from './components/CreateCampaignModal';
 import { useUgcCampaigns, useDeleteUgcCampaign } from '@/api/apiHooks/useUgcCampaign';
+import { CampaignIcon } from '@/components/icons/CustomIcon';
 
 const StatsCard = ({ title, value, label, icon: Icon, iconBg, iconColor, index }) => (
   <motion.div
@@ -49,9 +50,9 @@ const Campaign = () => {
       title: 'Total Campaigns',
       value: totalCampaigns,
       label: `${totalCampaigns} Total ${totalCampaigns === 1 ? 'campaign' : 'campaigns'}`,
-      icon: Folder,
-      iconBg: 'bg-indigo-50',
-      iconColor: 'text-indigo-600'
+      icon: CampaignIcon,
+      iconBg: 'bg-blue-50',
+      iconColor: 'text-blue-600'
     },
     {
       title: 'Under Review',
