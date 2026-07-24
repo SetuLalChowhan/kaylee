@@ -4,6 +4,7 @@ import { catchAsync } from "../utils/catchAsync.js";
 import fs from "fs";
 import jwt from "jsonwebtoken";
 import { normalizeUploadPath, getAbsoluteUploadPath, } from "../utils/upload.util.js";
+import { logActivity } from "../utils/activity.util.js";
 function appendPreviewToken(campaign) {
     if (!campaign)
         return campaign;
@@ -159,6 +160,16 @@ export const createUgcCampaign = catchAsync(async (req, res, next) => {
         });
         return c;
     });
+    logActivity({
+        userId: campaignOwnerId,
+        title: `${brandName} campaign created`,
+        sub: campaignName,
+        avatarBg: "bg-[#F4EBE1]",
+        avatarText: brandName.substring(0, 5).toUpperCase(),
+        dotColor: "bg-[#005BD6]",
+        type: "CAMPAIGN",
+        campaignId: campaign.id,
+    });
     res.status(201).json({
         status: "success",
         message: "Campaign created successfully",
@@ -246,6 +257,54 @@ export const updateUgcCampaign = catchAsync(async (req, res, next) => {
         message: "Campaign updated successfully",
         data: updated,
     });
+    // Log activity based on what changed
+    const ownerUserId = updated.userId;
+    const brandLabel = updated.brandName.substring(0, 5).toUpperCase();
+    if (status !== undefined && status !== existing.status) {
+        const statusColors = {
+            "Pending": { bg: "bg-yellow-100", dot: "bg-yellow-500" },
+            "Active": { bg: "bg-blue-100", dot: "bg-blue-500" },
+            "Under Review": { bg: "bg-orange-100", dot: "bg-orange-500" },
+            "Approved": { bg: "bg-green-100", dot: "bg-green-500" },
+            "Completed": { bg: "bg-emerald-100", dot: "bg-emerald-500" },
+            "Draft": { bg: "bg-gray-100", dot: "bg-gray-400" },
+        };
+        const color = statusColors[status] || { bg: "bg-gray-100", dot: "bg-gray-400" };
+        logActivity({
+            userId: ownerUserId,
+            title: `${updated.brandName} status → ${status}`,
+            sub: updated.name,
+            avatarBg: color.bg,
+            avatarText: brandLabel,
+            dotColor: color.dot,
+            type: "CAMPAIGN",
+            campaignId: updated.id,
+        });
+    }
+    else if (paymentStatus !== undefined && paymentStatus !== existing.paymentStatus) {
+        logActivity({
+            userId: ownerUserId,
+            title: `${updated.brandName} payment → ${paymentStatus}`,
+            sub: updated.name,
+            avatarBg: "bg-emerald-100",
+            avatarText: brandLabel,
+            dotColor: "bg-emerald-500",
+            type: "PAYMENT",
+            campaignId: updated.id,
+        });
+    }
+    else if (campaignName !== undefined || brandName !== undefined || deadline !== undefined || amount !== undefined) {
+        logActivity({
+            userId: ownerUserId,
+            title: `${updated.brandName} campaign updated`,
+            sub: updated.name,
+            avatarBg: "bg-[#F4EBE1]",
+            avatarText: brandLabel,
+            dotColor: "bg-[#005BD6]",
+            type: "CAMPAIGN",
+            campaignId: updated.id,
+        });
+    }
 });
 /**
  * DELETE /api/ugc-campaigns/:id — Delete a campaign
@@ -301,6 +360,16 @@ export const deleteUgcCampaign = catchAsync(async (req, res, next) => {
         }
         await tx.ugcCampaign.delete({ where: { id } });
     });
+    const brandLabel = (existing.brandName || "CAMP").substring(0, 5).toUpperCase();
+    logActivity({
+        userId: existing.userId,
+        title: `${existing.brandName} campaign deleted`,
+        sub: existing.name,
+        avatarBg: "bg-red-100",
+        avatarText: brandLabel,
+        dotColor: "bg-red-500",
+        type: "CAMPAIGN",
+    });
     res.status(200).json({
         status: "success",
         message: "Campaign deleted successfully",
@@ -319,7 +388,38 @@ export const createDeliverable = catchAsync(async (req, res, next) => {
     const deliverable = await prisma.ugcDeliverable.create({
         data: { campaignId, text },
     });
+    const brandLabel = (campaign.brandName || "DLVR").substring(0, 5).toUpperCase();
+    logActivity({
+        userId,
+        title: `${campaign.brandName} - Deliverable added`,
+        sub: `${campaign.name}: ${text.substring(0, 50)}`,
+        avatarBg: "bg-indigo-100",
+        avatarText: brandLabel,
+        dotColor: "bg-indigo-500",
+        type: "DELIVERABLE",
+        campaignId,
+    });
     res.status(201).json({ status: "success", data: deliverable });
+});
+export const updateDeliverable = catchAsync(async (req, res, next) => {
+    const { campaignId, id } = req.params;
+    const { text, progress } = req.body;
+    const campaign = await checkCampaignAccess(campaignId, req);
+    if (!campaign)
+        return next(new AppError("Campaign not found or unauthorized", 404));
+    const existingDeliverable = await prisma.ugcDeliverable.findUnique({
+        where: { id },
+    });
+    if (!existingDeliverable)
+        return next(new AppError("Deliverable not found", 404));
+    const updated = await prisma.ugcDeliverable.update({
+        where: { id },
+        data: {
+            ...(text !== undefined && { text }),
+            ...(progress !== undefined && { progress }),
+        },
+    });
+    res.status(200).json({ status: "success", data: updated });
 });
 export const deleteDeliverable = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
@@ -714,6 +814,16 @@ export const updatePublicMediaStatus = catchAsync(async (req, res, next) => {
             where: { campaignId: campaign.id },
             data: { status: "approved" },
         });
+        logActivity({
+            userId: campaign.userId,
+            title: `${campaign.brandName} approved all media`,
+            sub: campaign.name,
+            avatarBg: "bg-green-100",
+            avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+            dotColor: "bg-green-500",
+            type: "APPROVAL",
+            campaignId: campaign.id,
+        });
         return res
             .status(200)
             .json({ status: "success", message: "All media items approved" });
@@ -721,6 +831,16 @@ export const updatePublicMediaStatus = catchAsync(async (req, res, next) => {
     const updatedMedia = await prisma.ugcMedia.update({
         where: { id: mediaId },
         data: { status: "approved" },
+    });
+    logActivity({
+        userId: campaign.userId,
+        title: `${campaign.brandName} approved content`,
+        sub: campaign.name,
+        avatarBg: "bg-green-100",
+        avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+        dotColor: "bg-green-500",
+        type: "APPROVAL",
+        campaignId: campaign.id,
     });
     res.status(200).json({ status: "success", data: updatedMedia });
 });
@@ -746,6 +866,16 @@ export const requestChangesPublicMedia = catchAsync(async (req, res, next) => {
         },
         include: { media: true },
     });
+    logActivity({
+        userId: campaign.userId,
+        title: `${campaign.brandName} requested changes`,
+        sub: text.substring(0, 60),
+        avatarBg: "bg-orange-100",
+        avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+        dotColor: "bg-orange-500",
+        type: "FEEDBACK",
+        campaignId: campaign.id,
+    });
     res.status(200).json({ status: "success", data: message });
 });
 /**
@@ -765,6 +895,16 @@ export const createPublicFeedback = catchAsync(async (req, res, next) => {
             mediaId: mediaId || null,
         },
         include: { media: true },
+    });
+    logActivity({
+        userId: campaign.userId,
+        title: `${campaign.brandName} left feedback`,
+        sub: text.substring(0, 60),
+        avatarBg: "bg-purple-100",
+        avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+        dotColor: "bg-purple-500",
+        type: "FEEDBACK",
+        campaignId: campaign.id,
     });
     res.status(201).json({ status: "success", data: message });
 });

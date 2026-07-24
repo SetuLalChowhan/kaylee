@@ -1,9 +1,9 @@
 import express from "express";
-import { getUgcCampaigns, getUgcCampaignById, createUgcCampaign, updateUgcCampaign, deleteUgcCampaign, createDeliverable, deleteDeliverable, createCampaignTask, updateCampaignTask, deleteCampaignTask, uploadMedia, replaceMedia, deleteMedia, uploadDocument, deleteDocument, createNote, deleteNote, createFeedback, getPublicCampaignBySlug, updatePublicMediaStatus, requestChangesPublicMedia, createPublicFeedback, } from "../controllers/ugc_campaign.controller.js";
+import { getUgcCampaigns, getUgcCampaignById, createUgcCampaign, updateUgcCampaign, deleteUgcCampaign, createDeliverable, updateDeliverable, deleteDeliverable, createCampaignTask, updateCampaignTask, deleteCampaignTask, uploadMedia, replaceMedia, deleteMedia, uploadDocument, deleteDocument, createNote, deleteNote, createFeedback, getPublicCampaignBySlug, updatePublicMediaStatus, requestChangesPublicMedia, createPublicFeedback, } from "../controllers/ugc_campaign.controller.js";
 import { authGuard } from "../middlewares/auth.middleware.js";
 import { uploadCampaignFile } from "../middlewares/upload.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
-import { createUgcCampaignSchema, updateUgcCampaignSchema, createDeliverableSchema, createCampaignTaskSchema, updateCampaignTaskSchema, createNoteSchema, } from "../validations/ugc_campaign.validation.js";
+import { createUgcCampaignSchema, updateUgcCampaignSchema, createDeliverableSchema, updateDeliverableSchema, createCampaignTaskSchema, updateCampaignTaskSchema, createNoteSchema, } from "../validations/ugc_campaign.validation.js";
 const router = express.Router();
 // ── Public Guest Brand Routes (Auth not required) ────────────────────────────
 router.get("/public/:slug", getPublicCampaignBySlug);
@@ -15,11 +15,12 @@ import { requireCampaignLimit } from "../middlewares/subscription.middleware.js"
 router.use(authGuard);
 router.get("/", getUgcCampaigns);
 router.get("/:id", getUgcCampaignById);
-router.post("/", validate(createUgcCampaignSchema), requireCampaignLimit, createUgcCampaign);
+router.post("/", validate(createUgcCampaignSchema), createUgcCampaign);
 router.patch("/:id", validate(updateUgcCampaignSchema), updateUgcCampaign);
 router.delete("/:id", deleteUgcCampaign);
 // Deliverables
 router.post("/:campaignId/deliverables", validate(createDeliverableSchema), createDeliverable);
+router.patch("/:campaignId/deliverables/:id", validate(updateDeliverableSchema), updateDeliverable);
 router.delete("/:campaignId/deliverables/:id", deleteDeliverable);
 // Tasks
 router.post("/:campaignId/tasks", validate(createCampaignTaskSchema), createCampaignTask);

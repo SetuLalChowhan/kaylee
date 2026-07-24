@@ -22,6 +22,7 @@ const PricingPage = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoadingId, setCheckoutLoadingId] = useState(null);
+  const [billingTab, setBillingTab] = useState("monthly");
 
   const fallbackPlans = [
     {
@@ -30,6 +31,7 @@ const PricingPage = () => {
       description: "Explore the platform with basic features.",
       buttonText: "Start Free Trial",
       campaignLimit: 1,
+      billingCycle: "monthly",
       isRecommended: false,
       isDark: false,
       features: [
@@ -45,6 +47,7 @@ const PricingPage = () => {
       description: "Special introductory subscription rate for the first 200 users.",
       buttonText: "Join as Founding Member",
       campaignLimit: 999999,
+      billingCycle: "monthly",
       isRecommended: true,
       isDark: true,
       features: [
@@ -56,11 +59,13 @@ const PricingPage = () => {
       ]
     },
     {
-      title: "STANDARD",
-      price: 29.99,
-      description: "Regular plan for general creators to manage and scale their business.",
-      buttonText: "Get Standard Plan",
+      title: "FOUNDING MEMBER YEARLY",
+      price: 199.99,
+      description: "Annual introductory subscription rate for founding members.",
+      buttonText: "Join as Founding Member (Yearly)",
       campaignLimit: 999999,
+      billingCycle: "yearly",
+      priceSuffix: "/ yearly",
       isRecommended: false,
       isDark: false,
       features: [
@@ -136,6 +141,12 @@ const PricingPage = () => {
   };
 
   const displayPlans = plans.length > 0 ? plans : fallbackPlans;
+  const filteredDisplayPlans = displayPlans.filter((p) => {
+    const cycle = (p.billingCycle || "monthly").toLowerCase();
+    const isFree = p.price === 0 || p.slug === "free" || p.title.toUpperCase() === "FREE";
+    if (isFree) return true;
+    return cycle === billingTab;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50/50 pt-28 pb-20 px-4 sm:px-6 lg:px-8 font-urbanist relative overflow-hidden flex flex-col justify-between">
@@ -180,7 +191,7 @@ const PricingPage = () => {
       <div className="max-w-7xl mx-auto w-full flex-grow flex flex-col justify-center">
         
         {/* Intro */}
-        <div className="text-center max-w-3xl mx-auto mb-16 mt-8">
+        <div className="text-center max-w-3xl mx-auto mb-12 mt-8">
           <div className="inline-flex items-center gap-1.5 bg-Primary/10 text-Primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
             <Crown className="w-3.5 h-3.5" /> Subscription Plans
           </div>
@@ -190,6 +201,32 @@ const PricingPage = () => {
           <p className="text-gray-500 text-sm sm:text-base font-semibold max-w-xl mx-auto leading-relaxed">
             All prices are processed in AUD. Unlock powerful creator tools and streamline your brand partnerships today.
           </p>
+
+          {/* Billing Tab Switcher */}
+          <div className="flex items-center justify-center gap-2 mt-6 bg-slate-100 p-1.5 rounded-2xl w-fit mx-auto border border-slate-200/60 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setBillingTab("monthly")}
+              className={`px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                billingTab === "monthly"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              Monthly Billing
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingTab("yearly")}
+              className={`px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                billingTab === "yearly"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              Yearly Billing
+            </button>
+          </div>
         </div>
 
         {/* Pricing Cards Grid */}
@@ -197,9 +234,9 @@ const PricingPage = () => {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-10 h-10 text-Primary animate-spin" />
           </div>
-        ) : (
+        ) : filteredDisplayPlans.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto w-full px-2">
-            {displayPlans.map((plan, index) => {
+            {filteredDisplayPlans.map((plan, index) => {
               const isDark = plan.isDark;
               const isRecommended = plan.recommended || plan.isRecommended;
               const isFoundingMember = plan.title.toUpperCase() === "FOUNDING MEMBER";
@@ -279,6 +316,11 @@ const PricingPage = () => {
                 </div>
               );
             })}
+          </div>
+        ) : (
+          <div className="text-center py-12 max-w-md mx-auto p-8 rounded-3xl bg-white/70 backdrop-blur-xl border border-[#E6E6E6] flex flex-col items-center">
+            <h3 className="text-lg font-bold text-[#1A1A1A] mb-2">No plans available for {billingTab} billing</h3>
+            <p className="text-[#666] text-sm">Please check back later or switch tabs.</p>
           </div>
         )}
 

@@ -4,6 +4,7 @@ import { catchAsync } from "../utils/catchAsync.js";
 import { comparePassword, hashPassword } from "../utils/auth.util.js";
 import fs from "fs";
 import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
+import { logActivity } from "../utils/activity.util.js";
 /**
  * Helper to generate a unique lowercase URL slug from a display name
  */
@@ -152,6 +153,15 @@ export const updateProfile = catchAsync(async (req, res, next) => {
         message: "Profile updated successfully",
         data: updatedUser,
     });
+    logActivity({
+        userId,
+        title: "Profile updated",
+        sub: updatedUser.displayName || `${updatedUser.firstName} ${updatedUser.lastName}`,
+        avatarBg: "bg-teal-100",
+        avatarText: "PROF",
+        dotColor: "bg-teal-500",
+        type: "PROFILE",
+    });
 });
 export const completeOnboarding = catchAsync(async (req, res, next) => {
     const { userId } = req.user;
@@ -249,6 +259,15 @@ export const changePassword = catchAsync(async (req, res, next) => {
     await prisma.user.update({
         where: { id: userId },
         data: { password: hashedPassword },
+    });
+    logActivity({
+        userId,
+        title: "Password changed",
+        sub: "Security credentials updated",
+        avatarBg: "bg-purple-100",
+        avatarText: "PASS",
+        dotColor: "bg-purple-500",
+        type: "SECURITY",
     });
     res.status(200).json({
         status: "success",
@@ -367,6 +386,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
             title: c.brandName,
             sub: c.name,
             date,
+            rawDate: c.deadline,
             day: isNaN(date.getTime()) ? "" : date.getDate().toString().padStart(2, "0"),
             month: isNaN(date.getTime()) ? "" : date.toLocaleString("en-US", { month: "short" })
         };
@@ -374,7 +394,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         .filter((d) => d.day !== "")
         .sort((a, b) => a.date.getTime() - b.date.getTime())
         .slice(0, 5)
-        .map(({ id, title, sub, day, month }) => ({ id, title, sub, day, month }));
+        .map(({ id, title, sub, day, month, rawDate }) => ({ id, title, sub, day, month, rawDate }));
     // 4. Pending & Upcoming Tasks from Planner (up to 5)
     const tasks = await prisma.task.findMany({
         where: isAdmin ? {} : { userId },

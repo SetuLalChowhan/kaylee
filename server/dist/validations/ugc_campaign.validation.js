@@ -26,6 +26,12 @@ export const createDeliverableSchema = z.object({
         text: z.string().min(1, "Text is required").max(500),
     }),
 });
+export const updateDeliverableSchema = z.object({
+    body: z.object({
+        text: z.string().max(500).optional(),
+        progress: z.array(z.string()).optional(),
+    }),
+});
 export const createCampaignTaskSchema = z.object({
     body: z.object({
         name: z.string().min(1, "Task name is required").max(500),

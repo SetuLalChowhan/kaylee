@@ -68,6 +68,7 @@ const PlanModal = ({ isOpen, onClose }) => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoadingId, setCheckoutLoadingId] = useState(null);
+  const [billingTab, setBillingTab] = useState("monthly");
   const axiosSecure = useAxiosSecure();
 
   const fallbackPlans = [
@@ -76,6 +77,7 @@ const PlanModal = ({ isOpen, onClose }) => {
       price: "0",
       description: "Explore the platform with basic features.",
       buttonText: "Start Free Trial",
+      billingCycle: "monthly",
       features: [
         "1 active campaign limit",
         "Limited brand review links",
@@ -89,6 +91,7 @@ const PlanModal = ({ isOpen, onClose }) => {
       period: "monthly",
       description: "Special introductory subscription rate for the first 200 users.",
       buttonText: "Join as Founding Member",
+      billingCycle: "monthly",
       recommended: true,
       isDark: true,
       features: [
@@ -100,11 +103,14 @@ const PlanModal = ({ isOpen, onClose }) => {
       ]
     },
     {
-      title: "STANDARD",
-      price: "29.99",
-      period: "monthly",
-      description: "Regular plan for general creators to manage and scale their business.",
-      buttonText: "Get Standard Plan",
+      title: "FOUNDING MEMBER YEARLY",
+      price: "199.99",
+      period: "yearly",
+      description: "Annual introductory subscription rate for founding members.",
+      buttonText: "Join as Founding Member (Yearly)",
+      billingCycle: "yearly",
+      recommended: false,
+      isDark: false,
       features: [
         "Unlimited active campaigns",
         "Unlimited brand review links",
@@ -169,6 +175,12 @@ const PlanModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const displayPlans = plans.length > 0 ? plans : fallbackPlans;
+  const filteredDisplayPlans = displayPlans.filter((p) => {
+    const cycle = (p.billingCycle || "monthly").toLowerCase();
+    const isFree = Number(p.price) === 0 || p.slug === "free" || p.title.toUpperCase() === "FREE";
+    if (isFree) return true;
+    return cycle === billingTab;
+  });
 
   return (
     <AnimatePresence>
@@ -194,18 +206,47 @@ const PlanModal = ({ isOpen, onClose }) => {
             <X className="w-5 h-5 md:w-6 md:h-6" />
           </button>
 
-          <div className="mb-6 md:mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] font-outfit">Select Plan</h2>
-            <div className="w-full border-b border-dashed border-gray-100 mt-3 md:mt-6" />
+          <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] font-outfit">Select Plan</h2>
+              <p className="text-xs text-gray-400 font-medium mt-1">Choose a subscription tier to scale your workspace.</p>
+            </div>
+
+            {/* Billing Tab Switcher */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/60 shadow-inner shrink-0">
+              <button
+                type="button"
+                onClick={() => setBillingTab("monthly")}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  billingTab === "monthly"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingTab("yearly")}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  billingTab === "yearly"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
           </div>
+          <div className="w-full border-b border-dashed border-gray-100 mb-6 md:mb-8" />
 
           {loading ? (
             <div className="py-20 flex items-center justify-center">
               <Loader2 className="w-8 h-8 text-Primary animate-spin" />
             </div>
-          ) : (
+          ) : filteredDisplayPlans.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 font-outfit">
-              {displayPlans.map((plan, index) => (
+              {filteredDisplayPlans.map((plan, index) => (
                 <PlanCard 
                   key={plan.id || index}
                   {...plan}
@@ -213,6 +254,11 @@ const PlanModal = ({ isOpen, onClose }) => {
                   onSelect={() => handleCheckout(plan)}
                 />
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 max-w-md mx-auto p-8 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col items-center">
+              <h3 className="text-base font-bold text-[#1A1A1A] mb-1">No plans available for {billingTab} billing</h3>
+              <p className="text-gray-400 text-xs">Switch to {billingTab === "monthly" ? "yearly" : "monthly"} billing to view active plans.</p>
             </div>
           )}
         </motion.div>

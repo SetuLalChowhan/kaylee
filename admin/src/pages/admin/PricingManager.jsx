@@ -13,10 +13,13 @@ const PricingManager = () => {
 
   // Form states
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
   const [priceSuffix, setPriceSuffix] = useState("");
   const [selectedSuffixType, setSelectedSuffixType] = useState("/ monthly");
+  const [billingCycle, setBillingCycle] = useState("monthly");
+  const [isFounding, setIsFounding] = useState(false);
   const [featuresList, setFeaturesList] = useState([]);
   const [newFeatureText, setNewFeatureText] = useState("");
   const [editingFeatureIndex, setEditingFeatureIndex] = useState(null);
@@ -56,10 +59,13 @@ const PricingManager = () => {
   const openCreateModal = () => {
     setEditingPlan(null);
     setTitle("");
+    setSlug("");
     setDescription("");
     setPrice(0);
     setPriceSuffix("/ monthly");
     setSelectedSuffixType("/ monthly");
+    setBillingCycle("monthly");
+    setIsFounding(false);
     setFeaturesList([]);
     setNewFeatureText("");
     setEditingFeatureIndex(null);
@@ -75,9 +81,12 @@ const PricingManager = () => {
   const openEditModal = (plan) => {
     setEditingPlan(plan);
     setTitle(plan.title);
+    setSlug(plan.slug || "");
     setDescription(plan.description);
     setPrice(plan.price);
-    
+    setBillingCycle(plan.billingCycle || "monthly");
+    setIsFounding(!!plan.isFounding);
+
     const suffix = plan.priceSuffix || "";
     setPriceSuffix(suffix);
     if (suffix === "/ monthly" || suffix === "/ yearly" || suffix === "") {
@@ -89,8 +98,8 @@ const PricingManager = () => {
     const parsedFeatures = Array.isArray(plan.features)
       ? plan.features
       : typeof plan.features === "string"
-      ? JSON.parse(plan.features)
-      : [];
+        ? JSON.parse(plan.features)
+        : [];
     setFeaturesList(parsedFeatures);
     setNewFeatureText("");
     setEditingFeatureIndex(null);
@@ -153,11 +162,16 @@ const PricingManager = () => {
     e.preventDefault();
     setSaving(true);
 
+    const derivedSlug = slug.trim() || title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
     const payload = {
       title,
+      slug: derivedSlug,
       description,
       price: Number(price),
       priceSuffix,
+      billingCycle,
+      isFounding,
       features: featuresList.map((f) => f.trim()).filter((f) => f.length > 0),
       buttonText,
       isRecommended,
@@ -223,6 +237,7 @@ const PricingManager = () => {
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
                   <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Plan Title</th>
+                  <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Cycle</th>
                   <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Price</th>
                   <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Limit</th>
                   <th className="py-3 px-4 md:py-4 md:px-6 text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Stripe Price ID</th>
@@ -235,16 +250,30 @@ const PricingManager = () => {
                   const planFeatures = Array.isArray(p.features)
                     ? p.features
                     : typeof p.features === "string"
-                    ? JSON.parse(p.features)
-                    : [];
+                      ? JSON.parse(p.features)
+                      : [];
 
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/30 transition-colors">
                       <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
                         <div>
-                          <p className="font-bold text-slate-800 text-xs md:text-sm">{p.title}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-bold text-slate-800 text-xs md:text-sm">{p.title}</p>
+                            {p.isFounding && (
+                              <span className="bg-amber-100 text-amber-800 text-[8px] md:text-[9px] font-extrabold px-1.5 py-0.5 rounded-md uppercase">
+                                Founding
+                              </span>
+                            )}
+                          </div>
                           <p className="text-slate-400 text-[10px] md:text-xs mt-0.5 line-clamp-1">{p.description}</p>
+                          <p className="text-slate-350 text-[9px] font-mono mt-0.5">slug: {p.slug}</p>
                         </div>
+                      </td>
+                      <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase ${p.billingCycle === "yearly" ? "bg-indigo-100 text-indigo-700" : "bg-blue-100 text-blue-700"
+                          }`}>
+                          {p.billingCycle || "monthly"}
+                        </span>
                       </td>
                       <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-bold text-slate-700">
                         ${p.price} <span className="text-[9px] md:text-[10px] text-slate-400 font-medium">{p.priceSuffix}</span>
@@ -253,7 +282,7 @@ const PricingManager = () => {
                         {p.campaignLimit === 999999 ? "Unlimited" : `${p.campaignLimit} campaigns`}
                       </td>
                       <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm font-mono text-[11px] md:text-xs text-slate-500">
-                        {p.stripePriceId || <span className="text-slate-350 italic">None (Free Upgrade)</span>}
+                        {p.stripePriceId || <span className="text-slate-350 italic">None (Direct Free Upgrade)</span>}
                       </td>
                       <td className="py-2.5 px-3 md:py-4 md:px-6 text-xs md:text-sm text-center">
                         <div className="flex items-center justify-center gap-1 md:gap-2">
@@ -324,26 +353,61 @@ const PricingManager = () => {
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. PRO"
+                    placeholder="e.g. Founding Member"
                     className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Price ($)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Slug (URL identifier)</label>
                   <input
-                    type="number"
-                    required
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="e.g. 24"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold"
+                    type="text"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    placeholder="e.g. founding-monthly (auto if empty)"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-mono text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Billing Interval</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Price ($)</label>
+                  <input
+                    type="number"
+                    required
+                    step="0.01"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="e.g. 19.99"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Billing Cycle</label>
+                  <select
+                    value={billingCycle}
+                    onChange={(e) => {
+                      const cycle = e.target.value;
+                      setBillingCycle(cycle);
+                      if (cycle === "yearly") {
+                        setSelectedSuffixType("/ yearly");
+                        setPriceSuffix("/ yearly");
+                      } else if (cycle === "monthly") {
+                        setSelectedSuffixType("/ monthly");
+                        setPriceSuffix("/ monthly");
+                      }
+                    }}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold cursor-pointer"
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Price Suffix Display</label>
                   <select
                     value={selectedSuffixType}
                     onChange={(e) => {
@@ -355,9 +419,9 @@ const PricingManager = () => {
                     }}
                     className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:border-Primary focus:outline-none transition-all text-sm font-semibold cursor-pointer"
                   >
-                    <option value="/ monthly">Monthly billing</option>
-                    <option value="/ yearly">Yearly billing</option>
-                    <option value="">Free / One-time</option>
+                    <option value="/ monthly">/ monthly</option>
+                    <option value="/ yearly">/ yearly</option>
+                    <option value="">No Suffix (Free)</option>
                     <option value="custom">Custom Suffix...</option>
                   </select>
                 </div>
@@ -413,7 +477,7 @@ const PricingManager = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                   Plan Features
                 </label>
-                
+
                 <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 mb-3 custom-scrollbar border border-slate-100 rounded-xl p-3 bg-slate-50/50">
                   {featuresList.length === 0 ? (
                     <p className="text-slate-400 text-xs italic py-2 text-center">No features added yet. Add some below.</p>
@@ -535,6 +599,15 @@ const PricingManager = () => {
                   />
                 </div>
                 <div className="flex flex-col justify-center gap-3.5 pl-2 mt-4">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-wider select-none cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isFounding}
+                      onChange={(e) => setIsFounding(e.target.checked)}
+                      className="rounded border-amber-400 text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                    />
+                    Founding Member Plan
+                  </label>
                   <label className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-wider select-none cursor-pointer">
                     <input
                       type="checkbox"

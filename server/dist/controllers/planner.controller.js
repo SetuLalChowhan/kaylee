@@ -1,6 +1,7 @@
 import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
+import { logActivity } from "../utils/activity.util.js";
 /**
  * GET /api/planner — Retrieve user's planner tasks
  */
@@ -45,6 +46,15 @@ export const createTask = catchAsync(async (req, res, next) => {
             completed: completed ?? false,
         },
     });
+    logActivity({
+        userId: (role === "admin" && targetUserId) ? targetUserId : userId,
+        title: "New task added",
+        sub: name,
+        avatarBg: "bg-amber-100",
+        avatarText: "TASK",
+        dotColor: "bg-amber-500",
+        type: "TASK",
+    });
     res.status(201).json({
         status: "success",
         message: "Task created successfully",
@@ -88,6 +98,17 @@ export const updateTask = catchAsync(async (req, res, next) => {
             ...(completed !== undefined && { completed }),
         },
     });
+    if (completed === true && existingTask.completed !== true) {
+        logActivity({
+            userId: existingTask.userId,
+            title: "Task completed",
+            sub: updatedTask.name,
+            avatarBg: "bg-emerald-100",
+            avatarText: "TASK",
+            dotColor: "bg-emerald-500",
+            type: "TASK",
+        });
+    }
     // Sync updates back to the UgcCampaignTask and parent UgcCampaign if linked
     const campaignTasks = await prisma.ugcCampaignTask.findMany({
         where: { plannerTaskId: id },
@@ -130,6 +151,15 @@ export const deleteTask = catchAsync(async (req, res, next) => {
     }
     await prisma.task.delete({
         where: { id },
+    });
+    logActivity({
+        userId: existingTask.userId,
+        title: "Task deleted",
+        sub: existingTask.name,
+        avatarBg: "bg-red-100",
+        avatarText: "TASK",
+        dotColor: "bg-red-500",
+        type: "TASK",
     });
     res.status(200).json({
         status: "success",

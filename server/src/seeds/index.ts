@@ -10,7 +10,7 @@ export async function runSeeds() {
     await seedFaqs();
     await seedAdmin();
     await seedCms();
-    await seedPlans();
+    // Default plan seeder disabled as requested by user
   } catch (err) {
     console.error("Error executing database seeders:", err);
   }

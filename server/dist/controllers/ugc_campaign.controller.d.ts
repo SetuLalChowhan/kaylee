@@ -20,6 +20,7 @@ export declare const deleteUgcCampaign: (req: Request, res: Response, next: Next
  * Deliverables Operations
  */
 export declare const createDeliverable: (req: Request, res: Response, next: NextFunction) => void;
+export declare const updateDeliverable: (req: Request, res: Response, next: NextFunction) => void;
 export declare const deleteDeliverable: (req: Request, res: Response, next: NextFunction) => void;
 /**
  * Tasks Operations

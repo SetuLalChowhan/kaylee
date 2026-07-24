@@ -2,6 +2,7 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { StripeService } from "./stripe.service.js";
 import { PlanService } from "./plan.service.js";
+import { logActivity } from "../utils/activity.util.js";
 export class SubscriptionService {
     static async getUserSubscription(userId) {
         const sub = await prisma.subscription.findUnique({
@@ -32,8 +33,8 @@ export class SubscriptionService {
         const plan = await PlanService.getPlanById(planId);
         if (!plan.isActive)
             throw new AppError("Selected plan is not currently active", 400);
-        // 1. Free plan logic: upgrade instantly
-        if (plan.price === 0 || !plan.stripePriceId || plan.slug === "free") {
+        // 1. Free plan with no Stripe Price ID: upgrade instantly
+        if (!plan.stripePriceId && (plan.price === 0 || plan.slug === "free")) {
             await prisma.$transaction([
                 prisma.user.update({
                     where: { id: userId },
@@ -63,8 +64,11 @@ export class SubscriptionService {
                 url: `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard/settings?tab=Subscription`,
             };
         }
+        if (!plan.stripePriceId) {
+            throw new AppError("Selected plan does not have a Stripe Price ID configured.", 400);
+        }
         // 2. Founding Member plan logic: validate limits & historical cancellations
-        if (plan.slug === "founding") {
+        if (plan.isFounding || plan.slug.includes("founding")) {
             const claimedCount = await PlanService.getFoundingClaimedCount();
             if (claimedCount >= 200) {
                 throw new AppError("Founding Member plan has been sold out.", 400);
@@ -74,11 +78,11 @@ export class SubscriptionService {
                 where: {
                     userId,
                     status: "completed",
-                    plan: { slug: "founding" },
+                    plan: { isFounding: true },
                 },
             });
             if (priorFoundingPurchase) {
-                throw new AppError("You are not eligible for Founding Member pricing because you have previously cancelled or had a Founding Member subscription. Please subscribe to the Standard plan.", 400);
+                throw new AppError("You are not eligible for Founding Member pricing because you have previously cancelled or had a Founding Member subscription.", 400);
             }
         }
         // 3. Create Stripe Checkout Session
@@ -173,6 +177,15 @@ export class SubscriptionService {
                 cancelAtPeriodEnd: true,
                 cancelledAt: new Date(),
             },
+        });
+        logActivity({
+            userId,
+            title: "Subscription cancelled",
+            sub: "Cancellation scheduled for period end",
+            avatarBg: "bg-red-100",
+            avatarText: "SUB",
+            dotColor: "bg-red-500",
+            type: "SUBSCRIPTION",
         });
         return { message: "Your subscription cancellation has been scheduled successfully." };
     }
@@ -292,6 +305,16 @@ export class SubscriptionService {
                     stripeCustomerId: details.stripeCustomerId,
                     stripeSubscriptionId: details.stripeSubscriptionId,
                 },
+            });
+            // 6. Log activity for subscription upgrade
+            logActivity({
+                userId: details.userId,
+                title: `Subscription upgraded → ${plan.title || plan.slug}`,
+                sub: `$${details.amount} ${details.currency.toUpperCase()}`,
+                avatarBg: "bg-purple-100",
+                avatarText: "SUB",
+                dotColor: "bg-purple-500",
+                type: "SUBSCRIPTION",
             });
             // 5. Founding tracker increment if first time purchase
             if (plan.slug === "founding") {

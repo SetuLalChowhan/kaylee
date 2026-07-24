@@ -1,6 +1,7 @@
 import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
+import { logActivity } from "../utils/activity.util.js";
 /**
  * POST /api/invoice — Create a new invoice
  */
@@ -30,6 +31,15 @@ export const createInvoice = catchAsync(async (req, res, next) => {
             amount,
             status: status || "Pending",
         },
+    });
+    logActivity({
+        userId: invoice.userId,
+        title: `Invoice #${invoiceNo} created`,
+        sub: campaign ? `${campaign} ($${amount})` : `$${amount}`,
+        avatarBg: "bg-blue-100",
+        avatarText: "INV",
+        dotColor: "bg-blue-500",
+        type: "INVOICE",
     });
     // Sync UgcCampaign amount and payment status with invoice
     if (campaign) {
@@ -191,6 +201,32 @@ export const updateInvoice = catchAsync(async (req, res, next) => {
         message: "Invoice updated successfully",
         data: updatedInvoice,
     });
+    // Log activity for invoice status change or update
+    if (status !== undefined && status !== existingInvoice.status) {
+        const isPayment = status === "Paid";
+        logActivity({
+            userId,
+            title: isPayment
+                ? `Invoice ${updatedInvoice.invoiceNo} marked Paid`
+                : `Invoice ${updatedInvoice.invoiceNo} → ${status}`,
+            sub: updatedInvoice.campaignName || updatedInvoice.invoiceNo,
+            avatarBg: isPayment ? "bg-emerald-100" : "bg-orange-100",
+            avatarText: "INV",
+            dotColor: isPayment ? "bg-emerald-500" : "bg-orange-500",
+            type: "PAYMENT",
+        });
+    }
+    else if (amount !== undefined || campaign !== undefined) {
+        logActivity({
+            userId,
+            title: `Invoice ${updatedInvoice.invoiceNo} updated`,
+            sub: updatedInvoice.campaignName || updatedInvoice.invoiceNo,
+            avatarBg: "bg-blue-100",
+            avatarText: "INV",
+            dotColor: "bg-blue-500",
+            type: "PAYMENT",
+        });
+    }
 });
 /**
  * DELETE /api/invoice/:id — Delete an invoice
@@ -207,6 +243,15 @@ export const deleteInvoice = catchAsync(async (req, res, next) => {
     }
     await prisma.invoice.delete({
         where: { id },
+    });
+    logActivity({
+        userId: existingInvoice.userId,
+        title: `Invoice ${existingInvoice.invoiceNo} deleted`,
+        sub: existingInvoice.campaignName || existingInvoice.invoiceNo,
+        avatarBg: "bg-red-100",
+        avatarText: "INV",
+        dotColor: "bg-red-500",
+        type: "PAYMENT",
     });
     res.status(200).json({
         status: "success",

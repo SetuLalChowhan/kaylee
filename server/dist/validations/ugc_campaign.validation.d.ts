@@ -26,6 +26,12 @@ export declare const createDeliverableSchema: z.ZodObject<{
         text: z.ZodString;
     }, z.core.$strip>;
 }, z.core.$strip>;
+export declare const updateDeliverableSchema: z.ZodObject<{
+    body: z.ZodObject<{
+        text: z.ZodOptional<z.ZodString>;
+        progress: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    }, z.core.$strip>;
+}, z.core.$strip>;
 export declare const createCampaignTaskSchema: z.ZodObject<{
     body: z.ZodObject<{
         name: z.ZodString;

@@ -63,10 +63,14 @@ export class PlanService {
         return plan;
     }
     static async createPlan(data) {
+        const slug = (data.slug && data.slug.trim().length > 0)
+            ? data.slug.trim()
+            : data.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        const isFounding = data.isFounding !== undefined ? !!data.isFounding : slug.includes("founding");
         return await prisma.plan.create({
             data: {
                 title: data.title,
-                slug: data.slug,
+                slug,
                 description: data.description || "",
                 price: Number(data.price),
                 priceSuffix: data.priceSuffix || "",
@@ -77,18 +81,22 @@ export class PlanService {
                 stripePriceId: data.stripePriceId || null,
                 campaignLimit: data.campaignLimit !== undefined ? Number(data.campaignLimit) : 2,
                 billingCycle: data.billingCycle || "monthly",
-                isFounding: !!data.isFounding,
+                isFounding,
                 isActive: data.isActive !== undefined ? !!data.isActive : true,
             },
         });
     }
     static async updatePlan(id, data) {
         const existing = await this.getPlanById(id);
+        const slug = (data.slug && data.slug.trim().length > 0)
+            ? data.slug.trim()
+            : existing.slug;
+        const isFounding = data.isFounding !== undefined ? !!data.isFounding : (slug ? slug.includes("founding") : existing.isFounding);
         return await prisma.plan.update({
             where: { id },
             data: {
                 title: data.title ?? existing.title,
-                slug: data.slug ?? existing.slug,
+                slug,
                 description: data.description ?? existing.description,
                 price: data.price !== undefined ? Number(data.price) : existing.price,
                 priceSuffix: data.priceSuffix ?? existing.priceSuffix,
@@ -96,10 +104,10 @@ export class PlanService {
                 buttonText: data.buttonText ?? existing.buttonText,
                 isRecommended: data.isRecommended !== undefined ? !!data.isRecommended : existing.isRecommended,
                 isDark: data.isDark !== undefined ? !!data.isDark : existing.isDark,
-                stripePriceId: data.stripePriceId !== undefined ? data.stripePriceId : existing.stripePriceId,
+                stripePriceId: data.stripePriceId !== undefined ? (data.stripePriceId || null) : existing.stripePriceId,
                 campaignLimit: data.campaignLimit !== undefined ? Number(data.campaignLimit) : existing.campaignLimit,
                 billingCycle: data.billingCycle ?? existing.billingCycle,
-                isFounding: data.isFounding !== undefined ? !!data.isFounding : existing.isFounding,
+                isFounding,
                 isActive: data.isActive !== undefined ? !!data.isActive : existing.isActive,
             },
         });

@@ -19,8 +19,8 @@ export const getPlans = catchAsync(async (req: Request, res: Response, next: Nex
  */
 export const createPlan = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const data = req.body;
-  if (!data.title || data.price === undefined || !data.slug) {
-    return next(new AppError("Title, Slug, and Price are required", 400));
+  if (!data.title || data.price === undefined) {
+    return next(new AppError("Title and Price are required", 400));
   }
 
   const plan = await PlanService.createPlan(data);

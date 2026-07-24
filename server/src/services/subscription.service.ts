@@ -37,8 +37,8 @@ export class SubscriptionService {
     const plan = await PlanService.getPlanById(planId);
     if (!plan.isActive) throw new AppError("Selected plan is not currently active", 400);
 
-    // 1. Free plan logic: upgrade instantly
-    if (plan.price === 0 || !plan.stripePriceId || plan.slug === "free") {
+    // 1. Free plan with no Stripe Price ID: upgrade instantly
+    if (!plan.stripePriceId && (plan.price === 0 || plan.slug === "free")) {
       await prisma.$transaction([
         prisma.user.update({
           where: { id: userId },
@@ -70,8 +70,12 @@ export class SubscriptionService {
       };
     }
 
+    if (!plan.stripePriceId) {
+      throw new AppError("Selected plan does not have a Stripe Price ID configured.", 400);
+    }
+
     // 2. Founding Member plan logic: validate limits & historical cancellations
-    if (plan.slug === "founding") {
+    if (plan.isFounding || plan.slug.includes("founding")) {
       const claimedCount = await PlanService.getFoundingClaimedCount();
       if (claimedCount >= 200) {
         throw new AppError("Founding Member plan has been sold out.", 400);
@@ -82,13 +86,13 @@ export class SubscriptionService {
         where: {
           userId,
           status: "completed",
-          plan: { slug: "founding" },
+          plan: { isFounding: true },
         },
       });
 
       if (priorFoundingPurchase) {
         throw new AppError(
-          "You are not eligible for Founding Member pricing because you have previously cancelled or had a Founding Member subscription. Please subscribe to the Standard plan.",
+          "You are not eligible for Founding Member pricing because you have previously cancelled or had a Founding Member subscription.",
           400
         );
       }
