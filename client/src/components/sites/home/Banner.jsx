@@ -36,7 +36,7 @@ const Banner = ({ cms }) => {
                         transition={{ duration: 0.6 }}
                         className="flex items-center gap-3 bg-white border border-gray-100 rounded-full py-2 px-4 shadow-sm mb-6 lg:mb-10"
                     >
-                        <img src={UsersImage} alt="Creators" className="h-5 lg:h-6 w-auto" />
+                        <img src={UsersImage} alt="Creators" className="h-5 lg:h-6 w-auto flex-shrink-0 object-contain" />
                         <span className="text-[#1A1A1A] font-semibold text-xs lg:text-base">
                             +5,000 <span className="font-medium text-gray-500">Creators using STAKD</span>
                         </span>
