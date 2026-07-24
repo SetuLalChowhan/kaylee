@@ -12,6 +12,13 @@ export const globalErrorHandler = (err, req, res, next) => {
         error = { ...operationalErr };
         error.message = operationalErr.message;
     }
+    // Handle Prisma unique constraint error (P2002)
+    if (err.code === "P2002") {
+        const fields = err.meta?.target ? (Array.isArray(err.meta.target) ? err.meta.target.join(", ") : err.meta.target) : "field";
+        const operationalErr = new AppError(`A record with this unique ${fields} already exists. Please choose a different title or slug.`, 400);
+        error = { ...operationalErr };
+        error.message = operationalErr.message;
+    }
     error.statusCode = error.statusCode || 500;
     error.status = error.status || "error";
     // 🔹 DEVELOPMENT MODE

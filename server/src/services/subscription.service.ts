@@ -31,11 +31,34 @@ export class SubscriptionService {
   }
 
   static async createCheckoutSession(userId: string, planId: string) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { plan: true }
+    });
     if (!user) throw new AppError("User not found", 404);
 
     const plan = await PlanService.getPlanById(planId);
     if (!plan.isActive) throw new AppError("Selected plan is not currently active", 400);
+
+    // Prevent re-purchasing the exact plan user is already subscribed to
+    if (user.planId === plan.id) {
+      throw new AppError("You are already subscribed to this plan.", 400);
+    }
+
+    const isCurrentPlanFounding = !!(user.plan?.isFounding || user.plan?.slug.toLowerCase().includes("founding") || user.plan?.slug.toLowerCase().includes("fonding"));
+    const isTargetPlanFounding = !!(plan.isFounding || plan.slug.toLowerCase().includes("founding") || plan.slug.toLowerCase().includes("fonding"));
+
+    // RULE: Active Founding Member users CANNOT purchase Founding Member again
+    if (isTargetPlanFounding) {
+      if (isCurrentPlanFounding) {
+        throw new AppError("You are already an active Founding Member.", 400);
+      }
+
+      const claimedCount = await PlanService.getFoundingClaimedCount();
+      if (claimedCount >= 200) {
+        throw new AppError("Founding Member plan is currently sold out.", 400);
+      }
+    }
 
     // 1. Free plan with no Stripe Price ID: upgrade instantly
     if (!plan.stripePriceId && (plan.price === 0 || plan.slug === "free")) {
@@ -72,30 +95,6 @@ export class SubscriptionService {
 
     if (!plan.stripePriceId) {
       throw new AppError("Selected plan does not have a Stripe Price ID configured.", 400);
-    }
-
-    // 2. Founding Member plan logic: validate limits & historical cancellations
-    if (plan.isFounding || plan.slug.includes("founding")) {
-      const claimedCount = await PlanService.getFoundingClaimedCount();
-      if (claimedCount >= 200) {
-        throw new AppError("Founding Member plan has been sold out.", 400);
-      }
-
-      // Check if they ever cancelled or had a founding subscription in completed purchases
-      const priorFoundingPurchase = await prisma.purchase.findFirst({
-        where: {
-          userId,
-          status: "completed",
-          plan: { isFounding: true },
-        },
-      });
-
-      if (priorFoundingPurchase) {
-        throw new AppError(
-          "You are not eligible for Founding Member pricing because you have previously cancelled or had a Founding Member subscription.",
-          400
-        );
-      }
     }
 
     // 3. Create Stripe Checkout Session
@@ -255,6 +254,13 @@ export class SubscriptionService {
     const freePlanId = freePlan ? freePlan.id : null;
 
     return await prisma.$transaction(async (tx) => {
+      const currentUser = await tx.user.findUnique({
+        where: { id: userId },
+        include: { plan: true },
+      });
+
+      const isFoundingUser = currentUser?.plan?.isFounding || currentUser?.plan?.slug.includes("founding");
+
       await tx.user.update({
         where: { id: userId },
         data: {
@@ -282,6 +288,16 @@ export class SubscriptionService {
           currentPeriodEnd: null,
         },
       });
+
+      if (isFoundingUser) {
+        const tracker = await tx.foundingTracker.findFirst();
+        if (tracker && tracker.totalClaimed > 0) {
+          await tx.foundingTracker.update({
+            where: { id: tracker.id },
+            data: { totalClaimed: { decrement: 1 } },
+          });
+        }
+      }
     });
   }
 
@@ -368,13 +384,18 @@ export class SubscriptionService {
         type: "SUBSCRIPTION",
       });
 
-      // 5. Founding tracker increment if first time purchase
-      if (plan.slug === "founding") {
+      // 5. Founding tracker increment if first time purchase of any founding plan (monthly or yearly)
+      if (plan.isFounding || plan.slug.includes("founding")) {
         const priorCount = await tx.purchase.count({
           where: {
             userId: details.userId,
-            planId: details.planId,
             status: "completed",
+            plan: {
+              OR: [
+                { isFounding: true },
+                { slug: { contains: "founding" } }
+              ]
+            },
             stripeSessionId: { not: details.stripeSessionId },
           },
         });

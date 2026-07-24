@@ -1,6 +1,9 @@
 export declare class PlanService {
+    static getFoundingClaimedCount(): Promise<number>;
     static getPublicPlans(): Promise<{
         usersCount: number;
+        totalFoundingClaimed: number;
+        foundingSlotsRemaining: number;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -21,6 +24,8 @@ export declare class PlanService {
     }[]>;
     static getAdminPlans(): Promise<{
         usersCount: number;
+        totalFoundingClaimed: number;
+        foundingSlotsRemaining: number;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -39,7 +44,6 @@ export declare class PlanService {
         isFounding: boolean;
         isActive: boolean;
     }[]>;
-    static getFoundingClaimedCount(): Promise<number>;
     static getPlanBySlug(slug: string): Promise<{
         id: string;
         createdAt: Date;

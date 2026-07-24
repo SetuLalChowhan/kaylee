@@ -129,9 +129,9 @@ const PricingPage = () => {
     } catch (err) {
       console.error("Checkout session creation failed:", err);
       Swal.fire({
-        title: "Checkout Failed",
+        title: "Subscription Notice",
         text: err.response?.data?.message || "Failed to initiate payment session. Please try again.",
-        icon: "error",
+        icon: "info",
         confirmButtonText: "OK",
         confirmButtonColor: "#005BD6"
       });

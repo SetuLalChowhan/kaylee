@@ -5,6 +5,7 @@ import { comparePassword, hashPassword } from "../utils/auth.util.js";
 import fs from "fs";
 import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
 import { logActivity } from "../utils/activity.util.js";
+import { PlanService } from "../services/plan.service.js";
 /**
  * Helper to generate a unique lowercase URL slug from a display name
  */
@@ -552,8 +553,26 @@ export const adminCreateUser = catchAsync(async (req, res, next) => {
             role: role || "user",
             isVerified: true,
             ...(planId && { planId })
+        },
+        include: {
+            plan: true
         }
     });
+    if (planId) {
+        await prisma.subscription.upsert({
+            where: { userId: newUser.id },
+            create: {
+                userId: newUser.id,
+                planId,
+                status: "ACTIVE"
+            },
+            update: {
+                planId,
+                status: "ACTIVE"
+            }
+        });
+        await PlanService.getFoundingClaimedCount();
+    }
     res.status(201).json({
         status: "success",
         message: "User created successfully",
@@ -577,9 +596,27 @@ export const adminUpdateUser = catchAsync(async (req, res, next) => {
             ...(displayName !== undefined && { displayName }),
             ...(role !== undefined && { role }),
             ...(isVerified !== undefined && { isVerified }),
-            ...(planId !== undefined && { planId })
+            ...(planId !== undefined && { planId: planId || null })
+        },
+        include: {
+            plan: true
         }
     });
+    if (planId !== undefined) {
+        await prisma.subscription.upsert({
+            where: { userId: id },
+            create: {
+                userId: id,
+                planId: planId || null,
+                status: "ACTIVE"
+            },
+            update: {
+                planId: planId || null,
+                status: "ACTIVE"
+            }
+        });
+        await PlanService.getFoundingClaimedCount();
+    }
     res.status(200).json({
         status: "success",
         message: "User updated successfully",

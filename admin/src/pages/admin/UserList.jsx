@@ -225,7 +225,7 @@ const UserList = () => {
     setPassword("");
     setRole(user.role || "user");
     setIsVerified(user.isVerified ?? true);
-    setPlanId(user.planId || "");
+    setPlanId(user.planId || user.plan?.id || "");
     setIsOpen(true);
   };
 
@@ -519,9 +519,9 @@ const UserList = () => {
                 <select
                   value={planId}
                   onChange={(e) => setPlanId(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all cursor-pointer"
                 >
-
+                  <option value="">Free Plan / Starter (Default)</option>
                   {plans.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.title} (${p.price} AUD {p.priceSuffix})

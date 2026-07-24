@@ -6,6 +6,7 @@ import { comparePassword, hashPassword } from "../utils/auth.util.js";
 import fs from "fs";
 import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
 import { logActivity } from "../utils/activity.util.js";
+import { PlanService } from "../services/plan.service.js";
 
 // Typed request with authenticated user payload
 interface AuthRequest extends Request {
@@ -20,7 +21,7 @@ async function generateUniqueSlug(displayName: string, userId: string): Promise<
     .toLowerCase()
     .replace(/[^a-z0-9-]+/g, "-")
     .replace(/(^-|-$)/g, "");
-  
+
   let finalSlug = baseSlug || "user";
   let isUnique = false;
   let count = 0;
@@ -615,8 +616,8 @@ export const adminGetAllUsers = catchAsync(async (req: Request, res: Response, n
   });
 
   res.status(200).json({
-     status: "success",
-     data: users
+    status: "success",
+    data: users
   });
 });
 
@@ -648,8 +649,28 @@ export const adminCreateUser = catchAsync(async (req: Request, res: Response, ne
       role: role || "user",
       isVerified: true,
       ...(planId && { planId })
+    },
+    include: {
+      plan: true
     }
   });
+
+  if (planId) {
+    await prisma.subscription.upsert({
+      where: { userId: newUser.id },
+      create: {
+        userId: newUser.id,
+        planId,
+        status: "ACTIVE"
+      },
+      update: {
+        planId,
+        status: "ACTIVE"
+      }
+    });
+
+    await PlanService.getFoundingClaimedCount();
+  }
 
   res.status(201).json({
     status: "success",
@@ -683,9 +704,29 @@ export const adminUpdateUser = catchAsync(async (req: Request, res: Response, ne
       ...(displayName !== undefined && { displayName }),
       ...(role !== undefined && { role }),
       ...(isVerified !== undefined && { isVerified }),
-      ...(planId !== undefined && { planId })
+      ...(planId !== undefined && { planId: planId || null })
+    },
+    include: {
+      plan: true
     }
   });
+
+  if (planId !== undefined) {
+    await prisma.subscription.upsert({
+      where: { userId: id },
+      create: {
+        userId: id,
+        planId: planId || null,
+        status: "ACTIVE"
+      },
+      update: {
+        planId: planId || null,
+        status: "ACTIVE"
+      }
+    });
+
+    await PlanService.getFoundingClaimedCount();
+  }
 
   res.status(200).json({
     status: "success",
@@ -800,4 +841,4 @@ export const adminDeleteUser = catchAsync(async (req: Request, res: Response, ne
     message: "User deleted successfully"
   });
 });
-
+

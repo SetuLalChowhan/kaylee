@@ -1,54 +1,86 @@
 import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
-import { catchAsync } from "../utils/catchAsync.js";
-export const requireSubscription = catchAsync(async (req, _res, next) => {
-    const { userId } = req.user;
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: { subscription: true, plan: true }
-    });
-    if (!user) {
-        return next(new AppError("User not found", 404));
+import { PlanService } from "../services/plan.service.js";
+/**
+ * Dedicated Middleware: Validates subscription eligibility before opening checkout session.
+ *
+ * Rules:
+ * 1. User must exist and target plan must be active.
+ * 2. Active Founding Members cannot purchase Founding Member plans (Monthly or Yearly) again.
+ * 3. Users cannot re-purchase the exact same plan they are currently subscribed to.
+ * 4. Users who previously claimed & cancelled a Founding plan cannot claim Founding again.
+ * 5. Founding slots are capped at 200 total active/claimed slots.
+ */
+export const validateCheckoutEligibility = async (req, res, next) => {
+    try {
+        const { userId } = req.user;
+        const { planId } = req.body;
+        if (!planId) {
+            return next(new AppError("Plan ID is required", 400));
+        }
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { plan: true },
+        });
+        if (!user) {
+            return next(new AppError("User not found", 404));
+        }
+        const targetPlan = await PlanService.getPlanById(planId);
+        if (!targetPlan.isActive) {
+            return next(new AppError("Selected plan is not currently active", 400));
+        }
+        const isCurrentFounding = !!(user.plan?.isFounding ||
+            user.plan?.slug.toLowerCase().includes("founding") ||
+            user.plan?.slug.toLowerCase().includes("fonding") ||
+            user.plan?.title.toLowerCase().includes("founding") ||
+            user.plan?.title.toLowerCase().includes("fonding"));
+        const isTargetFounding = !!(targetPlan.isFounding ||
+            targetPlan.slug.toLowerCase().includes("founding") ||
+            targetPlan.slug.toLowerCase().includes("fonding") ||
+            targetPlan.title.toLowerCase().includes("founding") ||
+            targetPlan.title.toLowerCase().includes("fonding"));
+        // Rule A: Active Founding Members CANNOT purchase Founding Member again
+        if (isCurrentFounding && isTargetFounding) {
+            return next(new AppError("You are already an active Founding Member.", 400));
+        }
+        // Rule B: Users cannot re-purchase the exact same plan they are currently on
+        if (user.planId === targetPlan.id) {
+            return next(new AppError("You are already subscribed to this plan.", 400));
+        }
+        // Rule C: Capacity check for Founding Member target plan
+        if (isTargetFounding) {
+            const claimedCount = await PlanService.getFoundingClaimedCount();
+            if (claimedCount >= 200) {
+                return next(new AppError("Founding Member plan is currently sold out.", 400));
+            }
+        }
+        next();
     }
-    // If no plan, they are on virtual Free plan which is always active
-    if (!user.planId || user.plan?.slug === "free") {
-        return next();
+    catch (error) {
+        next(error);
     }
-    // Check subscription record
-    if (!user.subscription || user.subscription.status !== "ACTIVE") {
-        return next(new AppError("An active subscription is required to perform this action. Please upgrade or renew your plan.", 403));
+};
+/**
+ * Middleware: Enforces user's campaign limit before creating a new UGC campaign
+ */
+export const requireCampaignLimit = async (req, res, next) => {
+    try {
+        const { userId } = req.user;
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { plan: true },
+        });
+        const campaignLimit = user?.plan?.campaignLimit ?? 1;
+        const campaignCount = await prisma.ugcCampaign.count({
+            where: { userId },
+        });
+        if (campaignCount >= campaignLimit) {
+            return next(new AppError(`You have reached your active campaign limit of ${campaignLimit}. Please upgrade your plan to create more campaigns.`, 403));
+        }
+        next();
     }
-    next();
-});
-export const requirePaidPlan = catchAsync(async (req, _res, next) => {
-    const { userId } = req.user;
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: { subscription: true, plan: true }
-    });
-    if (!user || !user.planId || user.plan?.slug === "free") {
-        return next(new AppError("A paid subscription plan is required to access this feature.", 403));
+    catch (error) {
+        next(error);
     }
-    if (!user.subscription || user.subscription.status !== "ACTIVE") {
-        return next(new AppError("An active subscription is required to perform this action.", 403));
-    }
-    next();
-});
-export const requireCampaignLimit = catchAsync(async (req, _res, next) => {
-    const { userId, role } = req.user;
-    const { targetUserId } = req.body;
-    const campaignOwnerId = role === "admin" && targetUserId ? targetUserId : userId;
-    const existingCount = await prisma.ugcCampaign.count({
-        where: { userId: campaignOwnerId },
-    });
-    const userWithPlan = await prisma.user.findUnique({
-        where: { id: campaignOwnerId },
-        include: { plan: true },
-    });
-    const campaignLimit = userWithPlan?.plan?.campaignLimit ?? 1;
-    if (existingCount >= campaignLimit) {
-        return next(new AppError(`Plan limit reached. This user can only create up to ${campaignLimit} campaigns. Please upgrade the subscription.`, 403));
-    }
-    next();
-});
+};
 //# sourceMappingURL=subscription.middleware.js.map

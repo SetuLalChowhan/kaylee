@@ -27,9 +27,9 @@ export declare class PaymentService {
         userId: string;
         amount: number;
         status: string;
+        stripeSessionId: string;
         currency: string;
         invoiceId: string | null;
-        stripeSessionId: string;
     })[]>;
     static adminGetPayments(): Promise<{
         payments: ({
@@ -65,9 +65,9 @@ export declare class PaymentService {
             userId: string;
             amount: number;
             status: string;
+            stripeSessionId: string;
             currency: string;
             invoiceId: string | null;
-            stripeSessionId: string;
         })[];
         aggregates: {
             planId: string;
