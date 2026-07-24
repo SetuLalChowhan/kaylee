@@ -5,6 +5,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 });
 
 export class StripeService {
+  static get stripeInstance() {
+    return stripe;
+  }
+
   static async createCheckoutSession(params: Stripe.Checkout.SessionCreateParams) {
     return await stripe.checkout.sessions.create(params);
   }
@@ -18,7 +22,17 @@ export class StripeService {
   }
 
   static async cancelSubscription(subscriptionId: string) {
+    return await stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true,
+    });
+  }
+
+  static async cancelSubscriptionImmediately(subscriptionId: string) {
     return await stripe.subscriptions.cancel(subscriptionId);
+  }
+
+  static async updateSubscription(subscriptionId: string, params: Stripe.SubscriptionUpdateParams) {
+    return await stripe.subscriptions.update(subscriptionId, params);
   }
 
   static async retrieveInvoice(invoiceId: string) {

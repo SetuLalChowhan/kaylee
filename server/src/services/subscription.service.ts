@@ -215,14 +215,13 @@ export class SubscriptionService {
       throw new AppError("No active Stripe subscription found to cancel", 400);
     }
 
-    // Cancel Stripe subscription
+    // Turn off auto-renew at period end in Stripe
     await StripeService.cancelSubscription(user.stripeSubscriptionId);
 
-    // Update Subscription status to CANCELLED in database
+    // Update Subscription status in database
     await prisma.subscription.update({
       where: { userId },
       data: {
-        status: "CANCELLED",
         cancelAtPeriodEnd: true,
         cancelledAt: new Date(),
       },
@@ -230,7 +229,7 @@ export class SubscriptionService {
 
     logActivity({
       userId,
-      title: "Subscription cancelled",
+      title: "Subscription auto-renew cancelled",
       sub: "Cancellation scheduled for period end",
       avatarBg: "bg-red-100",
       avatarText: "SUB",
@@ -238,7 +237,7 @@ export class SubscriptionService {
       type: "SUBSCRIPTION",
     });
 
-    return { message: "Your subscription cancellation has been scheduled successfully." };
+    return { message: "Your subscription auto-renewal has been cancelled successfully." };
   }
 
   static async renewSubscription(userId: string) {
@@ -256,9 +255,8 @@ export class SubscriptionService {
       return { message: "Subscription is already active" };
     }
 
-    // To renew (reactivate) in Stripe, we update the subscription to reset cancel_at_period_end to false
-    const stripe = (StripeService as any).stripe || new (require("stripe"))(process.env.STRIPE_SECRET_KEY || "");
-    await stripe.subscriptions.update(user.stripeSubscriptionId, {
+    // Reactivate auto-renew in Stripe
+    await StripeService.updateSubscription(user.stripeSubscriptionId, {
       cancel_at_period_end: false,
     });
 
@@ -271,7 +269,7 @@ export class SubscriptionService {
       },
     });
 
-    return { message: "Subscription successfully renewed" };
+    return { message: "Subscription auto-renewal successfully reactivated" };
   }
 
   static async downgradeToFree(userId: string) {
