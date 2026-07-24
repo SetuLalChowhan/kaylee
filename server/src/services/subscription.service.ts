@@ -122,7 +122,32 @@ export class SubscriptionService {
       sessionParams.customer_email = user.email;
     }
 
-    const session = await StripeService.createCheckoutSession(sessionParams);
+    let session;
+    try {
+      session = await StripeService.createCheckoutSession(sessionParams);
+    } catch (err: any) {
+      const isMissingCustomer =
+        err?.code === "resource_missing" ||
+        err?.param === "customer" ||
+        (err?.message && (err.message.includes("No such customer") || err.message.includes("resource_missing")));
+
+      if (isMissingCustomer) {
+        console.warn(`[Stripe warning] Customer ${user.stripeCustomerId} not found on Stripe. Resetting user customerId and retrying checkout.`);
+        delete sessionParams.customer;
+        sessionParams.customer_email = user.email;
+
+        // Reset stale stripeCustomerId in DB
+        await prisma.user.update({
+          where: { id: userId },
+          data: { stripeCustomerId: null },
+        });
+
+        session = await StripeService.createCheckoutSession(sessionParams);
+      } else {
+        throw err;
+      }
+    }
+
     return {
       status: "success",
       url: session.url,
