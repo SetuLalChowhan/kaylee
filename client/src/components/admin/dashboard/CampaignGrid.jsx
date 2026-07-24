@@ -41,7 +41,7 @@ const CampaignGrid = ({ campaigns = [], onEdit }) => {
           See all <span className="text-lg">→</span>
         </button>
       </div>
-      <div className="grid grid-cols-1 xlg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
         {campaigns.length > 0 ? (
           campaigns.map((campaign) => (
             <CampaignCard
@@ -58,7 +58,7 @@ const CampaignGrid = ({ campaigns = [], onEdit }) => {
             />
           ))
         ) : (
-          <div className="col-span-1 xl:col-span-2 text-center py-12 border-2 border-dashed border-gray-100 rounded-[32px] bg-white">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-12 border-2 border-dashed border-gray-100 rounded-[32px] bg-white">
             <p className="text-gray-400 font-medium">No active campaigns found.</p>
           </div>
         )}

@@ -127,25 +127,25 @@ const Invoices = () => {
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {/* Card 1: Paid Invoices (Blue Card) */}
-        <div className="bg-Primary border-Primary text-white shadow-xl shadow-Primary/30 rounded-2xl p-4 flex flex-col justify-between h-36 border transition-all duration-300">
-          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-            <DollarSign className="w-5 h-5 text-white" />
+        {/* Card 1: Paid Invoices */}
+        <div className="bg-white border border-gray-100 hover:border-Primary/30 shadow-sm text-[#1A1A1A] rounded-2xl p-4 flex flex-col justify-between h-36 transition-all duration-300">
+          <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
+            <DollarSign className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold mb-0.5">
+            <h2 className="text-2xl font-bold mb-0.5 text-[#1A1A1A]">
               {formatCurrency(stats.paidAmount)}
             </h2>
-            <p className="text-white/80 text-xs font-medium">
+            <p className="text-gray-500 text-xs font-medium">
               {stats.paidCount || 0} Paid invoice{stats.paidCount !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
-        {/* Card 2: Outstanding Invoices (White Card) */}
-        <div className="bg-white border border-gray-100 hover:border-Primary/30 text-[#1A1A1A] rounded-2xl p-4 flex flex-col justify-between h-36 border transition-all duration-300">
-          <div className="w-10 h-10 bg-[#F8FAFC] rounded-xl flex items-center justify-center">
-            <Clock className="w-5 h-5 text-Primary" />
+        {/* Card 2: Outstanding Invoices */}
+        <div className="bg-white border border-gray-100 hover:border-Primary/30 shadow-sm text-[#1A1A1A] rounded-2xl p-4 flex flex-col justify-between h-36 transition-all duration-300">
+          <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+            <Clock className="w-5 h-5 text-amber-600" />
           </div>
           <div>
             <h2 className="text-2xl font-bold mb-0.5 text-[#1A1A1A]">
@@ -157,10 +157,10 @@ const Invoices = () => {
           </div>
         </div>
 
-        {/* Card 3: Past 30 Days (White Card) */}
-        <div className="bg-white border border-gray-100 hover:border-Primary/30 text-[#1A1A1A] rounded-2xl p-4 flex flex-col justify-between h-36 border transition-all duration-300">
-          <div className="w-10 h-10 bg-[#F8FAFC] rounded-xl flex items-center justify-center">
-            <Receipt className="w-5 h-5 text-Primary" />
+        {/* Card 3: Past 30 Days */}
+        <div className="bg-white border border-gray-100 hover:border-Primary/30 shadow-sm text-[#1A1A1A] rounded-2xl p-4 flex flex-col justify-between h-36 transition-all duration-300">
+          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
+            <Receipt className="w-5 h-5 text-indigo-600" />
           </div>
           <div>
             <h2 className="text-2xl font-bold mb-0.5 text-[#1A1A1A]">

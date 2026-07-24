@@ -32,25 +32,19 @@ import {
   Legend
 } from "recharts";
 
-const StatsCard = ({ title, value, label, icon: Icon, isPrimary, index }) => (
+const StatsCard = ({ title, value, label, icon: Icon, iconBg, iconColor, index }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, delay: index * 0.1 }}
-    className={`p-4 md:p-6 rounded-2xl md:rounded-[32px] flex flex-col justify-between h-36 md:h-44 border transition-all duration-300 ${
-      isPrimary
-        ? "bg-Primary border-Primary text-white shadow-xl shadow-Primary/30"
-        : "bg-white border-slate-100 text-[#1A1A1A] hover:border-Primary/30"
-    }`}
+    className="p-4 md:p-6 rounded-2xl md:rounded-[32px] flex flex-col justify-between h-36 md:h-44 border border-slate-100 bg-white text-[#1A1A1A] hover:border-Primary/30 shadow-sm transition-all duration-300"
   >
-    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center ${
-      isPrimary ? "bg-white/20" : "bg-Primary/5"
-    }`}>
-      <Icon className={`w-5 h-5 md:w-6 md:h-6 ${isPrimary ? "text-white" : "text-Primary"}`} />
+    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center ${iconBg || "bg-blue-50"}`}>
+      <Icon className={`w-5 h-5 md:w-6 md:h-6 ${iconColor || "text-blue-600"}`} />
     </div>
     <div>
       <h2 className="text-2xl md:text-3xl xl:text-4xl font-bold mb-0.5 md:mb-1">{value}</h2>
-      <p className={`text-xs md:text-sm font-medium ${isPrimary ? "text-white/80" : "text-slate-500"}`}>
+      <p className="text-xs md:text-sm font-medium text-slate-500">
         {label}
       </p>
     </div>
@@ -64,7 +58,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         <p className="text-xs font-bold text-slate-800 mb-2">{label}</p>
         <div className="space-y-1.5">
           {payload.map((entry, index) => {
-            const isEarnings = entry.dataKey === "earnings" || entry.name.toLowerCase().includes("earnings");
+            const isEarnings = entry.dataKey === "earnings" || entry.name?.toLowerCase().includes("earnings");
             const formattedVal = isEarnings
               ? `$${parseFloat(entry.value).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
               : entry.value;
@@ -277,11 +271,11 @@ const Dashboard = () => {
   });
 
   const statsList = [
-    { title: "Active Campaigns", value: activeCampaignsVal, label: "System Campaigns", icon: FolderOpen, isPrimary: true },
-    { title: "Awaiting Review", value: awaitingReviewVal, label: "Awaiting Approval", icon: Clock, isPrimary: false },
-    { title: "Total Users", value: totalUsersVal, label: "Registered Users", icon: Users, isPrimary: false },
-    { title: "Total Invoices", value: totalInvoicesVal, label: "Platform Invoices", icon: FileText, isPrimary: false },
-    { title: "Campaign Payments", value: campaignPaymentsVal, label: "Campaign Payments", icon: DollarSign, isPrimary: false },
+    { title: "Active Campaigns", value: activeCampaignsVal, label: "System Campaigns", icon: FolderOpen, iconBg: "bg-blue-50", iconColor: "text-blue-600" },
+    { title: "Awaiting Review", value: awaitingReviewVal, label: "Awaiting Approval", icon: Clock, iconBg: "bg-amber-50", iconColor: "text-amber-600" },
+    { title: "Total Users", value: totalUsersVal, label: "Registered Users", icon: Users, iconBg: "bg-purple-50", iconColor: "text-purple-600" },
+    { title: "Total Invoices", value: totalInvoicesVal, label: "Platform Invoices", icon: FileText, iconBg: "bg-indigo-50", iconColor: "text-indigo-600" },
+    { title: "Campaign Payments", value: campaignPaymentsVal, label: "Campaign Payments", icon: DollarSign, iconBg: "bg-emerald-50", iconColor: "text-emerald-600" },
   ];
 
   const getProgress = (status) => {

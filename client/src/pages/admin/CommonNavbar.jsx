@@ -9,12 +9,11 @@ import { getImgUrl } from '@/utils/image';
 import { useNotifications, useMarkAsSeen, useMarkAllAsSeen, useDeleteNotification } from '@/api/apiHooks/useNotification';
 import { useDashboardStats } from '@/api/apiHooks/useUser';
 
-const getGreeting = () => {
+const getGreeting = (name = 'Kaylee') => {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'Good Morning';
-  if (hour >= 12 && hour < 17) return 'Good Afternoon';
-  if (hour >= 17 && hour < 21) return 'Good Evening';
-  return 'Good Night';
+  if (hour >= 5 && hour < 12) return `Good morning ${name}!`;
+  if (hour >= 12 && hour < 17) return `Good afternoon ${name}!`;
+  return `Good evening ${name}!`;
 };
 
 const CommonNavbar = ({ setOpen }) => {
@@ -79,8 +78,8 @@ const CommonNavbar = ({ setOpen }) => {
     if (diffDays === 1) return 'Yesterday';
     return date.toLocaleDateString();
   };
-  const welcomeName = user?.firstName || user?.displayName || 'Jahan';
-  const greeting = useMemo(() => getGreeting(), []);
+  const welcomeName = user?.firstName || user?.displayName || 'Kaylee';
+  const greeting = useMemo(() => getGreeting(welcomeName), [welcomeName]);
   const { data: dashboardData, isLoading: isDashLoading } = useDashboardStats();
 
   const weekSubtitle = useMemo(() => {
@@ -115,7 +114,7 @@ const CommonNavbar = ({ setOpen }) => {
     if (weekCampaigns > 0) parts.push(`${weekCampaigns} campaign${weekCampaigns !== 1 ? 's' : ''} due`);
     if (weekTasks > 0) parts.push(`${weekTasks} task${weekTasks !== 1 ? 's' : ''} to meet`);
     if (isDashLoading) return 'Loading your week...';
-    if (parts.length === 0) return 'All clear for this week ✨';
+    if (parts.length === 0) return 'You are up to date';
     return `You have ${parts.join(' and ')} this week`;
   }, [dashboardData, isDashLoading]);
 
@@ -132,7 +131,7 @@ const CommonNavbar = ({ setOpen }) => {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between md:gap-4 gap-2.5  ">
           <div>
-            <h1 className="lg:text-xl text-base font-semibold text-[#1A1A1A] mb-1.5 md:mb-2">{greeting}, {welcomeName} 👋</h1>
+            <h1 className="lg:text-xl text-base font-semibold text-[#1A1A1A] mb-1.5 md:mb-2">{greeting}</h1>
             <p className="text-gray-500 text-xs md:text-sm font-medium">{weekSubtitle}</p>
           </div>
         </div>

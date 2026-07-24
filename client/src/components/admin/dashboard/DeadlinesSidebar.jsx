@@ -147,7 +147,7 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
   };
 
   return (
-    <div className="w-full xlg:w-[320px] md:w-[300px] space-y-6 ">
+    <div className="w-full xl:w-[320px] lg:w-[300px] space-y-6 ">
 
       {/* Pending Tasks */}
       <div className="bg-[#FFFFFF] border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
