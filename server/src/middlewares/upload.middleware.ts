@@ -64,7 +64,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
   }
 };
 
-const limits = { fileSize: 2 * 1024 * 1024 };
+const limits = { fileSize: 50 * 1024 * 1024 }; // 50 MB limit for avatars and logos
 
 export const uploadAvatar = multer({
   storage: avatarStorage,
@@ -81,7 +81,7 @@ export const uploadBrandLogo = multer({
 export const uploadPortfolio = multer({
   storage: avatarStorage,
   fileFilter,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB limit for portfolio items (videos/images)
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB limit for portfolio items (videos/images)
 });
 
 // Campaign uploads config supporting images, videos, and documents
@@ -102,7 +102,7 @@ const campaignStorage = multer.diskStorage({
 
 export const uploadCampaignFile = multer({
   storage: campaignStorage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB limit
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB limit
 });
 
 // CMS uploads config supporting images
@@ -130,7 +130,7 @@ export const uploadCmsFile = multer({
       cb(new AppError("Only images are allowed!", 400), false);
     }
   },
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
 });
 
 // Re-export for backward compatibility (single avatar upload)

@@ -17,8 +17,8 @@ const Documents = ({ campaign }) => {
     if (files.length === 0) return;
 
     for (const f of files) {
-      if (f.size > 10 * 1024 * 1024) {
-        toast.error(`Document "${f.name}" exceeds the 10MB limit.`);
+      if (f.size > 50 * 1024 * 1024) {
+        toast.error(`Document "${f.name}" exceeds the 50MB limit.`);
         continue;
       }
 

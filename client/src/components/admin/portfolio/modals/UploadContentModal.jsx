@@ -15,14 +15,14 @@ const UploadContentModal = ({ isOpen, onClose, onUpload, isPending }) => {
       const file = selectedFile[0];
       const type = file.type.startsWith('video') ? 'video' : 'image';
       
-      if (type === 'image' && file.size > 20 * 1024 * 1024) {
-        toast.error("Image file size exceeds the 20MB limit.");
+      if (type === 'image' && file.size > 50 * 1024 * 1024) {
+        toast.error("Image file size exceeds the 50MB limit.");
         reset({ file: null });
         setPreview(null);
         return;
       }
-      if (type === 'video' && file.size > 100 * 1024 * 1024) {
-        toast.error("Video file size exceeds the 100MB limit.");
+      if (type === 'video' && file.size > 500 * 1024 * 1024) {
+        toast.error("Video file size exceeds the 500MB limit.");
         reset({ file: null });
         setPreview(null);
         return;
