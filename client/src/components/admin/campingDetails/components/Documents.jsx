@@ -103,15 +103,21 @@ const Documents = ({ campaign }) => {
       </div>
 
       {/* List */}
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {Object.entries(uploadProgress).map(([filename, progress]) => (
-          <div key={filename} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3.5 border border-dashed border-Primary/30">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <Loader2 className="w-4 h-4 text-Primary animate-spin shrink-0" />
-              <span className="text-sm text-Primary truncate">{filename} (Uploading...)</span>
+          <div key={filename} className="bg-gradient-to-r from-Primary/5 via-white to-indigo-50/20 rounded-xl p-4 border border-Primary/20 space-y-2 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Loader2 className="w-4 h-4 text-Primary animate-spin shrink-0" />
+                <span className="text-xs font-bold text-[#1A1A1A] truncate" title={filename}>{filename}</span>
+              </div>
+              <span className="text-xs font-black text-Primary shrink-0 ml-3">{progress}%</span>
             </div>
-            <div className="flex items-center shrink-0 ml-4">
-              <span className="text-xs font-bold text-Primary">{progress}%</span>
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-Primary via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-300 shadow-sm"
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </div>
         ))}

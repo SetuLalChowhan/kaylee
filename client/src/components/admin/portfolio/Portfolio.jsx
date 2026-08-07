@@ -78,6 +78,8 @@ const Portfolio = () => {
       }))
     : [];
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   // Modal States
   const [modals, setModals] = useState({
     editPortfolio: false,
@@ -102,9 +104,17 @@ const Portfolio = () => {
     if (data.file) {
       formData.append('file', data.file);
     }
-    createMutation.mutate(formData, {
-      onSuccess: () => toggleModal('uploadContent', false),
-    });
+    setUploadProgress(0);
+    createMutation.mutate(
+      { formData, onProgress: (percent) => setUploadProgress(percent) },
+      {
+        onSuccess: () => {
+          setUploadProgress(0);
+          toggleModal('uploadContent', false);
+        },
+        onError: () => setUploadProgress(0),
+      }
+    );
   };
 
   const handleUpdateContent = (data) => {
@@ -115,9 +125,17 @@ const Portfolio = () => {
     if (data.newFile) {
       formData.append('file', data.newFile);
     }
-    updateMutation.mutate({ id: selectedMedia.id, formData }, {
-      onSuccess: () => toggleModal('editContent', false),
-    });
+    setUploadProgress(0);
+    updateMutation.mutate(
+      { id: selectedMedia.id, formData, onProgress: (percent) => setUploadProgress(percent) },
+      {
+        onSuccess: () => {
+          setUploadProgress(0);
+          toggleModal('editContent', false);
+        },
+        onError: () => setUploadProgress(0),
+      }
+    );
   };
 
   const handleDeleteContent = (item) => {
@@ -191,6 +209,7 @@ const Portfolio = () => {
         onClose={() => toggleModal('uploadContent', false)}
         onUpload={handleUploadContent}
         isPending={createMutation.isPending}
+        uploadProgress={uploadProgress}
       />
 
       <EditContentModal
@@ -199,6 +218,7 @@ const Portfolio = () => {
         content={selectedMedia}
         onUpdate={handleUpdateContent}
         isPending={updateMutation.isPending}
+        uploadProgress={uploadProgress}
       />
 
       {/* Preview Modal */}

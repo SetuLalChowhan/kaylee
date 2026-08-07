@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, CloudUpload } from 'lucide-react';
+import { X, CloudUpload, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
-const UploadContentModal = ({ isOpen, onClose, onUpload, isPending }) => {
+const UploadContentModal = ({ isOpen, onClose, onUpload, isPending, uploadProgress }) => {
   const [preview, setPreview] = useState(null);
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm();
   
@@ -138,21 +138,48 @@ const UploadContentModal = ({ isOpen, onClose, onUpload, isPending }) => {
                 {errors.title && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.title.message}</p>}
               </div>
 
+              {/* Progress Bar Display */}
+              {isPending && (
+                <div className="bg-Primary/5 border border-Primary/10 rounded-2xl p-4 space-y-2 mt-4">
+                  <div className="flex items-center justify-between text-xs font-bold text-[#1A1A1A]">
+                    <span className="flex items-center gap-2 text-Primary">
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      Uploading media...
+                    </span>
+                    <span className="text-Primary font-black">{uploadProgress || 0}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-Primary via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-300 shadow-sm"
+                      style={{ width: `${uploadProgress || 0}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Submit Button */}
               <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
+                  disabled={isPending}
+                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer disabled:opacity-50"
+                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isPending ? "Uploading..." : "Upload Media"}
+                  {isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      Uploading ({uploadProgress || 0}%)
+                    </>
+                  ) : (
+                    "Upload Media"
+                  )}
                 </button>
               </div>
             </form>

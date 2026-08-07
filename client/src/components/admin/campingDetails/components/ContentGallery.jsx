@@ -184,10 +184,31 @@ const ContentGallery = ({ campaign }) => {
     formData.append('description', replaceCaption);
     formData.append('assetType', replaceAssetType);
 
+    const filename = replaceModal.file.name;
+    setUploadProgress(prev => ({ ...prev, [filename]: 0 }));
+
     replaceMutation.mutate({
       campaignId: campaign.id,
       id: replaceModal.itemId,
       formData,
+      onProgress: (percent) => {
+        setUploadProgress(prev => ({ ...prev, [filename]: percent }));
+      }
+    }, {
+      onSuccess: () => {
+        setUploadProgress(prev => {
+          const next = { ...prev };
+          delete next[filename];
+          return next;
+        });
+      },
+      onError: () => {
+        setUploadProgress(prev => {
+          const next = { ...prev };
+          delete next[filename];
+          return next;
+        });
+      }
     });
     setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null });
   };
@@ -231,11 +252,15 @@ const ContentGallery = ({ campaign }) => {
           <h4 className="text-sm font-bold text-[#1A1A1A] mb-4">Uploaded Content</h4>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             {Object.entries(uploadProgress).map(([filename, progress]) => (
-              <div key={filename} className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 flex flex-col items-center justify-center p-4">
-                <Loader2 className="w-6 h-6 text-Primary animate-spin mb-2" />
-                <span className="text-xs font-bold text-[#1A1A1A] text-center truncate w-full px-2">{filename}</span>
-                <span className="text-[10px] font-bold text-Primary mt-1">{progress}%</span>
-                <div className="absolute bottom-0 left-0 h-1 bg-Primary transition-all duration-300" style={{ width: `${progress}%` }} />
+              <div key={filename} className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-Primary/5 via-white to-gray-50 border border-Primary/20 flex flex-col items-center justify-center p-4 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-Primary/10 flex items-center justify-center mb-2">
+                  <Loader2 className="w-5 h-5 text-Primary animate-spin" />
+                </div>
+                <span className="text-xs font-bold text-[#1A1A1A] text-center truncate w-full px-2" title={filename}>{filename}</span>
+                <span className="text-xs font-black text-Primary mt-1">{progress}%</span>
+                <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mt-3">
+                  <div className="bg-gradient-to-r from-Primary via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-300 shadow-sm" style={{ width: `${progress}%` }} />
+                </div>
               </div>
             ))}
             {items.map((item) => (
@@ -262,7 +287,7 @@ const ContentGallery = ({ campaign }) => {
                       muted
                       playsInline
                       preload="metadata"
-                      onMouseEnter={(e) => { e.target.play().catch(() => {}); }}
+                      onMouseEnter={(e) => { e.target.play().catch(() => { }); }}
                       onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
@@ -302,14 +327,13 @@ const ContentGallery = ({ campaign }) => {
                       </span>
                     )}
                     {item.status && (
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full w-fit ${
-                        item.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                        item.status === 'changes_requested' ? 'bg-red-500/20 text-red-400' :
-                        'bg-orange-500/20 text-orange-400'
-                      }`}>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full w-fit ${item.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                          item.status === 'changes_requested' ? 'bg-red-500/20 text-red-400' :
+                            'bg-orange-500/20 text-orange-400'
+                        }`}>
                         {item.status === 'approved' ? 'Approved' :
-                         item.status === 'changes_requested' ? 'Revision Requested' :
-                         'Pending Review'}
+                          item.status === 'changes_requested' ? 'Revision Requested' :
+                            'Pending Review'}
                       </span>
                     )}
                   </div>
@@ -321,11 +345,10 @@ const ContentGallery = ({ campaign }) => {
       )}
 
       {/* Download lock notice */}
-      <div className={`rounded-xl p-4 border transition-all ${
-        campaign.releaseFiles
+      <div className={`rounded-xl p-4 border transition-all ${campaign.releaseFiles
           ? 'bg-green-50 border-green-100'
           : 'bg-orange-50 border-orange-100'
-      }`}>
+        }`}>
         <h4 className="text-sm font-bold text-[#1A1A1A] mb-1">
           {campaign.releaseFiles ? 'Downloads are unlocked for brand' : 'Downloads are locked for brand'}
         </h4>
@@ -343,67 +366,67 @@ const ContentGallery = ({ campaign }) => {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setCaptionModal({ open: false, files: [] })}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 max-h-[88vh] overflow-y-auto custom-scrollbar border border-gray-100 z-10"
+              className="relative w-full max-w-[800px] bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-100 z-10"
             >
               <button
                 type="button"
                 onClick={() => setCaptionModal({ open: false, files: [] })}
-                className="absolute top-6 right-6 z-10 w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all cursor-pointer shadow-sm"
+                className="absolute top-6 right-6 z-10 w-10 h-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer shadow-sm"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="relative pr-10 mb-6 text-left">
-                <h2 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] tracking-tight">Add Content Details</h2>
-                <p className="text-sm text-gray-500 font-medium mt-1.5">Provide details to help the brand understand and categorize your media.</p>
+              <div className="relative pr-10 mb-8 text-left border-b border-slate-100 pb-5">
+                <h2 className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight">Add Content Details</h2>
+                <p className="text-sm sm:text-base text-slate-500 font-medium mt-1.5 leading-relaxed">Provide details to help the brand understand and categorize your media deliverables.</p>
               </div>
 
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-slate-100">
                 {captionModal.files.map((file) => (
-                  <div key={file.name} className="flex flex-col sm:flex-row items-start gap-6 py-6 first:pt-2 last:pb-2">
+                  <div key={file.name} className="flex flex-col sm:flex-row items-start gap-6 py-6 first:pt-0 last:pb-2">
                     {/* Preview Thumbnail */}
-                    <div className="relative w-28 h-28 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 shadow-sm">
+                    <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0 border border-slate-200 shadow-md">
                       {file.type === 'video' ? (
                         <video src={file.url} className="w-full h-full object-cover" muted preload="metadata" />
                       ) : (
                         <img src={file.url} alt={file.name} className="w-full h-full object-cover" loading="lazy" />
                       )}
-                      <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-bold bg-[#1A1A1A] text-white rounded-md uppercase tracking-wider">
+                      <span className="absolute bottom-2 right-2 px-2.5 py-1 text-xs font-bold bg-[#0F172A]/90 backdrop-blur-sm text-white rounded-lg uppercase tracking-wider">
                         {file.type === 'video' ? 'Video' : 'Image'}
                       </span>
                     </div>
 
-                    <div className="flex-1 w-full space-y-4 text-left">
-                      {/* File Name */}
+                    <div className="flex-1 w-full space-y-5 text-left">
+                      {/* File Name Header */}
                       <div>
-                        <p className="text-sm font-bold text-[#1A1A1A] truncate w-full max-w-[340px]" title={file.name}>
+                        <p className="text-base sm:text-lg font-bold text-[#0F172A] truncate w-full max-w-[360px]" title={file.name}>
                           {file.name}
                         </p>
                       </div>
 
                       {/* File Title Input Group */}
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold text-gray-700">
-                          File Title <span className="text-gray-400 font-normal">(Optional)</span>
+                        <label className="block text-xs sm:text-sm font-semibold text-slate-700">
+                          File Title <span className="text-slate-400 font-normal">(Optional)</span>
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. 'OTWAY PASTURES PRODUCT PHOTO'"
+                          placeholder="e.g. 'PRODUCT HERO SHOT'"
                           value={titles[file.name] || ''}
                           onChange={(e) => setTitles(prev => ({ ...prev, [file.name]: e.target.value }))}
-                          className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm text-[#1A1A1A] placeholder-gray-400 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all font-medium"
+                          className="w-full bg-slate-50/70 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-[#0F172A] placeholder-slate-400 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all font-medium"
                         />
                       </div>
 
                       {/* Asset Category Dropdown Group */}
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold text-gray-700">
+                        <label className="block text-xs sm:text-sm font-semibold text-slate-700">
                           Asset Category <span className="text-red-500 font-bold">*</span>
                         </label>
                         <div className="relative">
@@ -419,13 +442,12 @@ const ContentGallery = ({ campaign }) => {
                                 });
                               }
                             }}
-                            className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 pl-3.5 pr-10 text-sm cursor-pointer focus:bg-white focus:outline-none transition-all appearance-none ${
-                              errors[file.name] 
-                                ? 'border-red-500 bg-red-50/10 focus:border-red-500' 
-                                : 'border-gray-200 focus:border-Primary focus:ring-2 focus:ring-Primary/10'
-                            } ${!assetTypes[file.name] ? 'text-gray-400 font-medium' : 'text-[#1A1A1A] font-semibold'}`}
+                            className={`w-full bg-slate-50/70 border rounded-xl py-2.5 pl-3.5 pr-10 text-sm cursor-pointer focus:bg-white focus:outline-none transition-all appearance-none ${errors[file.name]
+                                ? 'border-red-500 bg-red-50/10 focus:border-red-500'
+                                : 'border-slate-200 focus:border-Primary focus:ring-2 focus:ring-Primary/10'
+                              } ${!assetTypes[file.name] ? 'text-slate-400 font-medium' : 'text-[#0F172A] font-semibold'}`}
                           >
-                            <option value="" disabled className="text-gray-400 bg-white">Select Asset Category...</option>
+                            <option value="" disabled className="text-slate-400 bg-white">Select Asset Category...</option>
                             <option value="Video" className="text-black bg-white">Video</option>
                             <option value="Raw Footage" className="text-black bg-white">Raw Footage</option>
                             <option value="B-Roll" className="text-black bg-white">B-Roll</option>
@@ -433,7 +455,7 @@ const ContentGallery = ({ campaign }) => {
                             <option value="Graphic" className="text-black bg-white">Graphic</option>
                             <option value="Other" className="text-black bg-white">Other</option>
                           </select>
-                          <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-gray-400">
+                          <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-slate-400">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                             </svg>
@@ -454,15 +476,15 @@ const ContentGallery = ({ campaign }) => {
 
                       {/* File Description Input Group */}
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold text-gray-700">
-                          Description <span className="text-gray-400 font-normal">(Optional)</span>
+                        <label className="block text-xs sm:text-sm font-semibold text-slate-700">
+                          Description <span className="text-slate-400 font-normal">(Optional)</span>
                         </label>
                         <input
                           type="text"
                           placeholder="e.g. 'Behind the scenes shot with product', etc."
                           value={captions[file.name] || ''}
                           onChange={(e) => setCaptions(prev => ({ ...prev, [file.name]: e.target.value }))}
-                          className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm text-[#1A1A1A] placeholder-gray-400 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all font-medium"
+                          className="w-full bg-slate-50/70 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-[#0F172A] placeholder-slate-400 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all font-medium"
                         />
                       </div>
                     </div>
@@ -470,15 +492,15 @@ const ContentGallery = ({ campaign }) => {
                 ))}
               </div>
 
-              <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
-                <button 
+              <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+                <button
                   onClick={() => setCaptionModal({ open: false, files: [] })}
-                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
+                  className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button 
-                  onClick={handleUpload} 
+                <button
+                  onClick={handleUpload}
                   className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer"
                 >
                   Upload Content
@@ -496,67 +518,67 @@ const ContentGallery = ({ campaign }) => {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null })}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border border-gray-100 z-10"
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border border-slate-100 z-10"
             >
               <button
                 type="button"
                 onClick={() => setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null })}
-                className="absolute top-6 right-6 z-10 w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all cursor-pointer shadow-sm"
+                className="absolute top-6 right-6 z-10 w-10 h-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer shadow-sm"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="relative pr-10 mb-6 text-left">
+              <div className="relative pr-10 mb-8 text-left border-b border-slate-100 pb-5">
                 <div className="flex items-center gap-2.5 text-Primary mb-1">
-                  <RefreshCw className="w-5 h-5 text-Primary" />
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] tracking-tight">Replace Content</h2>
+                  <RefreshCw className="w-6 h-6 text-Primary" />
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight">Replace Content</h2>
                 </div>
-                <p className="text-sm text-gray-500 font-medium">Optionally update the title, category, and description for this replacement file.</p>
+                <p className="text-sm sm:text-base text-slate-500 font-medium mt-1 leading-relaxed">Optionally update the title, category, and description for this replacement file.</p>
               </div>
 
               <div className="flex flex-col sm:flex-row items-start gap-6 py-4">
                 {/* Preview thumbnail of new file */}
-                <div className="relative w-28 h-28 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 shadow-sm">
+                <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0 border border-slate-200 shadow-md">
                   {replaceModal.type === 'video' ? (
                     <video src={replaceModal.url} className="w-full h-full object-cover" muted preload="metadata" />
                   ) : (
                     <img src={replaceModal.url} alt="replacement preview" className="w-full h-full object-cover" loading="lazy" />
                   )}
-                  <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-bold bg-[#1A1A1A] text-white rounded-md uppercase tracking-wider">
+                  <span className="absolute bottom-2 right-2 px-2.5 py-1 text-xs font-bold bg-[#0F172A]/90 backdrop-blur-sm text-white rounded-lg uppercase tracking-wider">
                     {replaceModal.type === 'video' ? 'Video' : 'Image'}
                   </span>
                 </div>
-                
+
                 <div className="flex-1 w-full space-y-4 text-left">
                   <div>
-                    <p className="text-sm font-bold text-[#1A1A1A] truncate w-full max-w-[340px]" title={replaceModal.file?.name}>
+                    <p className="text-base sm:text-lg font-bold text-[#0F172A] truncate w-full max-w-[360px]" title={replaceModal.file?.name}>
                       {replaceModal.file?.name}
                     </p>
                   </div>
-                  
+
                   {/* File Title Input Group */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-700">
-                      File Title <span className="text-gray-400 font-normal">(Optional)</span>
+                    <label className="block text-xs sm:text-sm font-semibold text-slate-700">
+                      File Title <span className="text-slate-400 font-normal">(Optional)</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 'OTWAY PASTURES PRODUCT PHOTO'"
+                      placeholder="e.g. 'PRODUCT HERO SHOT'"
                       value={replaceTitle}
                       onChange={(e) => setReplaceTitle(e.target.value)}
-                      className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm text-[#1A1A1A] placeholder-gray-400 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all font-medium"
+                      className="w-full bg-slate-50/70 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-[#0F172A] placeholder-slate-400 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all font-medium"
                     />
                   </div>
 
                   {/* Category Dropdown Group */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-700">
+                    <label className="block text-xs sm:text-sm font-semibold text-slate-700">
                       Asset Category <span className="text-red-500 font-bold">*</span>
                     </label>
                     <div className="relative">
@@ -568,13 +590,12 @@ const ContentGallery = ({ campaign }) => {
                             setReplaceError(false);
                           }
                         }}
-                        className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 pl-3.5 pr-10 text-sm cursor-pointer focus:bg-white focus:outline-none transition-all appearance-none ${
-                          replaceError 
-                            ? 'border-red-500 bg-red-50/10 focus:border-red-500' 
-                            : 'border-gray-200 focus:border-Primary focus:ring-2 focus:ring-Primary/10'
-                        } ${!replaceAssetType ? 'text-gray-400 font-medium' : 'text-[#1A1A1A] font-semibold'}`}
+                        className={`w-full bg-slate-50/70 border rounded-xl py-2.5 pl-3.5 pr-10 text-sm cursor-pointer focus:bg-white focus:outline-none transition-all appearance-none ${replaceError
+                            ? 'border-red-500 bg-red-50/10 focus:border-red-500'
+                            : 'border-slate-200 focus:border-Primary focus:ring-2 focus:ring-Primary/10'
+                          } ${!replaceAssetType ? 'text-slate-400 font-medium' : 'text-[#0F172A] font-semibold'}`}
                       >
-                        <option value="" disabled className="text-gray-400 bg-white">Select Asset Category...</option>
+                        <option value="" disabled className="text-slate-400 bg-white">Select Asset Category...</option>
                         <option value="Video" className="text-black bg-white">Video</option>
                         <option value="Raw Footage" className="text-black bg-white">Raw Footage</option>
                         <option value="B-Roll" className="text-black bg-white">B-Roll</option>
@@ -582,7 +603,7 @@ const ContentGallery = ({ campaign }) => {
                         <option value="Graphic" className="text-black bg-white">Graphic</option>
                         <option value="Other" className="text-black bg-white">Other</option>
                       </select>
-                      <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-gray-400">
+                      <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-slate-400">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -603,15 +624,15 @@ const ContentGallery = ({ campaign }) => {
 
                   {/* File Description Input Group */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-700">
-                      Description <span className="text-gray-400 font-normal">(Optional)</span>
+                    <label className="block text-xs sm:text-sm font-semibold text-slate-700">
+                      Description <span className="text-slate-400 font-normal">(Optional)</span>
                     </label>
                     <input
                       type="text"
                       placeholder="e.g. 'Final version with logo', etc."
                       value={replaceCaption}
                       onChange={(e) => setReplaceCaption(e.target.value)}
-                      className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm text-[#1A1A1A] placeholder-gray-400 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all font-medium"
+                      className="w-full bg-slate-50/70 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-[#0F172A] placeholder-slate-400 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all font-medium"
                       autoFocus
                     />
                   </div>
@@ -619,14 +640,14 @@ const ContentGallery = ({ campaign }) => {
               </div>
 
               <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
-                <button 
+                <button
                   onClick={() => setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null })}
                   className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button 
-                  onClick={handleReplaceUpload} 
+                <button
+                  onClick={handleReplaceUpload}
                   className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer"
                 >
                   Replace Content

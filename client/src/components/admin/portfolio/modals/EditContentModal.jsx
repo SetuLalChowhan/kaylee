@@ -1,10 +1,10 @@
 import React from 'react';
-import { X, RefreshCw } from 'lucide-react';
+import { X, RefreshCw, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
-const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => {
+const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending, uploadProgress }) => {
   const [previewUrl, setPreviewUrl] = React.useState(content?.url);
   const [previewType, setPreviewType] = React.useState(content?.type || 'image');
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
@@ -68,7 +68,8 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => 
             <h2 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">Edit Content</h2>
             <button 
               onClick={onClose}
-              className="p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100"
+              disabled={isPending}
+              className="p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 border border-gray-100 disabled:opacity-50"
             >
               <X className="w-5 h-5 md:w-6 md:h-6" />
             </button>
@@ -101,7 +102,8 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => 
               <button 
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute top-4 right-4 md:top-6 md:right-6 p-2.5 md:p-4 bg-white rounded-full text-[#1A1A1A] hover:bg-gray-50 transition-all shadow-2xl z-20 border border-gray-100"
+                disabled={isPending}
+                className="absolute top-4 right-4 md:top-6 md:right-6 p-2.5 md:p-4 bg-white rounded-full text-[#1A1A1A] hover:bg-gray-50 transition-all shadow-2xl z-20 border border-gray-100 disabled:opacity-50"
               >
                 <RefreshCw className="w-5 h-5 md:w-6 md:h-6" />
               </button>
@@ -117,13 +119,39 @@ const EditContentModal = ({ isOpen, onClose, content, onUpdate, isPending }) => 
               />
             </div>
 
+            {/* Progress Bar Display */}
+            {isPending && (
+              <div className="bg-Primary/5 border border-Primary/10 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-[#1A1A1A]">
+                  <span className="flex items-center gap-2 text-Primary">
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                    Updating media...
+                  </span>
+                  <span className="text-Primary font-black">{uploadProgress || 0}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-Primary via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-300 shadow-sm"
+                    style={{ width: `${uploadProgress || 0}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isPending}
-              className="w-full bg-Primary text-white py-3 md:py-5 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-Primary text-white py-3 md:py-5 rounded-xl md:rounded-2xl font-bold hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 text-xs md:text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isPending ? "Updating..." : "Update"}
+              {isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  Updating ({uploadProgress || 0}%)
+                </>
+              ) : (
+                "Update"
+              )}
             </button>
           </form>
         </motion.div>
