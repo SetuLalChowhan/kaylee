@@ -110,7 +110,29 @@ export class SubscriptionService {
         else {
             sessionParams.customer_email = user.email;
         }
-        const session = await StripeService.createCheckoutSession(sessionParams);
+        let session;
+        try {
+            session = await StripeService.createCheckoutSession(sessionParams);
+        }
+        catch (err) {
+            const isMissingCustomer = err?.code === "resource_missing" ||
+                err?.param === "customer" ||
+                (err?.message && (err.message.includes("No such customer") || err.message.includes("resource_missing")));
+            if (isMissingCustomer) {
+                console.warn(`[Stripe warning] Customer ${user.stripeCustomerId} not found on Stripe. Resetting user customerId and retrying checkout.`);
+                delete sessionParams.customer;
+                sessionParams.customer_email = user.email;
+                // Reset stale stripeCustomerId in DB
+                await prisma.user.update({
+                    where: { id: userId },
+                    data: { stripeCustomerId: null },
+                });
+                session = await StripeService.createCheckoutSession(sessionParams);
+            }
+            else {
+                throw err;
+            }
+        }
         return {
             status: "success",
             url: session.url,
@@ -168,27 +190,26 @@ export class SubscriptionService {
         if (!user || !user.stripeSubscriptionId) {
             throw new AppError("No active Stripe subscription found to cancel", 400);
         }
-        // Cancel Stripe subscription
+        // Turn off auto-renew at period end in Stripe
         await StripeService.cancelSubscription(user.stripeSubscriptionId);
-        // Update Subscription status to CANCELLED in database
+        // Update Subscription status in database
         await prisma.subscription.update({
             where: { userId },
             data: {
-                status: "CANCELLED",
                 cancelAtPeriodEnd: true,
                 cancelledAt: new Date(),
             },
         });
         logActivity({
             userId,
-            title: "Subscription cancelled",
+            title: "Subscription auto-renew cancelled",
             sub: "Cancellation scheduled for period end",
             avatarBg: "bg-red-100",
             avatarText: "SUB",
             dotColor: "bg-red-500",
             type: "SUBSCRIPTION",
         });
-        return { message: "Your subscription cancellation has been scheduled successfully." };
+        return { message: "Your subscription auto-renewal has been cancelled successfully." };
     }
     static async renewSubscription(userId) {
         const user = await prisma.user.findUnique({
@@ -202,9 +223,8 @@ export class SubscriptionService {
         if (!user.subscription.cancelAtPeriodEnd) {
             return { message: "Subscription is already active" };
         }
-        // To renew (reactivate) in Stripe, we update the subscription to reset cancel_at_period_end to false
-        const stripe = StripeService.stripe || new (require("stripe"))(process.env.STRIPE_SECRET_KEY || "");
-        await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        // Reactivate auto-renew in Stripe
+        await StripeService.updateSubscription(user.stripeSubscriptionId, {
             cancel_at_period_end: false,
         });
         await prisma.subscription.update({
@@ -215,7 +235,7 @@ export class SubscriptionService {
                 cancelledAt: null,
             },
         });
-        return { message: "Subscription successfully renewed" };
+        return { message: "Subscription auto-renewal successfully reactivated" };
     }
     static async downgradeToFree(userId) {
         const freePlan = await prisma.plan.findUnique({ where: { slug: "free" } });
