@@ -40,6 +40,7 @@ export const useVerifyEmailToken = () => {
   const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ token }) => {
@@ -47,6 +48,7 @@ export const useVerifyEmailToken = () => {
       return res.data;
     },
     onSuccess: (data) => {
+      queryClient.clear();
       dispatch(setCredentials({ token: data.accessToken, user: data.user }));
       toast.success(data?.message || "Email verified successfully!");
       navigate("/onboarding");
@@ -87,6 +89,7 @@ export const useLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const axiosPublic = useAxiosPublic();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (formData) => {
@@ -94,6 +97,7 @@ export const useLogin = () => {
       return res.data;
     },
     onSuccess: (data) => {
+      queryClient.clear();
       dispatch(setCredentials({ token: data.accessToken, user: data.user }));
       toast.success(data?.message || "Login successful!");
       if (data.user?.role === "user" && !data.user?.slug) {
@@ -119,6 +123,7 @@ export const useGoogleLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const axiosPublic = useAxiosPublic();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (idToken) => {
@@ -126,6 +131,7 @@ export const useGoogleLogin = () => {
       return res.data;
     },
     onSuccess: (data) => {
+      queryClient.clear();
       dispatch(setCredentials({ token: data.accessToken, user: data.user }));
       toast.success(data?.message || "Google login successful!");
       if (data.user?.role === "user" && !data.user?.slug) {
@@ -213,6 +219,7 @@ export const useLogout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
@@ -220,12 +227,14 @@ export const useLogout = () => {
       return res.data;
     },
     onSuccess: () => {
+      queryClient.clear();
       dispatch(clearAuth());
       toast.success("Logged out successfully!");
       navigate("/");
     },
     onError: () => {
-      // Even if the API call fails, clear local auth state
+      // Even if the API call fails, clear local auth state and query cache
+      queryClient.clear();
       dispatch(clearAuth());
       navigate("/");
     },

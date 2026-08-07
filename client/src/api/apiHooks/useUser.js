@@ -163,6 +163,7 @@ export const useDeleteAccount = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
@@ -170,6 +171,7 @@ export const useDeleteAccount = () => {
       return res.data;
     },
     onSuccess: (data) => {
+      queryClient.clear();
       toast.success(data?.message || "Account permanently deleted.");
       dispatch(clearAuth());
       navigate("/login");
