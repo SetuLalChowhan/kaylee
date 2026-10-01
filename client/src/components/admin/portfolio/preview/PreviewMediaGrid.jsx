@@ -67,4 +67,4 @@ const PreviewMediaGrid = ({ items, onPreview }) => {
   );
 };
 
-export default PreviewMediaGrid;
+export default React.memo(PreviewMediaGrid);

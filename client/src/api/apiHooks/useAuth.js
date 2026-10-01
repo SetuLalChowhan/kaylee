@@ -126,8 +126,9 @@ export const useGoogleLogin = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (idToken) => {
-      const res = await axiosPublic.post(AUTH.GOOGLE_LOGIN, { idToken });
+    mutationFn: async (payload) => {
+      const body = typeof payload === "string" ? { idToken: payload } : payload;
+      const res = await axiosPublic.post(AUTH.GOOGLE_LOGIN, body);
       return res.data;
     },
     onSuccess: (data) => {
