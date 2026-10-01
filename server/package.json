@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "tsx watch src/server.ts",
-    "build": "npx prisma generate && tsc -p tsconfig.json"
+    "start": "node init && node dist/server.js",
+    "dev": "node init && tsx watch src/server.ts",
+    "build": "node init && npx prisma generate && tsc -p tsconfig.json"
   },
   "keywords": [],
   "author": "",
