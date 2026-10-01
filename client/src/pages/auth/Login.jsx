@@ -6,12 +6,24 @@ import CommonButton from '@/components/ui/CommonButton';
 import { FcGoogle } from 'react-icons/fc';
 import { toast } from 'react-toastify';
 import { useLogin, useGoogleLogin } from '@/api/apiHooks/useAuth';
-import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin as useGoogleOAuth } from '@react-oauth/google';
 
 const Login = () => {
   const navigate = useNavigate();
   const loginMutation = useLogin();
   const googleLoginMutation = useGoogleLogin();
+
+  const handleGoogleLogin = useGoogleOAuth({
+    onSuccess: (tokenResponse) => {
+      if (tokenResponse?.access_token) {
+        googleLoginMutation.mutate({ accessToken: tokenResponse.access_token });
+      }
+    },
+    onError: (error) => {
+      console.error("Google sign-in error:", error);
+      toast.error("Google login failed. Please try again.");
+    },
+  });
 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
@@ -64,31 +76,15 @@ const Login = () => {
           {loginMutation.isPending ? "Signing in..." : "Sign In"}
         </CommonButton>
 
-        <div className="relative w-full overflow-hidden">
-          <button 
-            type="button"
-            className="w-full py-4 bg-white border border-[#E6E6E6] text-[#1A1A1A] font-bold rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isPending}
-          >
-            <FcGoogle className="w-6 h-6" />
-            {googleLoginMutation.isPending ? "Connecting to Google..." : "Continue with Google"}
-          </button>
-          {!isPending && (
-            <div className="absolute inset-0 w-full h-full opacity-0 cursor-pointer pointer-events-auto z-10 [&_div]:!w-full [&_div]:!h-full [&_div]:!max-w-none [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!max-w-none [&_iframe]:!opacity-0">
-              <GoogleLogin
-                onSuccess={(credentialResponse) => {
-                  if (credentialResponse.credential) {
-                    googleLoginMutation.mutate(credentialResponse.credential);
-                  }
-                }}
-                onError={() => {
-                  toast.error("Google login failed. Please try again.");
-                }}
-                useOneTap
-              />
-            </div>
-          )}
-        </div>
+        <button 
+          type="button"
+          onClick={() => handleGoogleLogin()}
+          className="w-full py-4 bg-white border border-[#E6E6E6] text-[#1A1A1A] font-bold rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isPending}
+        >
+          <FcGoogle className="w-6 h-6" />
+          {googleLoginMutation.isPending ? "Connecting to Google..." : "Continue with Google"}
+        </button>
       </form>
 
       <p className="text-center text-sm text-[#666]">

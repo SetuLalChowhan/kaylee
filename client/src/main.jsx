@@ -21,7 +21,11 @@ createRoot(document.getElementById("root")).render(
           <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
             <RouterProvider router={router} />
           </GoogleOAuthProvider>
-          <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+          />
           <ReactQueryDevtools initialIsOpen={false} />
         </PersistGate>
       </Provider>

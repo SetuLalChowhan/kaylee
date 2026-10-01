@@ -173,7 +173,7 @@ export const googleLogin = async (
   next: NextFunction,
 ) => {
   try {
-    const { idToken } = req.body;
+    const { idToken, accessToken: googleAccessToken } = req.body;
     const googleClientId = process.env.GOOGLE_CLIENT_ID;
 
     if (!googleClientId) {
@@ -182,27 +182,77 @@ export const googleLogin = async (
       );
     }
 
-    if (!idToken) {
-      return next(new AppError("Google ID Token is required", 400));
+    if (!idToken && !googleAccessToken) {
+      return next(new AppError("Google Token is required", 400));
     }
 
-    // Verify Google ID Token
-    let ticket;
-    try {
-      ticket = await client.verifyIdToken({
-        idToken,
-        audience: googleClientId,
-      });
-    } catch (err) {
-      return next(new AppError("Invalid Google Token", 401));
+    let email: string | undefined;
+    let name: string | undefined;
+    let picture: string | undefined;
+    let given_name: string | undefined;
+    let family_name: string | undefined;
+
+    if (idToken) {
+      // Verify Google ID Token
+      let ticket;
+      try {
+        ticket = await client.verifyIdToken({
+          idToken,
+          audience: googleClientId,
+        });
+      } catch (err) {
+        console.error("Google ID Token verification error:", err);
+        return next(new AppError("Invalid Google Token", 401));
+      }
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        return next(new AppError("Google authentication failed", 400));
+      }
+
+      email = payload.email;
+      name = payload.name;
+      picture = payload.picture;
+      given_name = payload.given_name;
+      family_name = payload.family_name;
+    } else if (googleAccessToken) {
+      // Verify via Google userinfo endpoint using access token from useGoogleLogin
+      try {
+        const userInfoRes = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: { Authorization: `Bearer ${googleAccessToken}` },
+          },
+        );
+        if (!userInfoRes.ok) {
+          throw new Error(`Google returned status ${userInfoRes.status}`);
+        }
+        const userInfo = (await userInfoRes.json()) as {
+          email?: string;
+          name?: string;
+          picture?: string;
+          given_name?: string;
+          family_name?: string;
+        };
+
+        if (!userInfo.email) {
+          return next(new AppError("Google authentication failed", 400));
+        }
+
+        email = userInfo.email;
+        name = userInfo.name;
+        picture = userInfo.picture;
+        given_name = userInfo.given_name;
+        family_name = userInfo.family_name;
+      } catch (err) {
+        console.error("Google access token verification error:", err);
+        return next(new AppError("Invalid Google Access Token", 401));
+      }
     }
 
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
+    if (!email) {
       return next(new AppError("Google authentication failed", 400));
     }
-
-    const { email, name, picture, given_name, family_name } = payload;
 
     // Check database for existing user
     let user = await prisma.user.findUnique({ where: { email } });

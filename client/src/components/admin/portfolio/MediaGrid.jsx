@@ -3,7 +3,7 @@ import { MoreVertical, Edit3, Trash2, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import natureVideo from '@/assets/videos/nature.mp4';
 
-const MediaItem = ({ item, onEdit, onDelete, onPreview }) => {
+const MediaItem = React.memo(({ item, onEdit, onDelete, onPreview }) => {
   const [showOptions, setShowOptions] = useState(false);
 
   return (
@@ -80,7 +80,7 @@ const MediaItem = ({ item, onEdit, onDelete, onPreview }) => {
       </div>
     </motion.div>
   );
-};
+});
 
 const MediaGrid = ({ items, onEdit, onDelete, onPreview }) => {
   return (
