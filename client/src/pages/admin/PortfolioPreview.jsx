@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -55,36 +55,45 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
     );
   }
 
-  const profile = {
-    name: profileData.displayName || `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim(),
-    slug: profileData.slug || '',
-    niche: profileData.shortBio || '',
-    bio: profileData.shortBio || '',
-    portfolioLink: `${window.location.origin}/preview/${profileData.slug || ''}`.toLowerCase(),
-    services: profileData.servicesOffered || '',
-    brands: Array.isArray(profileData.brandLogos) ? profileData.brandLogos.map(logo => getImgUrl(logo)) : [],
-    image: getImgUrl(profileData.avatar) || '',
-    otherLink: profileData.socialLinks?.other || '',
-    socials: {
-      instagram: profileData.socialLinks?.instagram || '',
-      tiktok: profileData.socialLinks?.website || '', // website field maps tiktok
-      youtube: profileData.socialLinks?.youtube || '',
-    },
-  };
+  const profile = useMemo(() => {
+    if (!profileData) return null;
+    return {
+      name: profileData.displayName || `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim(),
+      slug: profileData.slug || '',
+      niche: profileData.shortBio || '',
+      bio: profileData.shortBio || '',
+      portfolioLink: `${window.location.origin}/preview/${profileData.slug || ''}`.toLowerCase(),
+      services: profileData.servicesOffered || '',
+      brands: Array.isArray(profileData.brandLogos) ? profileData.brandLogos.map(logo => getImgUrl(logo)) : [],
+      image: getImgUrl(profileData.avatar) || '',
+      otherLink: profileData.socialLinks?.other || '',
+      socials: {
+        instagram: profileData.socialLinks?.instagram || '',
+        tiktok: profileData.socialLinks?.website || '', // website field maps tiktok
+        youtube: profileData.socialLinks?.youtube || '',
+      },
+    };
+  }, [profileData]);
 
-  const mediaItems = Array.isArray(items)
-    ? items.map((item) => ({
-        id: item.id,
-        title: item.title,
-        type: item.type,
-        url: getImgUrl(item.url),
-        date: new Date(item.createdAt).toLocaleDateString('en-US', {
-          month: 'short',
-          day: '2-digit',
-          year: 'numeric',
-        }),
-      }))
-    : [];
+  const mediaItems = useMemo(() => {
+    return Array.isArray(items)
+      ? items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          url: getImgUrl(item.url),
+          date: new Date(item.createdAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+          }),
+        }))
+      : [];
+  }, [items]);
+
+  if (!profile) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -129,26 +138,57 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
       {/* Preview Modal */}
       <AnimatePresence>
         {previewItem && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPreviewItem(null)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <motion.div
+            key="preview-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setPreviewItem(null)}
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
               className="relative max-w-3xl w-full"
             >
-              <button onClick={() => setPreviewItem(null)} className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors">
+              <button 
+                type="button"
+                onClick={() => setPreviewItem(null)} 
+                className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer"
+              >
                 <X className="w-5 h-5 md:w-6 md:h-6" />
               </button>
               <div 
-                className="rounded-2xl overflow-hidden bg-black relative"
+                className="rounded-2xl overflow-hidden bg-black relative flex items-center justify-center min-h-[200px]"
                 onContextMenu={(e) => e.preventDefault()}
                 onDragStart={(e) => e.preventDefault()}
               >
                 {previewItem.type === 'video' ? (
-                  <video src={previewItem.url} className="w-full max-h-[80vh]" controls autoPlay controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+                  <video 
+                    src={previewItem.url} 
+                    className="w-full max-h-[80vh]" 
+                    controls 
+                    autoPlay 
+                    controlsList="nodownload" 
+                    disablePictureInPicture 
+                    onContextMenu={(e) => e.preventDefault()} 
+                    onDragStart={(e) => e.preventDefault()} 
+                    draggable="false" 
+                  />
                 ) : (
-                  <img src={previewItem.url} alt={previewItem.title} className="w-full max-h-[80vh] object-contain" loading="lazy" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+                  <img 
+                    src={previewItem.url} 
+                    alt={previewItem.title || "Preview"} 
+                    className="w-full max-h-[80vh] object-contain block" 
+                    decoding="async"
+                    onContextMenu={(e) => e.preventDefault()} 
+                    onDragStart={(e) => e.preventDefault()} 
+                    draggable="false" 
+                  />
                 )}
                 {/* STAKD Watermark */}
                 <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden bg-black/10">
@@ -161,7 +201,7 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
                 <p className="text-white font-bold text-sm md:text-base">{previewItem.title}</p>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

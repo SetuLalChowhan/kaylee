@@ -130,30 +130,69 @@ export const login = catchAsync(async (req, res, next) => {
 });
 export const googleLogin = async (req, res, next) => {
     try {
-        const { idToken } = req.body;
+        const { idToken, accessToken: googleAccessToken } = req.body;
         const googleClientId = process.env.GOOGLE_CLIENT_ID;
         if (!googleClientId) {
             return next(new AppError("Google Client ID is not configured on the server", 500));
         }
-        if (!idToken) {
-            return next(new AppError("Google ID Token is required", 400));
+        if (!idToken && !googleAccessToken) {
+            return next(new AppError("Google Token is required", 400));
         }
-        // Verify Google ID Token
-        let ticket;
-        try {
-            ticket = await client.verifyIdToken({
-                idToken,
-                audience: googleClientId,
-            });
+        let email;
+        let name;
+        let picture;
+        let given_name;
+        let family_name;
+        if (idToken) {
+            // Verify Google ID Token
+            let ticket;
+            try {
+                ticket = await client.verifyIdToken({
+                    idToken,
+                    audience: googleClientId,
+                });
+            }
+            catch (err) {
+                console.error("Google ID Token verification error:", err);
+                return next(new AppError("Invalid Google Token", 401));
+            }
+            const payload = ticket.getPayload();
+            if (!payload || !payload.email) {
+                return next(new AppError("Google authentication failed", 400));
+            }
+            email = payload.email;
+            name = payload.name;
+            picture = payload.picture;
+            given_name = payload.given_name;
+            family_name = payload.family_name;
         }
-        catch (err) {
-            return next(new AppError("Invalid Google Token", 401));
+        else if (googleAccessToken) {
+            // Verify via Google userinfo endpoint using access token from useGoogleLogin
+            try {
+                const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                    headers: { Authorization: `Bearer ${googleAccessToken}` },
+                });
+                if (!userInfoRes.ok) {
+                    throw new Error(`Google returned status ${userInfoRes.status}`);
+                }
+                const userInfo = (await userInfoRes.json());
+                if (!userInfo.email) {
+                    return next(new AppError("Google authentication failed", 400));
+                }
+                email = userInfo.email;
+                name = userInfo.name;
+                picture = userInfo.picture;
+                given_name = userInfo.given_name;
+                family_name = userInfo.family_name;
+            }
+            catch (err) {
+                console.error("Google access token verification error:", err);
+                return next(new AppError("Invalid Google Access Token", 401));
+            }
         }
-        const payload = ticket.getPayload();
-        if (!payload || !payload.email) {
+        if (!email) {
             return next(new AppError("Google authentication failed", 400));
         }
-        const { email, name, picture, given_name, family_name } = payload;
         // Check database for existing user
         let user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
