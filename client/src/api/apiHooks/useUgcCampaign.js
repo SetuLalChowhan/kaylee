@@ -75,9 +75,24 @@ export const useUpdateUgcCampaign = () => {
     },
     onSuccess: (data, variables) => {
       toast.success(data?.message || "Campaign updated successfully!");
+      
+      // Instantly update the campaign in the local cache
+      if (data?.data) {
+        // Update specific campaign query
+        queryClient.setQueryData(["ugcCampaign", variables.id], data.data);
+        
+        // Update all campaign lists
+        queryClient.setQueriesData({ queryKey: ["ugcCampaigns"] }, (oldList) => {
+          if (!Array.isArray(oldList)) return oldList;
+          return oldList.map(camp => camp.id === variables.id ? { ...camp, ...data.data } : camp);
+        });
+      }
+
+      // Invalidate to ensure background sync
       queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update campaign";
