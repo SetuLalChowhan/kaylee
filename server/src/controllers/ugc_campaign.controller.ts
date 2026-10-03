@@ -87,6 +87,12 @@ export const getUgcCampaigns = catchAsync(
 
     const campaigns = await prisma.ugcCampaign.findMany({
       where,
+      include: {
+        deliverables: { orderBy: { createdAt: "asc" } },
+        tasks: { orderBy: { createdAt: "asc" } },
+        media: { select: { id: true, name: true, type: true, status: true } },
+        feedback: { select: { id: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -198,7 +204,7 @@ export const createUgcCampaign = catchAsync(
         },
       });
 
-      // Create the ugc campaign task pointing to the planner task
+      // Automatically create the ugc campaign task pointing to the planner task
       await tx.ugcCampaignTask.create({
         data: {
           campaignId: c.id,
@@ -209,7 +215,55 @@ export const createUgcCampaign = catchAsync(
         },
       });
 
+      // Automatically generate invoice for this campaign
+      let validDueDate: Date;
+      if (deadline) {
+        validDueDate = new Date(deadline);
+        if (isNaN(validDueDate.getTime())) {
+          validDueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        }
+      } else {
+        validDueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      }
+
+      let oldCamp = await tx.campaign.findUnique({ where: { id: c.id } });
+      if (!oldCamp) {
+        oldCamp = await tx.campaign.create({
+          data: {
+            id: c.id,
+            title: `${campaignName}__${c.id}`,
+            description: `UgcCampaign:${c.id} user:${campaignOwnerId}`,
+          },
+        });
+      }
+
+      const randomInvNum = `INV-${Date.now().toString().slice(-6)}`;
+
+      await tx.invoice.create({
+        data: {
+          userId: campaignOwnerId,
+          invoiceNo: randomInvNum,
+          campaignId: c.id,
+          campaignName: campaignName,
+          issueDate: new Date(),
+          dueDate: validDueDate,
+          amount: amount || "0",
+          status: "Pending",
+        },
+      });
+
       return c;
+    });
+
+    logActivity({
+      userId: campaignOwnerId,
+      title: `Invoice auto-generated for ${campaignName}`,
+      sub: `${brandName} ($${amount || "0"})`,
+      avatarBg: "bg-blue-100",
+      avatarText: "INV",
+      dotColor: "bg-blue-500",
+      type: "INVOICE",
+      campaignId: campaign.id,
     });
 
     logActivity({
@@ -446,6 +500,25 @@ export const deleteUgcCampaign = catchAsync(
           console.warn("Failed to clean up associated planner tasks: ", err);
         });
       }
+
+      // Automatically delete all invoices associated with this campaign
+      await tx.invoice.deleteMany({
+        where: {
+          userId: existing.userId,
+          OR: [
+            { campaignId: id },
+            { campaignName: existing.name },
+          ],
+        },
+      }).catch((err) => {
+        console.warn("Failed to clean up associated invoices: ", err);
+      });
+
+      // Clean up legacy Campaign entry if exists
+      await tx.campaign.deleteMany({
+        where: { id },
+      }).catch(() => {});
+
       await tx.ugcCampaign.delete({ where: { id } });
     });
 
@@ -721,6 +794,11 @@ export const uploadMedia = catchAsync(
         assetType,
         status: "pending",
       },
+    });
+
+    await prisma.ugcCampaign.update({
+      where: { id: campaignId },
+      data: { updatedAt: new Date() },
     });
 
     res.status(201).json({ status: "success", data: media });
@@ -1001,6 +1079,14 @@ export const getPublicCampaignBySlug = catchAsync(
       return next(new AppError("Campaign not found", 404));
     }
 
+    if (campaign.status === "Draft" || campaign.status === "Active") {
+      await prisma.ugcCampaign.update({
+        where: { id: campaign.id },
+        data: { status: "Under Review", updatedAt: new Date() },
+      });
+      campaign.status = "Under Review";
+    }
+
     res.status(200).json({
       status: "success",
       data: appendPreviewToken(campaign),
@@ -1023,6 +1109,10 @@ export const updatePublicMediaStatus = catchAsync(
         where: { campaignId: campaign.id },
         data: { status: "approved" },
       });
+      await prisma.ugcCampaign.update({
+        where: { id: campaign.id },
+        data: { status: "Approved", updatedAt: new Date() },
+      });
       logActivity({
         userId: campaign.userId,
         title: `${campaign.brandName} approved all media`,
@@ -1042,6 +1132,22 @@ export const updatePublicMediaStatus = catchAsync(
       where: { id: mediaId },
       data: { status: "approved" },
     });
+
+    // Check if all media are now approved
+    const remainingUnapproved = await prisma.ugcMedia.count({
+      where: { campaignId: campaign.id, status: { not: "approved" } },
+    });
+    if (remainingUnapproved === 0) {
+      await prisma.ugcCampaign.update({
+        where: { id: campaign.id },
+        data: { status: "Approved", updatedAt: new Date() },
+      });
+    } else {
+      await prisma.ugcCampaign.update({
+        where: { id: campaign.id },
+        data: { updatedAt: new Date() },
+      });
+    }
 
     logActivity({
       userId: campaign.userId,

@@ -1,65 +1,98 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { format } from 'date-fns';
+import PlannerCalendarPopover from './PlannerCalendarPopover';
 
-const PlannerHeader = ({ currentWeekRange, onPrevWeek, onNextWeek, onToday, onAddTask, viewMode = 'week', onToggleView, navLabel }) => {
+const PlannerHeader = ({
+  currentDate = new Date(),
+  onPrevWeek,
+  onNextWeek,
+  onToday,
+  onAddTask,
+  viewMode = 'week',
+  onToggleView,
+  onSelectDate,
+  tasks = [],
+}) => {
+  const monthYearLabel = format(currentDate, 'MMMM yyyy');
+
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">Planner</h1>
-        <p className="text-gray-500 text-xs md:text-sm font-medium">{currentWeekRange}</p>
-      </div>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      {/* Left: Today, < >, Compact Calendar Popover, Month Year */}
+      <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+        <button
+          type="button"
+          onClick={onToday}
+          className="px-3.5 sm:px-4 py-2 rounded-xl border border-gray-200/90 bg-white hover:bg-gray-50 text-xs font-bold text-[#1A1A1A] shadow-2xs transition-all cursor-pointer"
+        >
+          Today
+        </button>
 
-      <div className="flex items-center flex-wrap gap-3">
-        {/* View Toggle - Text Tabs */}
-        <div className="flex items-center bg-[#F8FAFC] p-1 rounded-2xl border border-gray-100">
+        <div className="flex items-center border border-gray-200/90 bg-white rounded-xl p-1 shadow-2xs">
           <button
-            onClick={() => onToggleView('week')}
-            className={`lg:px-5 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${viewMode === 'week'
-              ? 'bg-white text-Primary shadow-sm'
-              : 'text-gray-500 hover:text-gray-900'
-              }`}
+            type="button"
+            onClick={onPrevWeek}
+            className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+            title="Previous"
           >
-            Weekly
+            <ChevronLeft className="w-4 h-4 stroke-[2.2]" />
           </button>
           <button
-            onClick={() => onToggleView('month')}
-            className={`lg:px-5 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${viewMode === 'month'
-              ? 'bg-white text-Primary shadow-sm'
-              : 'text-gray-500 hover:text-gray-900'
-              }`}
+            type="button"
+            onClick={onNextWeek}
+            className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+            title="Next"
           >
-            Monthly
+            <ChevronRight className="w-4 h-4 stroke-[2.2]" />
           </button>
         </div>
 
-        {/* Week Navigation - Only in week view */}
-        {viewMode === 'week' && (
-          <div className="flex items-center bg-[#F8FAFC] p-1.5 rounded-2xl border border-gray-50">
-            <button
-              onClick={onPrevWeek}
-              className="p-2 hover:bg-white hover:shadow-sm rounded-xl transition-all text-gray-500"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="px-4 py-2 text-sm font-bold text-[#1A1A1A] min-w-[110px] text-center">
-              {navLabel || 'This Week'}
-            </span>
-            <button
-              onClick={onNextWeek}
-              className="p-2 hover:bg-white hover:shadow-sm rounded-xl transition-all text-gray-500"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        )}
+        {/* Compact Floating Calendar Popover Box */}
+        <PlannerCalendarPopover
+          currentDate={currentDate}
+          onSelectDate={onSelectDate}
+          tasks={tasks}
+        />
 
-        {/* Add Task Button */}
+        <h2 className="text-xl sm:text-2xl font-black text-[#1A1A1A] tracking-tight ml-1 select-none">
+          {monthYearLabel}
+        </h2>
+      </div>
+
+      {/* Right: Week / Month Toggle & Add Task */}
+      <div className="flex items-center gap-3 self-end sm:self-auto">
+        <div className="flex items-center bg-[#F1F5F9]/80 p-1 rounded-2xl border border-gray-100">
+          <button
+            type="button"
+            onClick={() => onToggleView('week')}
+            className={`px-4 sm:px-5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+              viewMode === 'week'
+                ? 'bg-blue-100 text-blue-600 shadow-2xs'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            Week
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggleView('month')}
+            className={`px-4 sm:px-5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+              viewMode === 'month'
+                ? 'bg-blue-100 text-blue-600 shadow-2xs'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            Month
+          </button>
+        </div>
+
         <button
+          type="button"
           onClick={onAddTask}
-          className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full sm:w-auto"
+          className="bg-Primary text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-md shadow-Primary/20 hover:bg-Primary/90 transition-all cursor-pointer"
         >
-          <Plus className="w-4 h-4 md:w-5 md:h-5" />
-          Add Task
+          <Plus className="w-4 h-4" />
+          <span>Add Task</span>
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { X, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
+import { X, ChevronDown, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { useCampaigns } from '@/api/apiHooks/useCampaign';
@@ -12,6 +12,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
   const dropdownRef = useRef(null);
 
   const selectedCampaign = watch('campaign') || '';
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -29,15 +30,49 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
 
   useEffect(() => {
     if (task) {
+      let initialDate = '';
+      let initialTime = task.time || '';
+
+      if (task.date) {
+        if (task.date.includes('T')) {
+          const parts = task.date.split('T');
+          initialDate = parts[0];
+          if (!initialTime && parts[1]) {
+            initialTime = parts[1].slice(0, 5);
+          }
+        } else if (task.date.includes(' ')) {
+          const parts = task.date.split(' ');
+          initialDate = parts[0];
+          if (!initialTime && parts[1]) {
+            initialTime = parts[1].slice(0, 5);
+          }
+        } else {
+          initialDate = task.date;
+        }
+      }
+
       reset({
         name: task.name || '',
-        date: task.date || '',
+        date: initialDate || '',
+        time: initialTime || '',
         campaign: task.campaign || '',
       });
     } else {
-      reset({ name: '', date: '', campaign: '' });
+      reset({ name: '', date: '', time: '', campaign: '' });
     }
   }, [task, reset]);
+
+  const handleFormSubmit = (data) => {
+    let finalDate = data.date;
+    if (data.time) {
+      finalDate = `${data.date}T${data.time}:00`;
+    }
+    onSubmit({
+      name: data.name,
+      campaign: data.campaign,
+      date: finalDate,
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -75,26 +110,53 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
 
           {/* Form */}
           <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-6 md:pb-8 custom-scrollbar">
-            <form onSubmit={handleSubmit(onSubmit)} className={`space-y-4 transition-all duration-200 ${isOpenDropdown ? 'pb-36' : ''}`}>
+            <form onSubmit={handleSubmit(handleFormSubmit)} className={`space-y-4 transition-all duration-200 ${isOpenDropdown ? 'pb-36' : ''}`}>
               {/* Task Name */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">Task Name</label>
                 <input
-                  {...register('name', { required: true })}
+                  {...register('name', { required: 'Task name is required' })}
                   type="text"
                   placeholder="e.g. Shoot video, Edit draft"
-                  className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] placeholder-gray-400 font-medium"
+                  className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] placeholder-gray-400 font-medium ${
+                    errors.name ? 'border-red-500' : 'border-gray-200'
+                  }`}
                 />
+                {errors.name && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.name.message}</p>}
               </div>
 
-              {/* Date */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Date</label>
-                <input
-                  {...register('date', { required: true })}
-                  type="date"
-                  className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] font-medium"
-                />
+              {/* Date & Time Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Date */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Date</label>
+                  <input
+                    {...register('date', { required: 'Date is required' })}
+                    type="date"
+                    className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] font-medium ${
+                      errors.date ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                  />
+                  {errors.date && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.date.message}</p>}
+                </div>
+
+                {/* Time (with User's Local Timezone badge) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700">Time</label>
+                    <span
+                      className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md truncate max-w-[140px]"
+                      title={`Timezone: ${userTimezone}`}
+                    >
+                      {userTimezone}
+                    </span>
+                  </div>
+                  <input
+                    {...register('time')}
+                    type="time"
+                    className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] font-medium"
+                  />
+                </div>
               </div>
 
               {/* Campaign */}

@@ -8,6 +8,7 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const createCampaignMutation = useCreateUgcCampaign();
   const updateCampaignMutation = useUpdateUgcCampaign();
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
   const getLocalDateString = () => {
     const date = new Date();
     const year = date.getFullYear();
@@ -20,10 +21,26 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
   React.useEffect(() => {
     if (isOpen) {
       if (campaign) {
+        let initialDate = today;
+        let initialTime = '17:00';
+        if (campaign.deadline) {
+          if (campaign.deadline.includes('T')) {
+            const parts = campaign.deadline.split('T');
+            initialDate = parts[0] || today;
+            if (parts[1]) initialTime = parts[1].slice(0, 5);
+          } else if (campaign.deadline.includes(' ')) {
+            const parts = campaign.deadline.split(' ');
+            initialDate = parts[0] || today;
+            if (parts[1]) initialTime = parts[1].slice(0, 5);
+          } else {
+            initialDate = campaign.deadline;
+          }
+        }
         reset({
           campaignName: campaign.name || '',
           brandName: campaign.brandName || '',
-          deadline: campaign.deadline || today,
+          deadlineDate: initialDate,
+          deadlineTime: initialTime,
           amount: campaign.amount || '',
           status: campaign.status || 'Pending',
           notes: campaign.notes || '',
@@ -32,7 +49,8 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
         reset({
           campaignName: '',
           brandName: '',
-          deadline: today,
+          deadlineDate: today,
+          deadlineTime: '17:00',
           amount: '',
           status: 'Pending',
           notes: '',
@@ -42,9 +60,21 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
   }, [campaign, isOpen, reset, today]);
 
   const onSubmit = (data) => {
+    let finalDeadline = data.deadlineDate;
+    if (data.deadlineTime) {
+      finalDeadline = `${data.deadlineDate}T${data.deadlineTime}:00`;
+    }
+    const payload = {
+      campaignName: data.campaignName,
+      brandName: data.brandName,
+      deadline: finalDeadline,
+      amount: data.amount,
+      status: data.status,
+      notes: data.notes,
+    };
     if (campaign) {
       updateCampaignMutation.mutate(
-        { id: campaign.id, campaignData: data },
+        { id: campaign.id, campaignData: payload },
         {
           onSuccess: () => {
             onClose();
@@ -52,7 +82,7 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
         }
       );
     } else {
-      createCampaignMutation.mutate(data, {
+      createCampaignMutation.mutate(payload, {
         onSuccess: () => {
           onClose();
         },
@@ -120,15 +150,34 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
                 {errors.brandName && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.brandName.message}</p>}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Deadline</label>
-                <input
-                  {...register('deadline', { required: 'Deadline is required' })}
-                  type="date"
-                  defaultValue={today}
-                  className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] font-medium ${errors.deadline ? 'border-red-500' : 'border-gray-200'}`}
-                />
-                {errors.deadline && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.deadline.message}</p>}
+              {/* Due Date & Time with Timezone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Due Date</label>
+                  <input
+                    {...register('deadlineDate', { required: 'Due date is required' })}
+                    type="date"
+                    className={`w-full bg-[#F8FAFC] border rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] font-medium ${errors.deadlineDate ? 'border-red-500' : 'border-gray-200'}`}
+                  />
+                  {errors.deadlineDate && <p className="text-xs text-red-500 font-bold mt-1 ml-1">{errors.deadlineDate.message}</p>}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700">Due Time</label>
+                    <span
+                      className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md truncate max-w-[130px]"
+                      title={`Timezone: ${userTimezone}`}
+                    >
+                      {userTimezone}
+                    </span>
+                  </div>
+                  <input
+                    {...register('deadlineTime')}
+                    type="time"
+                    className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl py-2.5 px-3.5 focus:bg-white focus:border-Primary focus:ring-2 focus:ring-Primary/10 focus:outline-none transition-all text-sm text-[#1A1A1A] font-medium"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

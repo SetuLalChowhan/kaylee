@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
 import { Link2, Copy, Check } from 'lucide-react';
+import { useUpdateUgcCampaign } from '@/api/apiHooks/useUgcCampaign';
 
-const CampaignLink = ({ link }) => {
+const CampaignLink = ({ link, campaignId, status }) => {
   const [copied, setCopied] = useState(false);
+  const updateMutation = useUpdateUgcCampaign();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(link);
     setCopied(true);
-    console.log('Campaign Link Copied:', link);
+    if (campaignId && status === 'Draft') {
+      updateMutation.mutate({
+        id: campaignId,
+        campaignData: { status: 'Under Review' },
+      });
+    }
     setTimeout(() => setCopied(false), 2000);
   };
 

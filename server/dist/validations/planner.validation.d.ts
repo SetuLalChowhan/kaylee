@@ -5,6 +5,7 @@ export declare const createTaskSchema: z.ZodObject<{
         campaign: z.ZodString;
         date: z.ZodString;
         completed: z.ZodOptional<z.ZodBoolean>;
+        targetUserId: z.ZodOptional<z.ZodString>;
     }, z.core.$strip>;
 }, z.core.$strip>;
 export declare const updateTaskSchema: z.ZodObject<{

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, addMonths, subMonths, isSameDay } from 'date-fns';
 import PlannerHeader from './PlannerHeader';
 import WeeklyCalendar from './WeeklyCalendar';
 import MonthlyView from './MonthlyView';
@@ -25,6 +25,7 @@ const Planner = () => {
   const [modalType, setModalType] = useState('add');
   const [selectedTask, setSelectedTask] = useState(null);
   const [preselectedDate, setPreselectedDate] = useState(null);
+  const [preselectedTime, setPreselectedTime] = useState('');
 
   // Week Logic
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -33,18 +34,45 @@ const Planner = () => {
   const isCurrentWeek = isSameDay(weekStart, startOfWeek(new Date(), { weekStartsOn: 1 }));
   const navLabel = isCurrentWeek ? 'This Week' : format(weekStart, 'MMM d, yyyy');
 
-  const handleNextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
-  const handlePrevWeek = () => setCurrentDate(subWeeks(currentDate, 1));
+  const handleNext = () => {
+    if (viewMode === 'month') {
+      setCurrentDate(addMonths(currentDate, 1));
+    } else {
+      setCurrentDate(addWeeks(currentDate, 1));
+    }
+  };
+
+  const handlePrev = () => {
+    if (viewMode === 'month') {
+      setCurrentDate(subMonths(currentDate, 1));
+    } else {
+      setCurrentDate(subWeeks(currentDate, 1));
+    }
+  };
+
   const handleToday = () => setCurrentDate(new Date());
 
   // Task Handlers
-  const handleAddTask = (day) => {
+  const handleAddTask = (day, timeSlot) => {
     setModalType('add');
     setSelectedTask(null);
+    let preTime = '';
+    if (timeSlot) {
+      const match = timeSlot.match(/(\d+)\s*(AM|PM)/i);
+      if (match) {
+        let hour = parseInt(match[1], 10);
+        const ampm = match[2].toUpperCase();
+        if (ampm === 'PM' && hour < 12) hour += 12;
+        if (ampm === 'AM' && hour === 12) hour = 0;
+        preTime = `${String(hour).padStart(2, '0')}:00`;
+      }
+    }
     if (day) {
       setPreselectedDate(format(day, 'yyyy-MM-dd'));
+      setPreselectedTime(preTime);
     } else {
       setPreselectedDate(null);
+      setPreselectedTime('');
     }
     setIsTaskModalOpen(true);
   };
@@ -102,17 +130,25 @@ const Planner = () => {
     );
   }
 
+  const handleSelectSpecificDate = (date) => {
+    setCurrentDate(date);
+    setViewMode('week'); // Smoothly jump to the weekly view for this specific date
+  };
+
   return (
     <div className="py-2">
       <PlannerHeader 
+        currentDate={currentDate}
         currentWeekRange={weekRangeLabel}
-        onNextWeek={handleNextWeek}
-        onPrevWeek={handlePrevWeek}
+        onNextWeek={handleNext}
+        onPrevWeek={handlePrev}
         onToday={handleToday}
         onAddTask={() => handleAddTask()}
         viewMode={viewMode}
         onToggleView={(mode) => setViewMode(mode)}
         navLabel={navLabel}
+        onSelectDate={handleSelectSpecificDate}
+        tasks={tasks}
       />
 
       {viewMode === 'week' ? (
@@ -148,7 +184,7 @@ const Planner = () => {
         onClose={() => setIsTaskModalOpen(false)}
         onSubmit={handleTaskSubmit}
         type={modalType}
-        task={selectedTask || (preselectedDate ? { date: preselectedDate } : null)}
+        task={selectedTask || (preselectedDate ? { date: preselectedDate, time: preselectedTime } : null)}
       />
 
       <DeleteTaskModal 

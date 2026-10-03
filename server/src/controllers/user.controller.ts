@@ -430,11 +430,17 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   });
   const stripeIncomeValue = stripeIncomeSum._sum.amount ?? 0;
 
-  // 2. Recent Active/Draft campaigns (up to 4)
+  // 2. Recent Active/Draft campaigns (up to 6)
   const recentCampaigns = await prisma.ugcCampaign.findMany({
     where: isAdmin ? {} : { userId },
+    include: {
+      deliverables: { orderBy: { createdAt: "asc" } },
+      tasks: { orderBy: { createdAt: "asc" } },
+      media: { select: { id: true, name: true, type: true, status: true } },
+      feedback: { select: { id: true } },
+    },
     orderBy: { updatedAt: "desc" },
-    take: 4
+    take: 6
   });
 
   // 3. Upcoming Deadlines (up to 5)

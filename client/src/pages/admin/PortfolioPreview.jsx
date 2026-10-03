@@ -22,38 +22,8 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
   const { data: portfolioItems, isLoading: isItemsLoading } = usePortfolioItems({ enabled: !isPublic });
 
   const isLoading = isPublic ? isPublicLoading : (isProfileLoading || isItemsLoading);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-10 h-10 border-4 border-Primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   const profileData = isPublic ? publicData?.profile : currentUserProfile;
   const items = isPublic ? publicData?.portfolioItems : portfolioItems;
-
-  if (!profileData) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Portfolio Not Found</h2>
-        <p className="text-gray-500 mb-6">The requested portfolio does not exist or has not been set up yet.</p>
-        <button 
-          onClick={() => {
-            if (window.history.state && window.history.state.idx > 0) {
-              navigate(-1);
-            } else {
-              navigate(isPublic ? '/' : '/dashboard/portfolio');
-            }
-          }}
-          className="px-6 py-3 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 transition-all shadow-md"
-        >
-          Go Back
-        </button>
-      </div>
-    );
-  }
 
   const profile = useMemo(() => {
     if (!profileData) return null;
@@ -91,8 +61,33 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
       : [];
   }, [items]);
 
-  if (!profile) {
-    return null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-10 h-10 border-4 border-Primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!profileData || !profile) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Portfolio Not Found</h2>
+        <p className="text-gray-500 mb-6">The requested portfolio does not exist or has not been set up yet.</p>
+        <button 
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate(isPublic ? '/' : '/dashboard/portfolio');
+            }
+          }}
+          className="px-6 py-3 bg-Primary text-white font-bold rounded-xl hover:bg-Primary/90 transition-all shadow-md"
+        >
+          Go Back
+        </button>
+      </div>
+    );
   }
 
   return (

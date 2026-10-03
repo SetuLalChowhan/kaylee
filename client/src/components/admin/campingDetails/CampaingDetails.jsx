@@ -42,31 +42,6 @@ const CampaingDetails = () => {
     });
   };
 
-  const getProgress = (campaign) => {
-    const totalTasks = campaign.tasks?.length || 0;
-    if (totalTasks === 0) {
-      switch (campaign.status) {
-        case "Completed": return 100;
-        case "Approved": return 90;
-        case "Under Review": return 75;
-        case "Active": return 50;
-        case "Draft": return 25;
-        default: return 10;
-      }
-    }
-    const completedTasks = campaign.tasks.filter(t => t.completed).length;
-    return Math.round((completedTasks / totalTasks) * 100);
-  };
-
-  const getProgressLabel = (campaign) => {
-    const totalTasks = campaign.tasks?.length || 0;
-    if (totalTasks === 0) {
-      return `${getProgress(campaign)}%`;
-    }
-    const completedTasks = campaign.tasks?.filter(t => t.completed).length || 0;
-    return `${completedTasks}/${totalTasks}`;
-  };
-
   const shareLink = `${window.location.origin}/brand-view/${campaign.slug}`;
 
   return (
@@ -130,7 +105,7 @@ const CampaingDetails = () => {
 
       {/* Sections */}
       <div className="space-y-6">
-        <CampaignLink link={shareLink} />
+        <CampaignLink link={shareLink} campaignId={campaign.id} status={campaign.status} />
         <BrandFeedback campaign={campaign} />
         <Deliverables campaign={campaign} />
         <Tasks campaign={campaign} />

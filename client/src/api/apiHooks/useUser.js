@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -84,7 +84,7 @@ export const useCompleteOnboarding = () => {
       });
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: (error) => {
@@ -152,7 +152,8 @@ export const useDashboardStats = () => {
       const res = await axiosSecure.get(USER.DASHBOARD_STATS);
       return res.data?.data || res.data;
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 };
 

@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
-import StatsSection from './dashboard/StatsSection';
-import CampaignGrid from './dashboard/CampaignGrid';
-import DeadlinesSidebar from './dashboard/DeadlinesSidebar';
-import CommonButton from '@/components/ui/CommonButton';
-import CreateCampaignModal from './camping/components/CreateCampaignModal';
-import { useUserProfile, useDashboardStats } from '@/api/apiHooks/useUser';
-import PlatformDemoModal from '@/components/admin/PlatformDemoModal';
+import React, { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
+import StatsSection from "./dashboard/StatsSection";
+import CampaignGrid from "./dashboard/CampaignGrid";
+import DeadlinesSidebar from "./dashboard/DeadlinesSidebar";
+import CommonButton from "@/components/ui/CommonButton";
+import CreateCampaignModal from "./camping/components/CreateCampaignModal";
+import { useUserProfile, useDashboardStats } from "@/api/apiHooks/useUser";
+import PlatformDemoModal from "@/components/admin/PlatformDemoModal";
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const { user, isLoading: isUserLoading } = useUserProfile();
-  const { data: dashboardData, isLoading: isStatsLoading } = useDashboardStats();
+  const { data: dashboardData, isLoading: isStatsLoading } =
+    useDashboardStats();
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
@@ -32,7 +33,7 @@ const Dashboard = () => {
     );
   }
 
-  const welcomeName = user?.firstName || user?.displayName || 'Jahan';
+  const welcomeName = user?.firstName || user?.displayName || "Jahan";
 
   const handleEdit = (campaign) => {
     setSelectedCampaign(campaign);
@@ -52,7 +53,9 @@ const Dashboard = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">
             Dashboard
           </h1>
-          <p className="text-gray-500 text-xs md:text-sm">Here's what's happening with your campaigns.</p>
+          <p className="text-gray-500 text-xs md:text-sm">
+            Here's what's happening with your campaigns.
+          </p>
         </div>
         <CommonButton
           onClick={handleCreateClick}
@@ -65,19 +68,22 @@ const Dashboard = () => {
 
       {/* Stats Section */}
 
-
       {/* Main Content Layout */}
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start w-full">
-        <div className=' flex flex-col gap-6 flex-1 w-full'>
+      <div className="flex flex-col lg:flex-row gap-4 xlg:gap-8 items-start w-full">
+        <div className=" flex flex-col gap-6 flex-1 w-full">
           {/* Left Column: Campaigns */}
           <StatsSection stats={dashboardData?.stats} />
-          <CampaignGrid campaigns={dashboardData?.recentCampaigns} onEdit={handleEdit} />
-
+          <CampaignGrid
+            campaigns={dashboardData?.recentCampaigns}
+            onEdit={handleEdit}
+          />
         </div>
-        <div className='lg:w-auto w-full'>
-
+        <div className="lg:w-auto w-full">
           {/* Right Column: Deadlines & Tasks */}
-          <DeadlinesSidebar deadlines={dashboardData?.deadlines} tasks={dashboardData?.tasks} />
+          <DeadlinesSidebar
+            deadlines={dashboardData?.deadlines}
+            tasks={dashboardData?.tasks}
+          />
         </div>
       </div>
 
@@ -96,6 +102,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
 
 export default Dashboard;

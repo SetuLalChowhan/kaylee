@@ -3,6 +3,23 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addM
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Plus, Trash2, X, Calendar as CalendarIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+const getPastelColorTheme = (task, index = 0) => {
+  const text = `${task.campaign || ''} ${task.name || ''}`.toLowerCase();
+  if (text.includes('activewear') || text.includes('film') || text.includes('reel') || text.includes('video') || index % 5 === 0) {
+    return { bg: 'bg-[#DBEAFE]/90 text-[#1D4ED8] border-[#BFDBFE]' };
+  }
+  if (text.includes('gym') || text.includes('edit') || text.includes('content') || index % 5 === 1) {
+    return { bg: 'bg-[#EDE9FE]/90 text-[#6D28D9] border-[#DDD6FE]' };
+  }
+  if (text.includes('love') || text.includes('feedback') || text.includes('review') || index % 5 === 2) {
+    return { bg: 'bg-[#FCE7F3]/90 text-[#BE185D] border-[#FBCFE8]' };
+  }
+  if (text.includes('bhumi') || text.includes('deliverable') || text.includes('brand') || index % 5 === 3) {
+    return { bg: 'bg-[#D1FAE5]/90 text-[#047857] border-[#A7F3D0]' };
+  }
+  return { bg: 'bg-[#FEF3C7]/90 text-[#B45309] border-[#FDE68A]' };
+};
+
 const MonthlyView = ({ currentDate, tasks, onAddTask, onEditTask, onToggleTask, onDeleteTask }) => {
   const [viewDate, setViewDate] = useState(currentDate);
   const [selectedDayPopover, setSelectedDayPopover] = useState(null);
@@ -76,35 +93,36 @@ const MonthlyView = ({ currentDate, tasks, onAddTask, onEditTask, onToggleTask, 
 
       {/* Task Chips List (max 2 visible) */}
       <div className="space-y-1 flex-1 flex flex-col justify-start">
-        {dayTasks.slice(0, 2).map((task) => (
-          <div
-            key={task.id}
-            onClick={() => onEditTask(task)}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-left transition-all cursor-pointer group/chip ${
-              task.completed 
-                ? 'bg-gray-50 border-gray-100 opacity-60' 
-                : 'bg-[#F8FAFC] border-gray-100 hover:border-Primary/30 hover:bg-white hover:shadow-xs'
-            }`}
-          >
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleTask(task.id);
-              }}
-              className="shrink-0 hover:scale-110 transition-transform cursor-pointer"
+        {dayTasks.slice(0, 2).map((task, idx) => {
+          const theme = getPastelColorTheme(task, idx);
+          return (
+            <div
+              key={task.id}
+              onClick={() => onEditTask(task)}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-left transition-all cursor-pointer group/chip ${theme.bg} ${theme.border} ${
+                task.completed ? 'opacity-60 line-through' : 'hover:shadow-xs'
+              }`}
             >
-              {task.completed ? (
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-              ) : (
-                <Circle className="w-3 h-3 text-gray-300 group-hover/chip:text-Primary transition-colors" />
-              )}
-            </button>
-            <span className={`text-[11px] font-semibold truncate flex-1 ${task.completed ? 'text-gray-400 line-through' : 'text-[#1A1A1A]'}`}>
-              {task.name}
-            </span>
-          </div>
-        ))}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleTask(task.id);
+                }}
+                className="shrink-0 hover:scale-110 transition-transform cursor-pointer"
+              >
+                {task.completed ? (
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                ) : (
+                  <Circle className="w-3 h-3 opacity-60 hover:opacity-100" />
+                )}
+              </button>
+              <span className="text-[11px] font-bold truncate flex-1">
+                {task.name}
+              </span>
+            </div>
+          );
+        })}
 
         {/* Overflow Pill Button */}
         {dayTasks.length > 2 && (
@@ -145,34 +163,39 @@ const MonthlyView = ({ currentDate, tasks, onAddTask, onEditTask, onToggleTask, 
           </div>
         </div>
 
-        {/* Days Header Strip */}
-        <div className="grid grid-cols-7 border-b border-gray-100 bg-[#F8FAFC]">
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayName) => (
-            <div
-              key={dayName}
-              className="py-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider"
-            >
-              {dayName}
+        {/* Responsive Month Days Grid with Horizontal Scroll */}
+        <div className="overflow-x-auto custom-scrollbar">
+          <div className="min-w-[760px]">
+            {/* Days Header Strip */}
+            <div className="grid grid-cols-7 border-b border-gray-100 bg-[#F8FAFC]">
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayName) => (
+                <div
+                  key={dayName}
+                  className="py-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider"
+                >
+                  {dayName}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Days 7-Column Grid */}
-        <div className="grid grid-cols-7 border-l border-gray-100">
-          {days.map((day, index) => {
-            const isToday = isSameDay(day, new Date());
-            const isCurrentMonth = isSameMonth(day, viewDate);
-            const dayTasks = getTasksForDay(day);
-            return (
-              <DayCell
-                key={index}
-                day={day}
-                isToday={isToday}
-                isCurrentMonth={isCurrentMonth}
-                dayTasks={dayTasks}
-              />
-            );
-          })}
+            {/* Days 7-Column Grid */}
+            <div className="grid grid-cols-7 border-l border-gray-100">
+              {days.map((day, index) => {
+                const isToday = isSameDay(day, new Date());
+                const isCurrentMonth = isSameMonth(day, viewDate);
+                const dayTasks = getTasksForDay(day);
+                return (
+                  <DayCell
+                    key={index}
+                    day={day}
+                    isToday={isToday}
+                    isCurrentMonth={isCurrentMonth}
+                    dayTasks={dayTasks}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

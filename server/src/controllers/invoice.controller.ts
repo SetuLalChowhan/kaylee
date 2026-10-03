@@ -23,25 +23,51 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
     targetUserId?: string;
   };
 
-  // Find dynamic campaign by title to link campaignId, or create it if it doesn't exist
-  let dbCampaign = campaign ? await prisma.campaign.findUnique({
-    where: { title: campaign },
+  const invoiceOwnerId = (role === "admin" && targetUserId) ? targetUserId : userId;
+
+  // Find dynamic campaign by title/id to link campaignId, or create it if it doesn't exist
+  let dbCampaignId: string | null = null;
+  const matchingUgc = campaign ? await prisma.ugcCampaign.findFirst({
+    where: {
+      userId: invoiceOwnerId,
+      name: campaign,
+    },
   }) : null;
 
-  if (!dbCampaign && campaign) {
-    dbCampaign = await prisma.campaign.create({
-      data: {
-        title: campaign,
-        description: `Auto-created via invoice ${invoiceNo}`,
-      },
+  if (matchingUgc) {
+    let dbCampaign = await prisma.campaign.findUnique({
+      where: { id: matchingUgc.id },
     });
+    if (!dbCampaign) {
+      dbCampaign = await prisma.campaign.create({
+        data: {
+          id: matchingUgc.id,
+          title: `${campaign}__${matchingUgc.id}`,
+          description: `UgcCampaign:${matchingUgc.id}`,
+        },
+      });
+    }
+    dbCampaignId = dbCampaign.id;
+  } else if (campaign) {
+    let dbCampaign = await prisma.campaign.findUnique({
+      where: { title: campaign },
+    });
+    if (!dbCampaign) {
+      dbCampaign = await prisma.campaign.create({
+        data: {
+          title: `${campaign}__${Date.now()}`,
+          description: `Auto-created via invoice ${invoiceNo}`,
+        },
+      });
+    }
+    dbCampaignId = dbCampaign.id;
   }
 
   const invoice = await prisma.invoice.create({
     data: {
-      userId: (role === "admin" && targetUserId) ? targetUserId : userId,
+      userId: invoiceOwnerId,
       invoiceNo,
-      campaignId: dbCampaign?.id || null,
+      campaignId: dbCampaignId,
       campaignName: campaign,
       issueDate: issueDate ? new Date(issueDate) : new Date(),
       dueDate: new Date(dueDate),
@@ -60,23 +86,22 @@ export const createInvoice = catchAsync(async (req: Request, res: Response, next
     type: "INVOICE",
   });
 
-  // Sync UgcCampaign amount and payment status with invoice
-  if (campaign) {
-    const ugcCampaign = await prisma.ugcCampaign.findFirst({
-      where: {
-        name: campaign,
-        userId: invoice.userId,
+  // Sync UgcCampaign amount and payment status with invoice (exact content ID first, fallback to user + name)
+  const targetUgcCampaign = matchingUgc || (campaign ? await prisma.ugcCampaign.findFirst({
+    where: {
+      name: campaign,
+      userId: invoice.userId,
+    },
+  }) : null);
+
+  if (targetUgcCampaign) {
+    await prisma.ugcCampaign.update({
+      where: { id: targetUgcCampaign.id },
+      data: {
+        amount,
+        paymentStatus: invoice.status === "Paid" ? "Paid" : (invoice.status === "Overdue" ? "Overdue" : "Pending"),
       },
     });
-    if (ugcCampaign) {
-      await prisma.ugcCampaign.update({
-        where: { id: ugcCampaign.id },
-        data: {
-          amount,
-          paymentStatus: invoice.status === "Paid" ? "Paid" : (invoice.status === "Overdue" ? "Overdue" : "Pending"),
-        },
-      });
-    }
   }
 
   res.status(201).json({
@@ -220,26 +245,29 @@ export const updateInvoice = catchAsync(async (req: Request, res: Response, next
     },
   });
 
-  // Sync UgcCampaign amount and payment status with invoice
+  // Sync UgcCampaign amount and payment status with invoice (by exact campaignId first, fallback to name + userId)
   const finalAmount = amount !== undefined ? amount : existingInvoice.amount;
   const finalCampaignName = campaign !== undefined ? campaign : existingInvoice.campaignName;
   const finalStatus = status !== undefined ? status : updatedInvoice.status;
-  if (finalCampaignName) {
-    const ugcCampaign = await prisma.ugcCampaign.findFirst({
-      where: {
-        name: finalCampaignName,
-        userId: existingInvoice.userId,
+
+  const targetUgc = updatedInvoice.campaignId
+    ? await prisma.ugcCampaign.findFirst({
+        where: { id: updatedInvoice.campaignId, userId: existingInvoice.userId },
+      })
+    : (finalCampaignName
+        ? await prisma.ugcCampaign.findFirst({
+            where: { name: finalCampaignName, userId: existingInvoice.userId },
+          })
+        : null);
+
+  if (targetUgc) {
+    await prisma.ugcCampaign.update({
+      where: { id: targetUgc.id },
+      data: {
+        amount: finalAmount,
+        paymentStatus: finalStatus === "Paid" ? "Paid" : (finalStatus === "Overdue" ? "Overdue" : "Pending"),
       },
     });
-    if (ugcCampaign) {
-      await prisma.ugcCampaign.update({
-        where: { id: ugcCampaign.id },
-        data: {
-          amount: finalAmount,
-          paymentStatus: finalStatus === "Paid" ? "Paid" : (finalStatus === "Overdue" ? "Overdue" : "Pending"),
-        },
-      });
-    }
   }
 
   res.status(200).json({
