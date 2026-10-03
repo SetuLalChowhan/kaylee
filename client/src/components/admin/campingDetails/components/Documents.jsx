@@ -90,12 +90,17 @@ const Documents = ({ campaign }) => {
         </div>
       </div>
 
+      {/* Hidden file input isolated to prevent double clicks / dialog flicker */}
+      <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} multiple />
+
       {/* Upload Area */}
       <div
-        onClick={() => fileRef.current?.click()}
+        onClick={(e) => {
+          e.stopPropagation();
+          fileRef.current?.click();
+        }}
         className="border-2 border-dashed border-Primary/20 rounded-2xl p-8 flex flex-col items-center justify-center bg-Primary/[0.02] cursor-pointer hover:bg-Primary/[0.04] transition-all group mb-5"
       >
-        <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} multiple />
         <CloudUpload className="w-7 h-7 text-Primary/40 mb-2 group-hover:scale-110 transition-transform" />
         <p className="text-sm text-gray-400">Drag & drop files here</p>
         <p className="text-xs text-gray-300 italic my-1">or</p>

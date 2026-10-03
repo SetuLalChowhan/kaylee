@@ -69,8 +69,8 @@ const Dashboard = () => {
       {/* Stats Section */}
 
       {/* Main Content Layout */}
-      <div className="flex flex-col lg:flex-row gap-4 xlg:gap-8 items-start w-full">
-        <div className=" flex flex-col gap-6 flex-1 w-full">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 xl:gap-6 items-start w-full">
+        <div className="flex flex-col gap-5 xl:gap-6 flex-1 w-full min-w-0">
           {/* Left Column: Campaigns */}
           <StatsSection stats={dashboardData?.stats} />
           <CampaignGrid
@@ -78,7 +78,7 @@ const Dashboard = () => {
             onEdit={handleEdit}
           />
         </div>
-        <div className="lg:w-auto w-full">
+        <div className="lg:w-auto w-full shrink-0">
           {/* Right Column: Deadlines & Tasks */}
           <DeadlinesSidebar
             deadlines={dashboardData?.deadlines}

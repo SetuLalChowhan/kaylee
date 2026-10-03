@@ -7,8 +7,8 @@ import { toast } from 'react-toastify';
 
 const ContentGallery = ({ campaign }) => {
   const fileRef = useRef(null);
-  // Per-item replace: keyed by media id
-  const replaceRefs = useRef({});
+  const singleReplaceRef = useRef(null);
+  const activeReplaceItemIdRef = useRef(null);
 
   const uploadMutation = useUploadCampaignMedia();
   const deleteMutation = useDeleteCampaignMedia();
@@ -132,16 +132,19 @@ const ContentGallery = ({ campaign }) => {
 
   // ── Individual replace (replaces only that one card) ─────────────────────
   const handleReplaceClick = (e, itemId) => {
+    e.preventDefault();
     e.stopPropagation();
-    if (replaceRefs.current[itemId]) {
-      replaceRefs.current[itemId].value = '';
-      replaceRefs.current[itemId].click();
+    activeReplaceItemIdRef.current = itemId;
+    if (singleReplaceRef.current) {
+      singleReplaceRef.current.value = '';
+      singleReplaceRef.current.click();
     }
   };
 
-  const handleReplaceFileSelect = (e, itemId) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleReplaceFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    const itemId = activeReplaceItemIdRef.current;
+    if (!file || !itemId) return;
 
     const type = file.type.startsWith('video') ? 'video' : 'image';
     if (type === 'image' && file.size > 50 * 1024 * 1024) {
@@ -234,12 +237,31 @@ const ContentGallery = ({ campaign }) => {
         </div>
       </div>
 
+      {/* Hidden file inputs isolated from clickable UI containers to avoid click bubbling and dialog flicker */}
+      <input
+        ref={fileRef}
+        type="file"
+        multiple
+        accept="image/*,video/*"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+      <input
+        ref={singleReplaceRef}
+        type="file"
+        accept="image/*,video/*"
+        className="hidden"
+        onChange={handleReplaceFileSelect}
+      />
+
       {/* Upload Area — adds new files to the gallery */}
       <div
-        onClick={() => fileRef.current?.click()}
+        onClick={(e) => {
+          e.stopPropagation();
+          fileRef.current?.click();
+        }}
         className="border-2 border-dashed border-Primary/20 rounded-2xl p-8 flex flex-col items-center justify-center bg-Primary/[0.02] cursor-pointer hover:bg-Primary/[0.04] transition-all group mb-6"
       >
-        <input ref={fileRef} type="file" multiple accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
         <CloudUpload className="w-8 h-8 text-Primary/40 mb-3 group-hover:scale-110 transition-transform" />
         <p className="text-sm text-gray-400">Drag &amp; drop files here</p>
         <p className="text-xs text-gray-300 italic my-1">or</p>
@@ -269,16 +291,6 @@ const ContentGallery = ({ campaign }) => {
                 className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 group cursor-pointer"
                 onClick={() => setPreviewItem(item)}
               >
-                {/* Hidden per-item replace input — stopPropagation prevents bubble to parent card */}
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  className="hidden"
-                  ref={(el) => { if (el) replaceRefs.current[item.id] = el; }}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => handleReplaceFileSelect(e, item.id)}
-                />
-
                 {item.type === 'video' ? (
                   <>
                     <video
@@ -302,18 +314,25 @@ const ContentGallery = ({ campaign }) => {
 
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3 text-left">
-                  <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                  <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
                     {/* Replace this specific item */}
                     <button
+                      type="button"
                       onClick={(e) => handleReplaceClick(e, item.id)}
                       title="Replace this file"
-                      className="p-1.5 bg-white/90 rounded-lg hover:bg-white transition-colors cursor-pointer"
+                      className="p-1.5 bg-white/90 rounded-lg hover:bg-white hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
                     >
                       <RefreshCw className="w-3.5 h-3.5 text-[#1A1A1A]" />
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                      className="p-1.5 bg-white/90 rounded-lg hover:bg-white transition-colors cursor-pointer"
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDelete(item.id);
+                      }}
+                      title="Delete this file"
+                      className="p-1.5 bg-white/90 rounded-lg hover:bg-white hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
                     >
                       <Trash2 className="w-3.5 h-3.5 text-red-500" />
                     </button>
@@ -362,16 +381,21 @@ const ContentGallery = ({ campaign }) => {
       {/* Caption Modal (for new uploads) */}
       <AnimatePresence>
         {captionModal.open && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
+          <div key="caption-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={() => setCaptionModal({ open: false, files: [] })}
               className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-pointer"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-[800px] bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-100 z-10"
             >
               <button
@@ -514,16 +538,21 @@ const ContentGallery = ({ campaign }) => {
       {/* Replace Caption Modal — shown when replacing a single item via the refresh icon */}
       <AnimatePresence>
         {replaceModal.open && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
+          <div key="replace-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={() => setReplaceModal({ open: false, itemId: null, file: null, url: null, type: null })}
               className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-pointer"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border border-slate-100 z-10"
             >
               <button
@@ -661,17 +690,22 @@ const ContentGallery = ({ campaign }) => {
       {/* Preview Modal */}
       <AnimatePresence>
         {previewItem && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div key="preview-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={() => setPreviewItem(null)}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative max-w-3xl w-full"
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-3xl w-full z-10"
             >
               <button
                 type="button"

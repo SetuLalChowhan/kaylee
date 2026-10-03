@@ -211,7 +211,7 @@ const CampaignCard = ({
     <div
       onMouseLeave={() => setShowOptions(false)}
       onClick={handleCardClick}
-      className="bg-white border border-gray-100/90 rounded-[28px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_rgba(0,0,0,0.08)] hover:border-Primary/35 transition-all duration-300 relative group cursor-pointer flex flex-col justify-between min-h-[415px]"
+      className="bg-white border border-gray-100/90 rounded-[28px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_rgba(0,0,0,0.08)] hover:border-Primary/35 transition-all duration-300 relative group cursor-pointer flex flex-col justify-between min-h-[415px] w-full"
     >
       {/* ── TOP SECTION ── */}
       <div>

@@ -147,32 +147,20 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
   };
 
   return (
-    <div className="w-full xl:w-[320px] lg:w-[300px] space-y-6 ">
+    <div className="w-full lg:w-[275px] xl:w-[295px] space-y-4">
 
       {/* Pending Tasks */}
-      <div className="bg-[#FFFFFF] border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-[#FFFFFF] border border-gray-100 p-4 lg:p-4.5 rounded-2xl w-full shadow-sm">
+        <div className="flex items-center justify-between mb-3.5">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Today's Priorities</h2>
-            {/* {todayCount > 0 && (
-              <span className="text-[10px] font-bold bg-Primary/10 text-Primary px-2 py-0.5 rounded-full">
-                {todayCount} due
-              </span>
-            )} */}
+            <h2 className="text-base font-bold text-[#1A1A1A]">Today's Priorities</h2>
           </div>
           <div className="flex items-center gap-2">
-            {/* <button
-              onClick={() => setShowAllTasks(v => !v)}
-              title={showAllTasks ? 'Show today only' : 'Show all tasks'}
-              className={`p-1.5 rounded-lg transition-all border ${showAllTasks ? 'bg-Primary/10 border-Primary/20 text-Primary' : 'border-gray-100 text-gray-400 hover:text-Primary hover:bg-Primary/5'}`}
-            >
-              {showAllTasks ? <CalendarDays className="w-3.5 h-3.5" /> : <Calendar className="w-3.5 h-3.5" />}
-            </button> */}
             <button
               onClick={() => navigate('/dashboard/planner')}
-              className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
+              className="text-Primary text-xs font-bold hover:underline flex items-center gap-1"
             >
-              See all <span className="text-sm">→</span>
+              See all <span className="text-xs">→</span>
             </button>
           </div>
         </div>
@@ -199,14 +187,14 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
         </div>
       </div>
       {/* Upcoming Deadlines */}
-      <div className="bg-white border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-[#1A1A1A]">Upcoming Deadlines</h2>
+      <div className="bg-white border border-gray-100 p-4 lg:p-4.5 rounded-2xl w-full shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold text-[#1A1A1A]">Upcoming Deadlines</h2>
           <button
             onClick={() => navigate('/dashboard/campaigns')}
-            className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
+            className="text-Primary text-xs font-bold hover:underline flex items-center gap-1"
           >
-            See all <span className="text-sm">→</span>
+            See all <span className="text-xs">→</span>
           </button>
         </div>
         <div className="space-y-1">
@@ -221,12 +209,12 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white border border-gray-100 p-4 md:p-6 rounded-2xl w-full shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-[#1A1A1A]">Recent Activity</h2>
+      <div className="bg-white border border-gray-100 p-4 lg:p-4.5 rounded-2xl w-full shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold text-[#1A1A1A]">Recent Activity</h2>
           <button
             onClick={() => navigate('/dashboard/settings?tab=Activity')}
-            className="text-Primary text-sm font-bold hover:underline flex items-center gap-1"
+            className="text-Primary text-xs font-bold hover:underline flex items-center gap-1"
           >
             View all
           </button>
