@@ -479,7 +479,11 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   // 4. Pending & Upcoming Tasks from Planner (up to 5)
   const tasks = await prisma.task.findMany({
     where: isAdmin ? {} : { userId },
-    orderBy: { date: "asc" }
+    orderBy: [
+      { completed: "asc" },
+      { date: "asc" }
+    ],
+    take: 5
   });
 
   const parsedTasks = tasks
@@ -497,17 +501,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
         rawDate: t.date,
         completed: t.completed
       };
-    })
-    .sort((a: any, b: any) => {
-      // Sort in-completed first, then by date
-      if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1;
-      }
-      const dateA = new Date(a.rawDate).getTime();
-      const dateB = new Date(b.rawDate).getTime();
-      return (isNaN(dateA) ? 0 : dateA) - (isNaN(dateB) ? 0 : dateB);
-    })
-    .slice(0, 5);
+    });
 
   // 5. Generate monthly trends data (last 6 months) for stats visualization
   const sixMonthsAgo = new Date();

@@ -54,9 +54,6 @@ export const useCreateUgcCampaign = () => {
       toast.success(data?.message || "Campaign created successfully!");
       queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to create campaign";
@@ -81,9 +78,6 @@ export const useUpdateUgcCampaign = () => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update campaign";
@@ -107,7 +101,6 @@ export const useDeleteUgcCampaign = () => {
       toast.success(data?.message || "Campaign deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
     },
@@ -131,8 +124,6 @@ export const useCreateDeliverable = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -147,8 +138,6 @@ export const useDeleteDeliverable = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -163,8 +152,6 @@ export const useUpdateDeliverable = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       queryClient.invalidateQueries({ queryKey: ["publicCampaign"] });
     },
   });
@@ -183,9 +170,7 @@ export const useCreateCampaignTask = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -200,9 +185,7 @@ export const useUpdateCampaignTask = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -217,9 +200,7 @@ export const useDeleteCampaignTask = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -246,8 +227,6 @@ export const useUploadCampaignMedia = () => {
     onSuccess: (data, variables) => {
       toast.success("Media file uploaded successfully!");
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || "Failed to upload media");
@@ -266,8 +245,6 @@ export const useDeleteCampaignMedia = () => {
     onSuccess: (data, variables) => {
       toast.success("Media deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
@@ -298,8 +275,6 @@ export const useReplaceCampaignMedia = () => {
     onSuccess: (data, variables) => {
       toast.success("Media added successfully!");
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || "Failed to replace media");
@@ -330,7 +305,6 @@ export const useUploadCampaignDocument = () => {
     onSuccess: (data, variables) => {
       toast.success("Document uploaded successfully!");
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || "Failed to upload document");
@@ -349,7 +323,6 @@ export const useDeleteCampaignDocument = () => {
     onSuccess: (data, variables) => {
       toast.success("Document deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
     },
   });
 };
@@ -367,7 +340,6 @@ export const useCreateCampaignNote = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
     },
   });
 };
@@ -382,7 +354,6 @@ export const useDeleteCampaignNote = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
     },
   });
 };
@@ -402,7 +373,6 @@ export const useCreateFeedback = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ugcCampaign", variables.campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
     },
   });
 };
@@ -442,8 +412,6 @@ export const useUpdatePublicMediaStatus = () => {
     onSuccess: (data, variables) => {
       toast.success("Media status updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["publicCampaign", variables.slug] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update media status";
@@ -466,7 +434,6 @@ export const useRequestChangesPublicMedia = () => {
     onSuccess: (data, variables) => {
       toast.success("Change request submitted!");
       queryClient.invalidateQueries({ queryKey: ["publicCampaign", variables.slug] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to submit change request";
@@ -488,7 +455,6 @@ export const useCreatePublicFeedback = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["publicCampaign", variables.slug] });
-      queryClient.invalidateQueries({ queryKey: ["ugcCampaigns"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to send comment";

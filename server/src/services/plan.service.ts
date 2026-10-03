@@ -44,6 +44,11 @@ export class PlanService {
     const plans = await prisma.plan.findMany({
       where: { isActive: true },
       orderBy: { price: "asc" },
+      include: {
+        _count: {
+          select: { users: true }
+        }
+      }
     });
 
     // 3. Filter out all founding plans if sold out (>= 200)
@@ -53,19 +58,15 @@ export class PlanService {
     }
 
     // 4. Map active users counts and founding slots status
-    return await Promise.all(
-      filteredPlans.map(async (p) => {
-        const usersCount = await prisma.user.count({
-          where: { planId: p.id },
-        });
-        return {
-          ...p,
-          usersCount,
-          totalFoundingClaimed: totalClaimed,
-          foundingSlotsRemaining: Math.max(0, 200 - totalClaimed),
-        };
-      })
-    );
+    return filteredPlans.map((p) => {
+      const { _count, ...rest } = p;
+      return {
+        ...rest,
+        usersCount: _count.users,
+        totalFoundingClaimed: totalClaimed,
+        foundingSlotsRemaining: Math.max(0, 200 - totalClaimed),
+      };
+    });
   }
 
   static async getAdminPlans() {
@@ -73,21 +74,22 @@ export class PlanService {
 
     const plans = await prisma.plan.findMany({
       orderBy: { price: "asc" },
+      include: {
+        _count: {
+          select: { users: true }
+        }
+      }
     });
 
-    return await Promise.all(
-      plans.map(async (p) => {
-        const usersCount = await prisma.user.count({
-          where: { planId: p.id },
-        });
-        return {
-          ...p,
-          usersCount,
-          totalFoundingClaimed: totalClaimed,
-          foundingSlotsRemaining: Math.max(0, 200 - totalClaimed),
-        };
-      })
-    );
+    return plans.map((p) => {
+      const { _count, ...rest } = p;
+      return {
+        ...rest,
+        usersCount: _count.users,
+        totalFoundingClaimed: totalClaimed,
+        foundingSlotsRemaining: Math.max(0, 200 - totalClaimed),
+      };
+    });
   }
 
   static async getPlanBySlug(slug: string) {

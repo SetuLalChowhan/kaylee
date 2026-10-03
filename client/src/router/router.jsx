@@ -30,12 +30,20 @@ import SubscriptionCancel from "@/pages/sites/SubscriptionCancel";
 import PortfolioPreview from "@/pages/admin/PortfolioPreview";
 import BrandView from "@/components/admin/brandView/BrandView";
 
-import Dashboard from "@/components/admin/Dashboard";
-import Campaign from "@/components/admin/camping/Campaign";
-import CampaingDetails from "@/components/admin/campingDetails/CampaingDetails";
-import Planner from "@/components/admin/planner/Planner";
-import Invoices from "@/components/admin/invoices/Invoices";
-import Portfolio from "@/components/admin/portfolio/Portfolio";
+import { Suspense, lazy } from "react";
+
+const Dashboard = lazy(() => import("@/components/admin/Dashboard"));
+const Campaign = lazy(() => import("@/components/admin/camping/Campaign"));
+const CampaingDetails = lazy(() => import("@/components/admin/campingDetails/CampaingDetails"));
+const Planner = lazy(() => import("@/components/admin/planner/Planner"));
+const Invoices = lazy(() => import("@/components/admin/invoices/Invoices"));
+const Portfolio = lazy(() => import("@/components/admin/portfolio/Portfolio"));
+
+const SuspenseWrapper = ({ children }) => (
+  <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
+    {children}
+  </Suspense>
+);
 import FAQPage from "@/components/admin/faq/FAQPage";
 import Setting from "@/components/admin/setting/Setting";
 import NotFound from "@/pages/NotFound";
@@ -128,13 +136,13 @@ const router = createBrowserRouter([
       {
         element: <AdminLayout />,
         children: [
-          { index: true, element: <Dashboard /> },
-          { path: "campaigns", element: <Campaign /> },
-          { path: "campaigns/:id", element: <CampaingDetails /> },
+          { index: true, element: <SuspenseWrapper><Dashboard /></SuspenseWrapper> },
+          { path: "campaigns", element: <SuspenseWrapper><Campaign /></SuspenseWrapper> },
+          { path: "campaigns/:id", element: <SuspenseWrapper><CampaingDetails /></SuspenseWrapper> },
           { path: "campaigns/:id/brand-view", element: <BrandView /> },
-          { path: "planner", element: <Planner /> },
-          { path: "invoices", element: <Invoices /> },
-          { path: "portfolio", element: <Portfolio /> },
+          { path: "planner", element: <SuspenseWrapper><Planner /></SuspenseWrapper> },
+          { path: "invoices", element: <SuspenseWrapper><Invoices /></SuspenseWrapper> },
+          { path: "portfolio", element: <SuspenseWrapper><Portfolio /></SuspenseWrapper> },
           { path: "faq", element: <FAQPage /> },
           { path: "settings", element: <Setting /> },
         ],
