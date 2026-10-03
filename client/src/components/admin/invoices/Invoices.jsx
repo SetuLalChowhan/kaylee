@@ -233,6 +233,8 @@ const Invoices = () => {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
+        isDeleting={deleteMutation.isPending}
+        invoiceNo={selectedInvoice?.invoiceNo}
       />
 
       <InvoiceDetailsModal

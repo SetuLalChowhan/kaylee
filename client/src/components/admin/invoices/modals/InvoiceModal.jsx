@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { X, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
+import { X, Calendar as CalendarIcon, ChevronDown, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { useCampaigns } from '@/api/apiHooks/useCampaign';
@@ -50,18 +50,18 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
     }
   }, [invoice, reset]);
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
-        />
+      {isOpen && (
+        <div key="invoice-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
+          />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -210,23 +210,32 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, invoice, type = 'create', isP
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
+                  disabled={isPending}
+                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer disabled:opacity-50"
+                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[140px]"
                 >
-                  {isPending ? (type === 'create' ? 'Creating...' : 'Saving...') : (type === 'create' ? 'Create Invoice' : 'Save Changes')}
+                  {isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{type === 'create' ? 'Creating...' : 'Saving...'}</span>
+                    </>
+                  ) : (
+                    <span>{type === 'create' ? 'Create Invoice' : 'Save Changes'}</span>
+                  )}
                 </button>
               </div>
             </form>
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    )}
+  </AnimatePresence>
   );
 };
 

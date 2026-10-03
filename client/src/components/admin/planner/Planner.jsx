@@ -124,8 +124,11 @@ const Planner = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-Primary"></div>
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-blue-200 border-t-blue-600 animate-spin" />
+          <p className="text-xs font-semibold text-gray-400">Loading planner...</p>
+        </div>
       </div>
     );
   }
@@ -136,7 +139,7 @@ const Planner = () => {
   };
 
   return (
-    <div className="py-2">
+    <div className="py-0">
       <PlannerHeader 
         currentDate={currentDate}
         currentWeekRange={weekRangeLabel}
@@ -185,12 +188,15 @@ const Planner = () => {
         onSubmit={handleTaskSubmit}
         type={modalType}
         task={selectedTask || (preselectedDate ? { date: preselectedDate, time: preselectedTime } : null)}
+        isPending={createTaskMutation.isPending || updateTaskMutation.isPending}
       />
 
       <DeleteTaskModal 
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
+        isDeleting={deleteTaskMutation.isPending}
+        taskName={selectedTask?.name}
       />
     </div>
   );

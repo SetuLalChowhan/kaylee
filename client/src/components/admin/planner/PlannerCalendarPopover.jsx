@@ -26,6 +26,7 @@ const PlannerCalendarPopover = ({
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(currentDate || new Date());
   const popoverRef = useRef(null);
+  const buttonRef = useRef(null);
 
   // Sync viewDate when currentDate changes externally
   useEffect(() => {
@@ -61,8 +62,7 @@ const PlannerCalendarPopover = ({
     return tasks.some((t) => {
       if (!t.date) return false;
       try {
-        const d = parseISO(t.date);
-        return isSameDay(d, day);
+        return isSameDay(parseISO(t.date), day);
       } catch {
         return false;
       }
@@ -81,44 +81,75 @@ const PlannerCalendarPopover = ({
     setIsOpen(false);
   };
 
+  const [popoverStyle, setPopoverStyle] = useState({});
+
+  const openPopover = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const popoverWidth = 272;
+      const viewportWidth = window.innerWidth;
+      const padding = 12;
+
+      let left = rect.left;
+      // Prevent overflow on the right
+      if (left + popoverWidth > viewportWidth - padding) {
+        left = viewportWidth - popoverWidth - padding;
+      }
+      // Never go off the left
+      if (left < padding) left = padding;
+
+      setPopoverStyle({
+        position: 'fixed',
+        top: rect.bottom + 8,
+        left,
+        width: popoverWidth,
+        zIndex: 9990,
+      });
+    }
+    setIsOpen(true);
+  };
+
   return (
     <div className="relative inline-block" ref={popoverRef}>
       {/* Trigger Button */}
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => (isOpen ? setIsOpen(false) : openPopover())}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
           isOpen
-            ? 'border-Primary bg-blue-50 text-Primary shadow-2xs ring-2 ring-Primary/10'
-            : 'border-gray-200/90 bg-white hover:bg-gray-50 text-[#1A1A1A] shadow-2xs'
+            ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm ring-2 ring-blue-500/10'
+            : 'border-gray-200 bg-white hover:bg-gray-50 text-[#1A1A1A] shadow-sm'
         }`}
         title="Open calendar"
       >
-        <CalendarIcon className="w-3.5 h-3.5 text-Primary" />
+        <CalendarIcon className="w-3.5 h-3.5 text-blue-600" />
         <span className="hidden sm:inline">Calendar</span>
         <ChevronDown
           className={`w-3.5 h-3.5 transition-transform duration-200 ${
-            isOpen ? 'rotate-180 text-Primary' : 'text-gray-400'
+            isOpen ? 'rotate-180 text-blue-600' : 'text-gray-400'
           }`}
         />
       </button>
 
-      {/* Floating Small Box Popover (shadcn-style) */}
+      {/* Floating Popover — rendered via fixed positioning to escape clipping contexts */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            key="calendar-popover"
             initial={{ opacity: 0, scale: 0.95, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 6 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute top-full left-0 mt-2 z-50 w-[280px] bg-white rounded-2xl border border-gray-200/80 shadow-[0_12px_36px_rgba(0,0,0,0.12)] p-3 select-none"
+            style={popoverStyle}
+            className="bg-white rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.14)] p-3 select-none"
           >
-            {/* Popover Header: Month & Navigation */}
+            {/* Month Header */}
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100">
               <span className="text-xs font-bold text-[#1A1A1A] tracking-tight pl-1">
                 {format(viewDate, 'MMMM yyyy')}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 <button
                   type="button"
                   onClick={() => setViewDate(subMonths(viewDate, 1))}
@@ -138,12 +169,12 @@ const PlannerCalendarPopover = ({
               </div>
             </div>
 
-            {/* Weekdays Row */}
-            <div className="grid grid-cols-7 gap-1 mb-1">
+            {/* Weekday Labels */}
+            <div className="grid grid-cols-7 mb-1">
               {WEEKDAYS.map((wd) => (
                 <div
                   key={wd}
-                  className="text-center text-[10px] font-semibold text-gray-400 py-0.5"
+                  className="text-center text-[10px] font-bold text-gray-400 py-1"
                 >
                   {wd}
                 </div>
@@ -151,7 +182,7 @@ const PlannerCalendarPopover = ({
             </div>
 
             {/* Days Grid */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-y-0.5">
               {calendarDays.map((day) => {
                 const inCurrentMonth = isSameMonth(day, viewDate);
                 const isSelected = isSameDay(day, currentDate);
@@ -163,21 +194,21 @@ const PlannerCalendarPopover = ({
                     key={day.toISOString()}
                     type="button"
                     onClick={() => handleDateClick(day)}
-                    className={`h-8 w-8 text-xs rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer relative mx-auto ${
+                    className={`h-8 w-full text-[11px] rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer relative ${
                       isSelected
-                        ? 'bg-Primary text-white font-bold shadow-xs scale-105'
+                        ? 'bg-blue-600 text-white font-bold shadow-sm'
                         : isTodayDate
-                        ? 'bg-blue-50 text-Primary font-bold border border-blue-200 hover:bg-blue-100'
+                        ? 'bg-blue-50 text-blue-600 font-bold border border-blue-200 hover:bg-blue-100'
                         : inCurrentMonth
                         ? 'text-[#1A1A1A] hover:bg-gray-100 font-medium'
-                        : 'text-gray-300 opacity-40 hover:bg-gray-50 font-normal'
+                        : 'text-gray-300 hover:bg-gray-50 font-normal'
                     }`}
                   >
                     <span className="leading-none">{format(day, 'd')}</span>
                     {hasTask && (
                       <span
                         className={`w-1 h-1 rounded-full mt-0.5 ${
-                          isSelected ? 'bg-white' : 'bg-Primary'
+                          isSelected ? 'bg-white' : 'bg-blue-500'
                         }`}
                       />
                     )}
@@ -186,13 +217,13 @@ const PlannerCalendarPopover = ({
               })}
             </div>
 
-            {/* Popover Footer: Today shortcut */}
-            <div className="pt-2 mt-2 border-t border-gray-100 flex items-center justify-between text-[11px]">
-              <span className="text-gray-400 font-medium">Jump to date</span>
+            {/* Footer */}
+            <div className="pt-2 mt-2 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-[11px] text-gray-400 font-medium">Jump to date</span>
               <button
                 type="button"
                 onClick={handleGoToday}
-                className="font-bold text-Primary hover:text-Primary/80 hover:underline cursor-pointer"
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
               >
                 Today
               </button>

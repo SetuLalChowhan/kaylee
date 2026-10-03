@@ -1,28 +1,141 @@
 import React, { useState } from 'react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, parseISO } from 'date-fns';
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Plus, Trash2, X, Calendar as CalendarIcon } from 'lucide-react';
+import {
+  format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
+  addDays, addMonths, subMonths, isSameMonth, isSameDay, parseISO
+} from 'date-fns';
+import {
+  ChevronLeft, ChevronRight, CheckCircle2, Circle,
+  Plus, Trash2, X, Clock, Calendar, Pencil
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const getPastelColorTheme = (task, index = 0) => {
-  const text = `${task.campaign || ''} ${task.name || ''}`.toLowerCase();
-  if (text.includes('activewear') || text.includes('film') || text.includes('reel') || text.includes('video') || index % 5 === 0) {
-    return { bg: 'bg-[#DBEAFE]/90 text-[#1D4ED8] border-[#BFDBFE]' };
+const TASK_COLORS = [
+  { bg: 'bg-blue-100',   border: 'border-blue-300',   text: 'text-blue-900',   sub: 'text-blue-700',   dot: 'bg-blue-500',   light: 'bg-blue-50' },
+  { bg: 'bg-violet-100', border: 'border-violet-300', text: 'text-violet-900', sub: 'text-violet-700', dot: 'bg-violet-500', light: 'bg-violet-50' },
+  { bg: 'bg-rose-100',   border: 'border-rose-300',   text: 'text-rose-900',   sub: 'text-rose-700',   dot: 'bg-rose-500',   light: 'bg-rose-50' },
+  { bg: 'bg-emerald-100',border: 'border-emerald-300',text: 'text-emerald-900',sub: 'text-emerald-700',dot: 'bg-emerald-500',light: 'bg-emerald-50' },
+  { bg: 'bg-amber-100',  border: 'border-amber-300',  text: 'text-amber-900',  sub: 'text-amber-700',  dot: 'bg-amber-500',  light: 'bg-amber-50' },
+];
+
+const getColor = (index) => TASK_COLORS[index % TASK_COLORS.length];
+
+const formatTaskTime = (task) => {
+  if (task.date && (task.date.includes('T') || task.date.includes(' '))) {
+    try {
+      const d = new Date(task.date);
+      if (!isNaN(d.getTime())) return format(d, 'h:mm a');
+    } catch {}
   }
-  if (text.includes('gym') || text.includes('edit') || text.includes('content') || index % 5 === 1) {
-    return { bg: 'bg-[#EDE9FE]/90 text-[#6D28D9] border-[#DDD6FE]' };
+  return '';
+};
+
+const formatFullDate = (task) => {
+  if (task.date) {
+    try {
+      const d = new Date(task.date);
+      if (!isNaN(d.getTime())) return format(d, 'EEE, MMM d, yyyy');
+    } catch {}
   }
-  if (text.includes('love') || text.includes('feedback') || text.includes('review') || index % 5 === 2) {
-    return { bg: 'bg-[#FCE7F3]/90 text-[#BE185D] border-[#FBCFE8]' };
-  }
-  if (text.includes('bhumi') || text.includes('deliverable') || text.includes('brand') || index % 5 === 3) {
-    return { bg: 'bg-[#D1FAE5]/90 text-[#047857] border-[#A7F3D0]' };
-  }
-  return { bg: 'bg-[#FEF3C7]/90 text-[#B45309] border-[#FDE68A]' };
+  return '';
+};
+
+// Compact task detail popover (Google Calendar style)
+const TaskDetailPopover = ({ task, color, position, onClose, onEdit, onDelete, onToggle }) => {
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="month-task-popover"
+        initial={{ opacity: 0, scale: 0.92, y: -4 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: -4 }}
+        transition={{ duration: 0.15, ease: 'easeOut' }}
+        style={{
+          position: 'fixed',
+          top: Math.min(position.y, window.innerHeight - 290),
+          left: Math.min(position.x + 8, window.innerWidth - 290),
+          zIndex: 9999,
+          width: 278,
+        }}
+        className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.16)] border border-gray-100 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={`h-1.5 w-full ${color.dot}`} />
+        <div className="p-4">
+          <div className="flex items-start justify-between mb-3 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className={`w-3 h-3 rounded-full flex-shrink-0 ${color.dot}`} />
+              <h3 className="text-sm font-bold text-[#1A1A1A] truncate">{task.name}</h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {task.campaign && (
+            <div className={`flex items-center gap-2 text-xs font-semibold ${color.text} ${color.light} rounded-xl px-3 py-1.5 mb-3`}>
+              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">{task.campaign}</span>
+            </div>
+          )}
+
+          <div className="space-y-1.5 mb-4">
+            {formatFullDate(task) && (
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <span className="font-medium">{formatFullDate(task)}</span>
+              </div>
+            )}
+            {formatTaskTime(task) && (
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <span className="font-medium">{formatTaskTime(task)}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => onToggle(task.id)}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                task.completed
+                  ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {task.completed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+              {task.completed ? 'Completed' : 'Mark Done'}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+            <button
+              onClick={() => { onClose(); onEdit(task); }}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl transition-colors cursor-pointer"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </button>
+            <button
+              onClick={() => { onClose(); onDelete(task); }}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 px-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
 };
 
 const MonthlyView = ({ currentDate, tasks, onAddTask, onEditTask, onToggleTask, onDeleteTask }) => {
   const [viewDate, setViewDate] = useState(currentDate);
-  const [selectedDayPopover, setSelectedDayPopover] = useState(null);
+  const [selectedDayPopover, setSelectedDayPopover] = useState(null); // full task list popover day
+  const [taskPopover, setTaskPopover] = useState(null); // { task, color, position }
 
   const monthStart = startOfMonth(viewDate);
   const monthEnd = endOfMonth(viewDate);
@@ -39,267 +152,271 @@ const MonthlyView = ({ currentDate, tasks, onAddTask, onEditTask, onToggleTask, 
   const handlePrevMonth = () => setViewDate(subMonths(viewDate, 1));
   const handleNextMonth = () => setViewDate(addMonths(viewDate, 1));
 
-  const getTasksForDay = (day) => {
-    return tasks.filter(t => {
-      try {
-        return isSameDay(parseISO(t.date), day);
-      } catch {
-        return false;
-      }
+  const getTasksForDay = (d) =>
+    tasks.filter((t) => {
+      try { return isSameDay(parseISO(t.date), d); } catch { return false; }
+    });
+
+  const handleTaskClick = (e, task, colorIndex) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTaskPopover({
+      task,
+      color: getColor(colorIndex),
+      position: { x: rect.right, y: rect.top },
     });
   };
 
-  const monthTasks = tasks
-    .filter(t => {
-      try {
-        const taskDate = parseISO(t.date);
-        return taskDate >= monthStart && taskDate <= monthEnd;
-      } catch {
-        return false;
-      }
-    })
-    .sort((a, b) => parseISO(a.date) - parseISO(b.date));
+  const closeTaskPopover = () => setTaskPopover(null);
 
   const popoverDayTasks = selectedDayPopover ? getTasksForDay(selectedDayPopover) : [];
 
-  const DayCell = ({ day, isToday, isCurrentMonth, dayTasks }) => (
-    <div
-      className={`min-h-[105px] md:min-h-[130px] border-b border-r border-gray-100 p-2 flex flex-col justify-between transition-colors relative group ${
-        isToday ? 'bg-Primary/[0.03]' : !isCurrentMonth ? 'bg-gray-50/40 opacity-50' : 'bg-white hover:bg-[#FAFAFA]'
-      }`}
-    >
-      {/* Top Bar: Date Number + Quick Add */}
-      <div className="flex items-center justify-between mb-1.5">
-        <div className={`w-7 h-7 flex items-center justify-center text-xs font-bold rounded-full transition-all ${
-          isToday 
-            ? 'bg-Primary text-white shadow-md shadow-Primary/20' 
-            : isCurrentMonth 
-            ? 'text-[#1A1A1A]' 
-            : 'text-gray-400'
-        }`}>
-          {format(day, 'd')}
-        </div>
-        
-        {isCurrentMonth && (
-          <button
-            onClick={() => onAddTask(day)}
-            className="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-Primary hover:border-Primary hover:bg-Primary/5 transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-xs"
-            title="Add task for this day"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-
-      {/* Task Chips List (max 2 visible) */}
-      <div className="space-y-1 flex-1 flex flex-col justify-start">
-        {dayTasks.slice(0, 2).map((task, idx) => {
-          const theme = getPastelColorTheme(task, idx);
-          return (
-            <div
-              key={task.id}
-              onClick={() => onEditTask(task)}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-left transition-all cursor-pointer group/chip ${theme.bg} ${theme.border} ${
-                task.completed ? 'opacity-60 line-through' : 'hover:shadow-xs'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleTask(task.id);
-                }}
-                className="shrink-0 hover:scale-110 transition-transform cursor-pointer"
-              >
-                {task.completed ? (
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                ) : (
-                  <Circle className="w-3 h-3 opacity-60 hover:opacity-100" />
-                )}
-              </button>
-              <span className="text-[11px] font-bold truncate flex-1">
-                {task.name}
-              </span>
-            </div>
-          );
-        })}
-
-        {/* Overflow Pill Button */}
-        {dayTasks.length > 2 && (
-          <button
-            type="button"
-            onClick={() => setSelectedDayPopover(day)}
-            className="text-[10px] font-bold text-Primary bg-Primary/5 border border-Primary/10 hover:bg-Primary/10 px-2 py-0.5 rounded-md transition-all text-left cursor-pointer w-fit"
-          >
-            +{dayTasks.length - 2} more
-          </button>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <>
-      {/* Calendar Grid Box */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-        {/* Month Header & Controls */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-100">
-          <h2 className="text-xl md:text-2xl font-bold text-[#1A1A1A] tracking-tight">{format(viewDate, 'MMMM yyyy')}</h2>
-          <div className="flex items-center bg-[#F8FAFC] p-1 rounded-2xl border border-gray-100">
+      {/* Click-outside overlay for task popover */}
+      {taskPopover && (
+        <div
+          className="fixed inset-0 z-[9998]"
+          onClick={closeTaskPopover}
+        />
+      )}
+
+      <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
+        {/* Month Nav Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <h2 className="text-base font-black text-[#1A1A1A] tracking-tight">
+            {format(viewDate, 'MMMM yyyy')}
+          </h2>
+          <div className="flex items-center bg-gray-50 p-0.5 rounded-xl border border-gray-100">
             <button
               onClick={handlePrevMonth}
-              className="p-2 hover:bg-white hover:shadow-xs rounded-xl transition-all text-gray-500 cursor-pointer"
-              title="Previous month"
+              className="p-1.5 hover:bg-white rounded-lg transition-all text-gray-500 hover:text-gray-800 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={handleNextMonth}
-              className="p-2 hover:bg-white hover:shadow-xs rounded-xl transition-all text-gray-500 cursor-pointer"
-              title="Next month"
+              className="p-1.5 hover:bg-white rounded-lg transition-all text-gray-500 hover:text-gray-800 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Responsive Month Days Grid with Horizontal Scroll */}
+        {/* Horizontal scroll wrapper for calendar grid */}
         <div className="overflow-x-auto custom-scrollbar">
-          <div className="min-w-[760px]">
-            {/* Days Header Strip */}
-            <div className="grid grid-cols-7 border-b border-gray-100 bg-[#F8FAFC]">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayName) => (
-                <div
-                  key={dayName}
-                  className="py-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider"
-                >
-                  {dayName}
+          <div className="min-w-[560px]">
+
+            {/* Day Name Headers */}
+            <div className="grid grid-cols-7 border-b border-gray-100 bg-gray-50/50">
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
+                <div key={d} className="py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  {d}
                 </div>
               ))}
             </div>
 
-            {/* Days 7-Column Grid */}
-            <div className="grid grid-cols-7 border-l border-gray-100">
-              {days.map((day, index) => {
-                const isToday = isSameDay(day, new Date());
-                const isCurrentMonth = isSameMonth(day, viewDate);
-                const dayTasks = getTasksForDay(day);
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7">
+              {days.map((d, index) => {
+                const isToday = isSameDay(d, new Date());
+                const isCurrentMonth = isSameMonth(d, viewDate);
+                const dayTasks = getTasksForDay(d);
+                const MAX_VISIBLE = 2;
+
                 return (
-                  <DayCell
+                  <div
                     key={index}
-                    day={day}
-                    isToday={isToday}
-                    isCurrentMonth={isCurrentMonth}
-                    dayTasks={dayTasks}
-                  />
+                    onClick={() => onAddTask(d)}
+                    className={`border-b border-r border-gray-100 last:border-r-0 p-1.5 group relative cursor-pointer transition-colors ${
+                      !isCurrentMonth
+                        ? 'bg-gray-50/50 opacity-50'
+                        : isToday
+                        ? 'bg-blue-50/40'
+                        : 'hover:bg-gray-50/60'
+                    }`}
+                    style={{ minHeight: 82 }}
+                  >
+                    {/* Day number */}
+                    <div className="flex items-center justify-between mb-1">
+                      <span
+                        className={`inline-flex items-center justify-center w-6 h-6 text-xs font-bold rounded-full ${
+                          isToday
+                            ? 'bg-blue-600 text-white'
+                            : isCurrentMonth
+                            ? 'text-[#1A1A1A]'
+                            : 'text-gray-400'
+                        }`}
+                      >
+                        {format(d, 'd')}
+                      </span>
+                      {isCurrentMonth && (
+                        <Plus className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                    </div>
+
+                    {/* Task chips */}
+                    <div className="space-y-0.5">
+                      {dayTasks.slice(0, MAX_VISIBLE).map((task, tIdx) => {
+                        const color = getColor(tIdx);
+                        return (
+                          <div
+                            key={task.id}
+                            onClick={(e) => handleTaskClick(e, task, tIdx)}
+                            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border ${color.bg} ${color.border} cursor-pointer hover:brightness-95 transition-all`}
+                          >
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${color.dot}`} />
+                            <span className={`text-[11px] font-bold truncate ${color.text} ${task.completed ? 'line-through opacity-50' : ''}`}>
+                              {task.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+
+                      {/* More overflow */}
+                      {dayTasks.length > MAX_VISIBLE && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDayPopover(d);
+                          }}
+                          className="text-[9px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-1.5 py-0.5 rounded-md transition-all cursor-pointer w-full text-left"
+                        >
+                          +{dayTasks.length - MAX_VISIBLE} more
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* Day Agenda Popover Modal (when clicking "+X more") */}
+      {/* Task Detail Popover */}
+      {taskPopover && (
+        <TaskDetailPopover
+          task={taskPopover.task}
+          color={taskPopover.color}
+          position={taskPopover.position}
+          onClose={closeTaskPopover}
+          onEdit={onEditTask}
+          onDelete={onDeleteTask}
+          onToggle={(id) => {
+            onToggleTask(id);
+            closeTaskPopover();
+          }}
+        />
+      )}
+
+      {/* Day Tasks Expanded Modal ("+X more") */}
       <AnimatePresence>
         {selectedDayPopover && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={() => setSelectedDayPopover(null)}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
             />
-
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              key="day-tasks-modal"
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-h-[80vh] overflow-y-auto custom-scrollbar z-10 border border-gray-100"
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden z-10 border border-gray-100"
+              onClick={(e) => e.stopPropagation()}
             >
-              <button
-                type="button"
-                onClick={() => setSelectedDayPopover(null)}
-                className="absolute top-6 right-6 w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all cursor-pointer shadow-xs"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="pr-10 mb-6">
-                <h3 className="text-2xl font-bold text-[#1A1A1A] tracking-tight">
-                  {format(selectedDayPopover, 'EEEE, MMMM d, yyyy')}
-                </h3>
-                <p className="text-sm text-gray-500 font-medium mt-1">
-                  {popoverDayTasks.length} {popoverDayTasks.length === 1 ? 'task' : 'tasks'} scheduled for this day
-                </p>
-                <div className="w-full border-b border-gray-100 mt-4" />
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <div>
+                  <h3 className="text-base font-bold text-[#1A1A1A]">
+                    {format(selectedDayPopover, 'EEEE, MMMM d')}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {popoverDayTasks.length} {popoverDayTasks.length === 1 ? 'task' : 'tasks'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedDayPopover(null)}
+                  className="p-1.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="space-y-3">
-                {popoverDayTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    onClick={() => {
-                      setSelectedDayPopover(null);
-                      onEditTask(task);
-                    }}
-                    className="bg-[#F8FAFC] border border-gray-100 rounded-2xl p-4 flex items-center justify-between gap-3 hover:bg-white hover:shadow-xs hover:border-Primary/20 transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+              {/* Task List */}
+              <div className="p-4 space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+                {popoverDayTasks.map((task, tIdx) => {
+                  const color = getColor(tIdx);
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-white hover:shadow-sm hover:border-gray-200 transition-all group"
+                    >
                       <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleTask(task.id);
-                        }}
-                        className="shrink-0 transition-transform hover:scale-110 cursor-pointer"
+                        onClick={() => onToggleTask(task.id)}
+                        className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
                       >
-                        {task.completed ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                        ) : (
-                          <Circle className="w-5 h-5 text-gray-300 hover:text-Primary" />
-                        )}
+                        {task.completed
+                          ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          : <Circle className="w-4 h-4 text-gray-300 hover:text-blue-500" />
+                        }
                       </button>
-                      <div className="min-w-0">
-                        <h4 className={`text-sm font-bold truncate ${task.completed ? 'text-gray-400 line-through' : 'text-[#1A1A1A]'}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-bold truncate ${task.completed ? 'text-gray-400 line-through' : 'text-[#1A1A1A]'}`}>
                           {task.name}
-                        </h4>
+                        </p>
                         {task.campaign && (
-                          <p className="text-xs text-Primary font-semibold truncate mt-0.5">{task.campaign}</p>
+                          <p className={`text-[10px] font-semibold truncate mt-0.5 ${color.text}`}>
+                            {task.campaign}
+                          </p>
+                        )}
+                        {formatTaskTime(task) && (
+                          <p className="text-[10px] text-gray-400 mt-0.5">{formatTaskTime(task)}</p>
                         )}
                       </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => { setSelectedDayPopover(null); onEditTask(task); }}
+                          className="p-1 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => { setSelectedDayPopover(null); onDeleteTask(task); }}
+                          className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteTask(task);
-                      }}
-                      className="p-1.5 text-gray-300 hover:text-red-500 rounded-full transition-colors shrink-0 cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+              {/* Footer */}
+              <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
                 <button
-                  type="button"
                   onClick={() => {
-                    const day = selectedDayPopover;
+                    const d = selectedDayPopover;
                     setSelectedDayPopover(null);
-                    onAddTask(day);
+                    onAddTask(d);
                   }}
-                  className="bg-Primary text-white px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm hover:bg-Primary/90 transition-all shadow-md shadow-Primary/20 flex items-center gap-1.5 cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-xl transition-colors cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5" />
                   Add Task
                 </button>
                 <button
-                  type="button"
                   onClick={() => setSelectedDayPopover(null)}
-                  className="px-4 py-2 text-xs md:text-sm font-bold text-gray-500 hover:text-gray-800 rounded-xl transition-all cursor-pointer"
+                  className="text-xs font-bold text-gray-500 hover:text-gray-700 px-3 py-2 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
                 >
                   Close
                 </button>
@@ -308,84 +425,6 @@ const MonthlyView = ({ currentDate, tasks, onAddTask, onEditTask, onToggleTask, 
           </div>
         )}
       </AnimatePresence>
-
-      {/* All Tasks Section — Monthly Overview */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-        <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#1A1A1A] tracking-tight">This Month's Tasks</h2>
-            <p className="text-xs md:text-sm text-gray-500 font-medium mt-1">Overview of all tasks scheduled for this month.</p>
-          </div>
-          <button
-            onClick={() => onAddTask(null)}
-            className="flex items-center gap-2 bg-Primary text-white px-5 py-3 rounded-xl font-bold text-xs md:text-sm hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 md:w-5 md:h-5" />
-            Add Task
-          </button>
-        </div>
-
-        <div className="p-4 md:p-6">
-          {monthTasks.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {monthTasks.map((task) => (
-                <motion.div
-                  key={task.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-[#F8FAFC] border border-gray-100 rounded-2xl p-5 hover:bg-white hover:shadow-md hover:border-Primary/20 transition-all group flex flex-col justify-between cursor-pointer"
-                  onClick={() => onEditTask(task)}
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleTask(task.id);
-                        }}
-                        className="transition-transform hover:scale-110 shrink-0 mt-0.5 cursor-pointer"
-                      >
-                        {task.completed ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                        ) : (
-                          <Circle className="w-5 h-5 text-gray-300 group-hover:text-Primary transition-colors" />
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteTask(task);
-                        }}
-                        className="p-1.5 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <h4 className={`text-sm font-bold mb-1 leading-snug ${task.completed ? 'text-gray-400 line-through' : 'text-[#1A1A1A]'}`}>
-                      {task.name}
-                    </h4>
-                    {task.campaign && (
-                      <p className="text-xs text-Primary font-semibold">{task.campaign}</p>
-                    )}
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-gray-200/60 flex items-center justify-between text-xs text-gray-400 font-medium">
-                    <span>{format(parseISO(task.date), 'EEE, MMM d')}</span>
-                    {task.completed && (
-                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">Completed</span>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center text-gray-400 font-medium">
-              No tasks scheduled for this month.
-            </div>
-          )}
-        </div>
-      </div>
     </>
   );
 };

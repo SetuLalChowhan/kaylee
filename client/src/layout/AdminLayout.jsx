@@ -27,7 +27,7 @@ const AdminLayout = () => {
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 h-screen">
           <div className="px-4 lg:px-6">
             <CommonNavbar setOpen={setOpen} />
           </div>

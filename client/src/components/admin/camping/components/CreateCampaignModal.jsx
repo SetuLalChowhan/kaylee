@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, ChevronDown } from 'lucide-react';
+import { X, Calendar, ChevronDown, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { useCreateUgcCampaign, useUpdateUgcCampaign } from '@/api/apiHooks/useUgcCampaign';
@@ -90,18 +90,18 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
-        />
+      {isOpen && (
+        <div key="create-campaign-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
+          />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -241,23 +241,32 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
+                  disabled={createCampaignMutation.isPending || updateCampaignMutation.isPending}
+                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createCampaignMutation.isPending || updateCampaignMutation.isPending}
-                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer disabled:opacity-50"
+                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[150px]"
                 >
-                  {createCampaignMutation.isPending || updateCampaignMutation.isPending ? 'Saving...' : (campaign ? 'Save Changes' : 'Create Campaign')}
+                  {createCampaignMutation.isPending || updateCampaignMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{campaign ? 'Saving...' : 'Creating...'}</span>
+                    </>
+                  ) : (
+                    <span>{campaign ? 'Save Changes' : 'Create Campaign'}</span>
+                  )}
                 </button>
               </div>
             </form>
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    )}
+  </AnimatePresence>
   );
 };
 

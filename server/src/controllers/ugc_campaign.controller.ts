@@ -501,14 +501,11 @@ export const deleteUgcCampaign = catchAsync(
         });
       }
 
-      // Automatically delete all invoices associated with this campaign
+      // Automatically delete only the specific invoice strictly associated with this campaign
       await tx.invoice.deleteMany({
         where: {
           userId: existing.userId,
-          OR: [
-            { campaignId: id },
-            { campaignName: existing.name },
-          ],
+          campaignId: id,
         },
       }).catch((err) => {
         console.warn("Failed to clean up associated invoices: ", err);

@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { X, ChevronDown, Clock } from 'lucide-react';
+import { X, ChevronDown, Clock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { useCampaigns } from '@/api/apiHooks/useCampaign';
 
-const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
+const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add', isPending = false }) => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { data: campaigns = [] } = useCampaigns();
 
@@ -74,18 +74,18 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
     });
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
-        />
+      {isOpen && (
+        <div key="task-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={isPending ? undefined : onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
+          />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -97,7 +97,8 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
           <div className="p-6 md:p-8 pb-4 bg-white relative z-20">
             <button 
               onClick={onClose}
-              className="absolute top-6 right-6 w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all cursor-pointer shadow-sm"
+              disabled={isPending}
+              className="absolute top-6 right-6 w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all cursor-pointer shadow-sm disabled:opacity-50"
             >
               <X className="w-5 h-5" />
             </button>
@@ -217,22 +218,32 @@ const TaskModal = ({ isOpen, onClose, onSubmit, task, type = 'add' }) => {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
+                  disabled={isPending}
+                  className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer"
+                  disabled={isPending}
+                  className="bg-Primary text-white px-6 py-3 rounded-xl md:rounded-2xl font-bold text-sm hover:bg-Primary/90 shadow-lg shadow-Primary/20 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[130px]"
                 >
-                  {type === 'add' ? 'Save Task' : 'Save Changes'}
+                  {isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{type === 'add' ? 'Creating...' : 'Saving...'}</span>
+                    </>
+                  ) : (
+                    <span>{type === 'add' ? 'Save Task' : 'Save Changes'}</span>
+                  )}
                 </button>
               </div>
             </form>
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    )}
+  </AnimatePresence>
   );
 };
 
