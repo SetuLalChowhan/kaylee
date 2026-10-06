@@ -33,6 +33,9 @@ export declare const resetPasswordSchema: z.ZodObject<{
 }, z.core.$strip>;
 export declare const updateProfileSchema: z.ZodObject<{
     body: z.ZodObject<{
+        firstName: z.ZodOptional<z.ZodString>;
+        lastName: z.ZodOptional<z.ZodString>;
+        displayName: z.ZodOptional<z.ZodString>;
         shortBio: z.ZodOptional<z.ZodString>;
         socialLinks: z.ZodPreprocess<z.ZodOptional<z.ZodObject<{
             instagram: z.ZodPreprocess<z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>>;
@@ -48,6 +51,18 @@ export declare const changePasswordSchema: z.ZodObject<{
     body: z.ZodObject<{
         oldPassword: z.ZodString;
         newPassword: z.ZodString;
+    }, z.core.$strip>;
+}, z.core.$strip>;
+export declare const adminCreateUserSchema: z.ZodObject<{
+    body: z.ZodObject<{
+        firstName: z.ZodString;
+        lastName: z.ZodString;
+        email: z.ZodString;
+        password: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
+        role: z.ZodDefault<z.ZodEnum<{
+            user: "user";
+            admin: "admin";
+        }>>;
     }, z.core.$strip>;
 }, z.core.$strip>;
 export declare const onboardingSchema: z.ZodObject<{

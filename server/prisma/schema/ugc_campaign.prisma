@@ -51,6 +51,7 @@ model UgcOtp {
   hash       String
   expiresAt  DateTime
   used       Boolean     @default(false)
+  attempts   Int         @default(0)
   createdAt  DateTime    @default(now())
   campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 

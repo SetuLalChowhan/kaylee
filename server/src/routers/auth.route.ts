@@ -20,16 +20,21 @@ import {
   resetPasswordSchema,
 } from "../validations/user.validation.js";
 
+import {
+  authLimiter,
+  passwordResetLimiter,
+} from "../middlewares/rateLimit.middleware.js";
+
 const router = express.Router();
 
-router.post("/register", validate(registerSchema), register);
+router.post("/register", authLimiter, validate(registerSchema), register);
 router.post("/verify-email", validate(verifyEmailSchema), verifyEmail);
-router.post("/login", validate(loginSchema), login);
-router.post("/google-login", googleLogin);
-router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
-router.post("/resend-verification-link", validate(forgotPasswordSchema), resendVerificationLink);
-router.post("/resend-forgot-link", validate(forgotPasswordSchema), resendForgotPasswordLink);
-router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
+router.post("/login", authLimiter, validate(loginSchema), login);
+router.post("/google-login", authLimiter, googleLogin);
+router.post("/forgot-password", passwordResetLimiter, validate(forgotPasswordSchema), forgotPassword);
+router.post("/resend-verification-link", passwordResetLimiter, validate(forgotPasswordSchema), resendVerificationLink);
+router.post("/resend-forgot-link", passwordResetLimiter, validate(forgotPasswordSchema), resendForgotPasswordLink);
+router.post("/reset-password", passwordResetLimiter, validate(resetPasswordSchema), resetPassword);
 router.post("/refresh-token", refreshTokenHandler);
 router.post("/logout", logout);
 

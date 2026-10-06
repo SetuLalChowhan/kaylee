@@ -3,9 +3,10 @@ import { getContacts, createContact, updateContact, deleteContact, } from "../co
 import { authGuard, adminGuard } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { createContactSchema, updateContactSchema, } from "../validations/contact.validation.js";
+import { contactLimiter } from "../middlewares/rateLimit.middleware.js";
 const router = express.Router();
 // Public route to submit a contact message
-router.post("/", validate(createContactSchema), createContact);
+router.post("/", contactLimiter, validate(createContactSchema), createContact);
 // Protected routes (Admin only)
 router.use(authGuard);
 router.use(adminGuard);

@@ -17,30 +17,60 @@ export const getContacts = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 /**
  * POST /api/contact — Create a contact message submission (Public)
  */
 export const createContact = catchAsync(async (req: Request, res: Response) => {
   const { firstName, lastName, email, message } = req.body;
+  const normalizedEmail = String(email).trim().toLowerCase();
 
   const contact = await prisma.contact.create({
-    data: { firstName, lastName, email, message },
+    data: {
+      firstName: firstName ? String(firstName).trim() : "",
+      lastName: lastName ? String(lastName).trim() : "",
+      email: normalizedEmail,
+      message: String(message),
+    },
   });
 
-  try {
-    await sendEmail(
-      email,
-      "We've received your message!",
-      `<h1>Hello ${firstName || ""},</h1>
-       <p>Thank you for reaching out to STAKD Support. We have received your query and our team will get back to you shortly.</p>
-       <p style="border-left: 3px solid #ccc; padding-left: 10px; font-style: italic; color: #555;">
-         "${message || ""}"
-       </p>
-       <p>Best regards,<br/>STAKD Support Team</p>`,
-      "support"
-    );
-  } catch (err) {
-    console.error("Failed to send contact auto-reply:", err);
+  // Auto-reply spam protection: check if an auto-reply was already sent to this email within the last hour
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const recentPreviousSubmission = await prisma.contact.findFirst({
+    where: {
+      email: normalizedEmail,
+      createdAt: { gte: oneHourAgo },
+      id: { not: contact.id },
+    },
+  });
+
+  if (!recentPreviousSubmission) {
+    try {
+      const safeFirstName = escapeHtml(firstName || "");
+      const safeMessage = escapeHtml(message || "");
+
+      await sendEmail(
+        normalizedEmail,
+        "We've received your message!",
+        `<h1>Hello ${safeFirstName},</h1>
+         <p>Thank you for reaching out to STAKD Support. We have received your query and our team will get back to you shortly.</p>
+         <p style="border-left: 3px solid #ccc; padding-left: 10px; font-style: italic; color: #555;">
+           "${safeMessage}"
+         </p>
+         <p>Best regards,<br/>STAKD Support Team</p>`,
+        "support"
+      );
+    } catch (err) {
+      console.error("Failed to send contact auto-reply:", err);
+    }
   }
 
   res.status(201).json({

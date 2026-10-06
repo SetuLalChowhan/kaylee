@@ -2,8 +2,8 @@ import type { Request, Response, NextFunction } from "express";
 import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
-import fs from "fs";
-import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
+import { normalizeUploadPath, safeUnlink } from "../utils/upload.util.js";
+import { requireUserId } from "../middlewares/auth.middleware.js";
 
 interface AuthRequest extends Request {
   user: { userId: string; role: string };
@@ -13,7 +13,8 @@ interface AuthRequest extends Request {
  * POST /api/user/portfolio — Create a new portfolio item
  */
 export const createPortfolioItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId, role } = (req as AuthRequest).user;
+  const userId = requireUserId(req);
+  const role = (req as AuthRequest).user?.role;
   const { title, targetUserId } = req.body as { title: string; targetUserId?: string };
 
   if (!req.file) {
@@ -22,39 +23,43 @@ export const createPortfolioItem = catchAsync(async (req: Request, res: Response
 
   const type = req.file.mimetype.startsWith("video/") ? "video" : "image";
   if (type === "image" && req.file.size > 50 * 1024 * 1024) {
-    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    safeUnlink(req.file.path);
     return next(new AppError("Image file size must be less than 50MB", 400));
   }
   if (type === "video" && req.file.size > 500 * 1024 * 1024) {
-    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    safeUnlink(req.file.path);
     return next(new AppError("Video file size must be less than 500MB", 400));
   }
 
   const url = normalizeUploadPath(req.file.path);
-
   const finalUserId = (role === "admin" && targetUserId) ? targetUserId : userId;
 
-  const newItem = await prisma.portfolioItem.create({
-    data: {
-      userId: finalUserId,
-      title,
-      type,
-      url,
-    },
-  });
+  try {
+    const newItem = await prisma.portfolioItem.create({
+      data: {
+        userId: finalUserId,
+        title,
+        type,
+        url,
+      },
+    });
 
-  res.status(201).json({
-    status: "success",
-    message: "Portfolio item created successfully",
-    data: newItem,
-  });
+    res.status(201).json({
+      status: "success",
+      message: "Portfolio item created successfully",
+      data: newItem,
+    });
+  } catch (err) {
+    safeUnlink(req.file.path);
+    throw err;
+  }
 });
 
 /**
  * GET /api/user/portfolio — Get all portfolio items for the authenticated user
  */
 export const getPortfolioItems = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = (req as AuthRequest).user;
+  const userId = requireUserId(req);
 
   const items = await prisma.portfolioItem.findMany({
     where: { userId },
@@ -71,18 +76,24 @@ export const getPortfolioItems = catchAsync(async (req: Request, res: Response) 
  * PATCH /api/user/portfolio/:id — Update a portfolio item's title and/or media file
  */
 export const updatePortfolioItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const userId = requireUserId(req);
+  const role = (req as AuthRequest).user?.role;
   const { id } = req.params as { id: string };
   const { title } = req.body as { title?: string };
 
-  if (!id) return next(new AppError("Portfolio item ID is required", 400));
+  if (!id) {
+    if (req.file) safeUnlink(req.file.path);
+    return next(new AppError("Portfolio item ID is required", 400));
+  }
 
   const existingItem = await prisma.portfolioItem.findUnique({ where: { id } });
   if (!existingItem) {
+    if (req.file) safeUnlink(req.file.path);
     return next(new AppError("Portfolio item not found", 404));
   }
 
-  if (existingItem.userId !== userId && (req as AuthRequest).user.role !== "admin") {
+  if (existingItem.userId !== userId && role !== "admin") {
+    if (req.file) safeUnlink(req.file.path);
     return next(new AppError("You do not have permission to modify this item", 403));
   }
 
@@ -92,22 +103,15 @@ export const updatePortfolioItem = catchAsync(async (req: Request, res: Response
   if (req.file) {
     type = req.file.mimetype.startsWith("video/") ? "video" : "image";
     if (type === "image" && req.file.size > 50 * 1024 * 1024) {
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      safeUnlink(req.file.path);
       return next(new AppError("Image file size must be less than 50MB", 400));
     }
     if (type === "video" && req.file.size > 500 * 1024 * 1024) {
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      safeUnlink(req.file.path);
       return next(new AppError("Video file size must be less than 500MB", 400));
     }
 
-    const absolutePath = getAbsoluteUploadPath(existingItem.url);
-    if (fs.existsSync(absolutePath)) {
-      try {
-        fs.unlinkSync(absolutePath);
-      } catch (err) {
-        // ignore disk deletion errors in case file doesn't exist anymore
-      }
-    }
+    safeUnlink(existingItem.url);
     url = normalizeUploadPath(req.file.path);
   }
 
@@ -131,7 +135,8 @@ export const updatePortfolioItem = catchAsync(async (req: Request, res: Response
  * DELETE /api/user/portfolio/:id — Delete a portfolio item
  */
 export const deletePortfolioItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const userId = requireUserId(req);
+  const role = (req as AuthRequest).user?.role;
   const { id } = req.params as { id: string };
 
   if (!id) return next(new AppError("Portfolio item ID is required", 400));
@@ -141,18 +146,11 @@ export const deletePortfolioItem = catchAsync(async (req: Request, res: Response
     return next(new AppError("Portfolio item not found", 404));
   }
 
-  if (existingItem.userId !== userId && (req as AuthRequest).user.role !== "admin") {
+  if (existingItem.userId !== userId && role !== "admin") {
     return next(new AppError("You do not have permission to delete this item", 403));
   }
 
-  const absolutePath = getAbsoluteUploadPath(existingItem.url);
-  if (fs.existsSync(absolutePath)) {
-    try {
-      fs.unlinkSync(absolutePath);
-    } catch (err) {
-      // ignore
-    }
-  }
+  safeUnlink(existingItem.url);
 
   await prisma.portfolioItem.delete({ where: { id } });
 

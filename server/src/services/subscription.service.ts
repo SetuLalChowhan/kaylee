@@ -62,6 +62,14 @@ export class SubscriptionService {
 
     // 1. Free plan with no Stripe Price ID: upgrade instantly
     if (!plan.stripePriceId && (plan.price === 0 || plan.slug === "free")) {
+      if (user.stripeSubscriptionId) {
+        try {
+          await StripeService.cancelSubscriptionImmediately(user.stripeSubscriptionId);
+        } catch (err: any) {
+          throw new AppError(`Failed to cancel existing Stripe subscription: ${err.message}`, 500);
+        }
+      }
+
       await prisma.$transaction([
         prisma.user.update({
           where: { id: userId },
@@ -154,7 +162,7 @@ export class SubscriptionService {
     };
   }
 
-  static async verifyCheckoutSession(sessionId: string) {
+  static async verifyCheckoutSession(sessionId: string, requestingUserId?: string) {
     const session = await StripeService.retrieveSession(sessionId);
     if (!session || (session.payment_status !== "paid" && session.status !== "complete")) {
       throw new AppError("Payment not completed or session invalid", 400);
@@ -163,6 +171,10 @@ export class SubscriptionService {
     const { userId, planId } = session.metadata || {};
     if (!userId || !planId) {
       throw new AppError("Invalid checkout session metadata", 400);
+    }
+
+    if (requestingUserId && requestingUserId !== userId) {
+      throw new AppError("Forbidden: Session does not belong to the authenticated user", 403);
     }
 
     // Get current period from stripe subscription if available
@@ -342,6 +354,13 @@ export class SubscriptionService {
         where: { stripeSessionId: details.stripeSessionId },
       });
       if (existing) return;
+
+      if (details.invoiceId) {
+        const existingInvoice = await tx.purchase.findFirst({
+          where: { invoiceId: details.invoiceId },
+        });
+        if (existingInvoice) return;
+      }
 
       const plan = await tx.plan.findUnique({ where: { id: details.planId } });
       if (!plan) throw new Error("Plan not found");

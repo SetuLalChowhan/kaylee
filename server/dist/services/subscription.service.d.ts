@@ -66,7 +66,7 @@ export declare class SubscriptionService {
         status: string;
         url: string | null;
     }>;
-    static verifyCheckoutSession(sessionId: string): Promise<{
+    static verifyCheckoutSession(sessionId: string, requestingUserId?: string): Promise<{
         id: string;
         firstName: string;
         lastName: string;

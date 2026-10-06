@@ -1,5 +1,5 @@
 import cors from "cors";
-const allowedOrigins = [
+const defaultAllowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "https://stackd12.netlify.app",
@@ -11,9 +11,13 @@ const allowedOrigins = [
     "https://www.getstakd.co",
     "https://api.getstakd.co",
 ];
+const envAllowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllowedOrigins]));
 export const corsMiddleware = cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         }
         else {

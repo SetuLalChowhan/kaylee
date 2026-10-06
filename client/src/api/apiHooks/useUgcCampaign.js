@@ -420,6 +420,16 @@ export const usePublicCampaign = (slug) => {
   });
 };
 
+export const useMarkCampaignOpened = () => {
+  const axiosPublic = useAxiosPublic();
+  return useMutation({
+    mutationFn: async (slug) => {
+      const res = await axiosPublic.post(`${USER.UGC_CAMPAIGN}/public/${slug}/opened`);
+      return res.data;
+    },
+  });
+};
+
 /**
  * useUpdatePublicMediaStatus — Brand approves file(s)
  */

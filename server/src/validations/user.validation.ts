@@ -70,7 +70,6 @@ export const resetPasswordSchema = z.object({
     }),
 });
 
-
 const jsonArrayParser = z.preprocess((val) => {
   if (typeof val === "string") {
     try {
@@ -97,6 +96,9 @@ const urlPreprocess = (val: any) => {
 
 export const updateProfileSchema = z.object({
   body: z.object({
+    firstName: z.string().min(1).max(50).optional(),
+    lastName: z.string().min(1).max(50).optional(),
+    displayName: z.string().min(1).max(100).optional(),
     shortBio: z
       .string()
       .max(500, "Short bio cannot exceed 500 characters")
@@ -157,6 +159,16 @@ export const changePasswordSchema = z.object({
   body: z.object({
     oldPassword: z.string().min(1, "Old password is required"),
     newPassword: passwordValidation,
+  }),
+});
+
+export const adminCreateUserSchema = z.object({
+  body: z.object({
+    firstName: z.string().min(1, "First name is required").max(50),
+    lastName: z.string().min(1, "Last name is required").max(50),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8).max(32).optional().or(z.literal("")),
+    role: z.enum(["user", "admin"]).default("user"),
   }),
 });
 

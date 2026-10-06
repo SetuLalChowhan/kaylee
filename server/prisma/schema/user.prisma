@@ -16,6 +16,7 @@ model User {
   otpExpires              DateTime?
   resetToken              String?         @unique
   resetTokenExpires       DateTime?
+  passwordChangedAt       DateTime?
   role                    String          @default("user")
   notifyDeadlineReminders Boolean         @default(true)
   notifyInvoiceUpdates    Boolean         @default(true)

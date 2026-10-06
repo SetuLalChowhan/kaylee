@@ -2,10 +2,14 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { comparePassword, hashPassword } from "../utils/auth.util.js";
-import fs from "fs";
-import { normalizeUploadPath, getAbsoluteUploadPath } from "../utils/upload.util.js";
+import { normalizeUploadPath, safeUnlink } from "../utils/upload.util.js";
 import { logActivity } from "../utils/activity.util.js";
 import { PlanService } from "../services/plan.service.js";
+import { StripeService } from "../services/stripe.service.js";
+import { generateSecureToken } from "../utils/otp.util.js";
+import { sendEmail } from "../services/email.service.js";
+import { requireUserId } from "../middlewares/auth.middleware.js";
+const BRAND_LOGO_REGEX = /^uploads\/brand-logos\/[A-Za-z0-9._-]+$/;
 /**
  * Helper to generate a unique lowercase URL slug from a display name
  */
@@ -26,8 +30,8 @@ async function generateUniqueSlug(displayName, userId) {
         const existingUser = await prisma.user.findFirst({
             where: {
                 slug: candidateSlug,
-                id: { not: userId }
-            }
+                id: { not: userId },
+            },
         });
         if (!existingUser) {
             finalSlug = candidateSlug;
@@ -43,7 +47,7 @@ async function generateUniqueSlug(displayName, userId) {
  * GET /api/user/me — Fetch the authenticated user's profile
  */
 export const getMe = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const userId = requireUserId(req);
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -74,7 +78,7 @@ export const getMe = catchAsync(async (req, res, next) => {
  * PATCH /api/user/update — Update profile (firstName, lastName, servicesOffered, brandLogos) and/or avatar
  */
 export const updateProfile = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const userId = requireUserId(req);
     const { firstName, lastName, servicesOffered, displayName, shortBio, socialLinks } = req.body;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user)
@@ -91,27 +95,35 @@ export const updateProfile = catchAsync(async (req, res, next) => {
     const files = req.files;
     const avatarFile = files?.avatar?.[0];
     if (avatarFile) {
-        const prevAvatarPath = user.avatar ? getAbsoluteUploadPath(user.avatar) : "";
-        if (prevAvatarPath && fs.existsSync(prevAvatarPath)) {
-            fs.unlinkSync(prevAvatarPath);
+        if (user.avatar) {
+            safeUnlink(user.avatar);
         }
         avatarUrl = normalizeUploadPath(avatarFile.path);
     }
-    // Merge existing + new brand logos
-    let existingBrandLogos = Array.isArray(user.brandLogos) ? user.brandLogos : [];
-    // 1. If client sent a JSON array of EXISTING logo paths (after deletions), use that as the base
+    // Strict brand logos validation against path traversal
+    const userStoredBrandLogos = Array.isArray(user.brandLogos)
+        ? user.brandLogos
+        : [];
+    let existingBrandLogos = [];
+    // 1. If client sent a list of existing logo paths, only keep ones that match safe regex AND currently exist in user record
     if (req.body.brandLogos) {
-        if (typeof req.body.brandLogos === "string") {
+        let parsedLogos = req.body.brandLogos;
+        if (typeof parsedLogos === "string") {
             try {
-                existingBrandLogos = JSON.parse(req.body.brandLogos);
+                parsedLogos = JSON.parse(parsedLogos);
             }
             catch {
-                // ignore parse errors
+                parsedLogos = [];
             }
         }
-        else if (Array.isArray(req.body.brandLogos)) {
-            existingBrandLogos = req.body.brandLogos;
+        if (Array.isArray(parsedLogos)) {
+            existingBrandLogos = parsedLogos.filter((logo) => typeof logo === "string" &&
+                BRAND_LOGO_REGEX.test(logo) &&
+                userStoredBrandLogos.includes(logo));
         }
+    }
+    else {
+        existingBrandLogos = userStoredBrandLogos;
     }
     // 2. Append newly uploaded files
     const newLogoPaths = [];
@@ -165,7 +177,7 @@ export const updateProfile = catchAsync(async (req, res, next) => {
     });
 });
 export const completeOnboarding = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const userId = requireUserId(req);
     const { displayName, shortBio, socialLinks } = req.body;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user)
@@ -176,9 +188,8 @@ export const completeOnboarding = catchAsync(async (req, res, next) => {
     }
     let avatarUrl = user.avatar;
     if (req.file) {
-        const prevAvatarPath = user.avatar ? getAbsoluteUploadPath(user.avatar) : "";
-        if (prevAvatarPath && fs.existsSync(prevAvatarPath)) {
-            fs.unlinkSync(prevAvatarPath);
+        if (user.avatar) {
+            safeUnlink(user.avatar);
         }
         avatarUrl = normalizeUploadPath(req.file.path);
     }
@@ -213,22 +224,20 @@ export const completeOnboarding = catchAsync(async (req, res, next) => {
  * DELETE /api/user/brand-logo — Delete a single brand logo by its file path
  */
 export const deleteBrandLogo = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const userId = requireUserId(req);
     const { filePath } = req.body;
-    if (!filePath)
-        return next(new AppError("filePath is required", 400));
+    if (!filePath || !BRAND_LOGO_REGEX.test(filePath)) {
+        return next(new AppError("Invalid brand logo file path", 400));
+    }
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user)
         return next(new AppError("User not found", 404));
     const currentLogos = Array.isArray(user.brandLogos) ? user.brandLogos : [];
     // Remove the file path from the array
     const updatedLogos = currentLogos.filter((logo) => logo !== filePath);
-    // If it was removed, also delete the physical file
+    // If it was removed, safely delete the physical file
     if (updatedLogos.length < currentLogos.length) {
-        const absolutePath = getAbsoluteUploadPath(filePath);
-        if (fs.existsSync(absolutePath)) {
-            fs.unlinkSync(absolutePath);
-        }
+        safeUnlink(filePath);
     }
     const updatedUser = await prisma.user.update({
         where: { id: userId },
@@ -245,7 +254,7 @@ export const deleteBrandLogo = catchAsync(async (req, res, next) => {
     });
 });
 export const changePassword = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const userId = requireUserId(req);
     const { oldPassword, newPassword } = req.body;
     if (!oldPassword || !newPassword) {
         return next(new AppError("Please provide old and new password", 400));
@@ -259,7 +268,10 @@ export const changePassword = catchAsync(async (req, res, next) => {
     const hashedPassword = await hashPassword(newPassword);
     await prisma.user.update({
         where: { id: userId },
-        data: { password: hashedPassword },
+        data: {
+            password: hashedPassword,
+            passwordChangedAt: new Date(),
+        },
     });
     logActivity({
         userId,
@@ -275,8 +287,8 @@ export const changePassword = catchAsync(async (req, res, next) => {
         message: "Password changed successfully!",
     });
 });
-export const updateNotificationSettings = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+export const updateNotificationSettings = catchAsync(async (req, res) => {
+    const userId = requireUserId(req);
     const { notifyDeadlineReminders, notifyInvoiceUpdates, notifyContentApprovals, notifyTaskReminders } = req.body;
     const updatedUser = await prisma.user.update({
         where: { id: userId },
@@ -291,50 +303,51 @@ export const updateNotificationSettings = catchAsync(async (req, res, next) => {
             notifyInvoiceUpdates: true,
             notifyContentApprovals: true,
             notifyTaskReminders: true,
-        }
+        },
     });
     res.status(200).json({
         status: "success",
         message: "Notification settings updated successfully",
-        data: updatedUser
+        data: updatedUser,
     });
 });
 /**
  * GET /api/user/dashboard-stats — Retrieve authenticated user's dashboard metrics
  */
-export const getDashboardStats = catchAsync(async (req, res, next) => {
-    const { userId, role } = req.user;
+export const getDashboardStats = catchAsync(async (req, res) => {
+    const userId = requireUserId(req);
+    const role = req.user?.role;
     const isAdmin = role === "admin";
     const totalUsersCount = isAdmin ? await prisma.user.count() : null;
     // 1. Stats Card calculations
     const activeCampaignsCount = await prisma.ugcCampaign.count({
         where: {
-            ...(isAdmin ? {} : { userId })
-        }
+            ...(isAdmin ? {} : { userId }),
+        },
     });
     const awaitingReviewCount = await prisma.ugcCampaign.count({
         where: {
             ...(isAdmin ? {} : { userId }),
-            status: "Under Review"
-        }
+            status: "Under Review",
+        },
     });
     const completedCampaignsCount = await prisma.ugcCampaign.count({
         where: {
             ...(isAdmin ? {} : { userId }),
-            status: "Completed"
-        }
+            status: "Completed",
+        },
     });
     const campaigns = await prisma.ugcCampaign.findMany({
         where: isAdmin ? {} : { userId },
-        select: { amount: true, status: true, paymentStatus: true }
+        select: { amount: true, status: true, paymentStatus: true },
     });
     // Calculate earnings: Paid Invoices + Completed Unpaid Campaigns (to cover both models)
     const invoices = await prisma.invoice.findMany({
         where: {
             ...(isAdmin ? {} : { userId }),
-            status: "Paid"
+            status: "Paid",
         },
-        select: { amount: true }
+        select: { amount: true },
     });
     const invoiceEarned = invoices.reduce((sum, inv) => {
         const cleanAmount = inv.amount.replace(/[^0-9.]/g, "");
@@ -350,13 +363,13 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
     }, 0);
     const totalEarnedValue = invoiceEarned + completedCampaignsEarned;
     const totalInvoicesCount = await prisma.invoice.count({
-        where: isAdmin ? {} : { userId }
+        where: isAdmin ? {} : { userId },
     });
     const stripeIncomeSum = await prisma.purchase.aggregate({
         where: isAdmin ? { status: "completed" } : { userId, status: "completed" },
         _sum: {
-            amount: true
-        }
+            amount: true,
+        },
     });
     const stripeIncomeValue = stripeIncomeSum._sum.amount ?? 0;
     // 2. Recent Active/Draft campaigns (up to 6)
@@ -369,21 +382,21 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
             feedback: { select: { id: true } },
         },
         orderBy: { updatedAt: "desc" },
-        take: 6
+        take: 6,
     });
     // 3. Upcoming Deadlines (up to 5)
     const activeCampaignsForDeadlines = await prisma.ugcCampaign.findMany({
         where: {
             ...(isAdmin ? {} : { userId }),
             status: { not: "Completed" },
-            deadline: { not: "" }
+            deadline: { not: "" },
         },
         select: {
             id: true,
             name: true,
             brandName: true,
-            deadline: true
-        }
+            deadline: true,
+        },
     });
     const parsedDeadlines = activeCampaignsForDeadlines
         .map((c) => {
@@ -395,7 +408,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
             date,
             rawDate: c.deadline,
             day: isNaN(date.getTime()) ? "" : date.getDate().toString().padStart(2, "0"),
-            month: isNaN(date.getTime()) ? "" : date.toLocaleString("en-US", { month: "short" })
+            month: isNaN(date.getTime()) ? "" : date.toLocaleString("en-US", { month: "short" }),
         };
     })
         .filter((d) => d.day !== "")
@@ -407,12 +420,11 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         where: isAdmin ? {} : { userId },
         orderBy: [
             { completed: "asc" },
-            { date: "asc" }
+            { date: "asc" },
         ],
-        take: 5
+        take: 5,
     });
-    const parsedTasks = tasks
-        .map((t) => {
+    const parsedTasks = tasks.map((t) => {
         const dateObj = new Date(t.date);
         let formattedDate = t.date;
         if (!isNaN(dateObj.getTime())) {
@@ -424,7 +436,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
             sub: t.campaign,
             date: formattedDate,
             rawDate: t.date,
-            completed: t.completed
+            completed: t.completed,
         };
     });
     // 5. Generate monthly trends data (last 6 months) for stats visualization
@@ -435,16 +447,16 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
     const trendCampaigns = await prisma.ugcCampaign.findMany({
         where: {
             ...(isAdmin ? {} : { userId }),
-            createdAt: { gte: sixMonthsAgo }
+            createdAt: { gte: sixMonthsAgo },
         },
-        select: { createdAt: true }
+        select: { createdAt: true },
     });
     const trendInvoices = await prisma.invoice.findMany({
         where: {
             ...(isAdmin ? {} : { userId }),
-            createdAt: { gte: sixMonthsAgo }
+            createdAt: { gte: sixMonthsAgo },
         },
-        select: { createdAt: true, amount: true, status: true }
+        select: { createdAt: true, amount: true, status: true },
     });
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthlyMap = new Map();
@@ -457,7 +469,7 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
         monthlyMap.set(key, {
             month: `${mName} ${targetDate.getFullYear().toString().slice(-2)}`,
             campaigns: 0,
-            earnings: 0
+            earnings: 0,
         });
     }
     // Populate campaign counts
@@ -493,19 +505,19 @@ export const getDashboardStats = catchAsync(async (req, res, next) => {
                 totalEarned: totalEarnedValue,
                 totalInvoices: totalInvoicesCount,
                 stripeIncome: stripeIncomeValue,
-                totalUsers: totalUsersCount
+                totalUsers: totalUsersCount,
             },
             recentCampaigns,
             deadlines: parsedDeadlines,
             tasks: parsedTasks,
-            monthlyTrends
-        }
+            monthlyTrends,
+        },
     });
 });
 /**
  * GET /api/user/admin/users — Retrieve all registered users (Admin-only)
  */
-export const adminGetAllUsers = catchAsync(async (req, res, next) => {
+export const adminGetAllUsers = catchAsync(async (_req, res) => {
     const users = await prisma.user.findMany({
         orderBy: { createdAt: "desc" },
         select: {
@@ -524,14 +536,14 @@ export const adminGetAllUsers = catchAsync(async (req, res, next) => {
                     id: true,
                     title: true,
                     price: true,
-                    campaignLimit: true
-                }
-            }
-        }
+                    campaignLimit: true,
+                },
+            },
+        },
     });
     res.status(200).json({
         status: "success",
-        data: users
+        data: users,
     });
 });
 /**
@@ -539,24 +551,32 @@ export const adminGetAllUsers = catchAsync(async (req, res, next) => {
  */
 export const adminCreateUser = catchAsync(async (req, res, next) => {
     const { firstName, lastName, email, password, role, planId } = req.body;
+    if (!email || !firstName || !lastName) {
+        return next(new AppError("First name, last name, and email are required", 400));
+    }
+    const assignedRole = role === "admin" ? "admin" : "user";
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing)
         return next(new AppError("User already exists with this email", 400));
-    const pwd = password || "user123";
-    const hashedPassword = await hashPassword(pwd);
+    let plainPassword = password;
+    const isGeneratedPassword = !plainPassword || plainPassword.trim() === "";
+    if (isGeneratedPassword) {
+        plainPassword = generateSecureToken(16);
+    }
+    const hashedPassword = await hashPassword(plainPassword);
     const newUser = await prisma.user.create({
         data: {
             firstName,
             lastName,
             email,
             password: hashedPassword,
-            role: role || "user",
+            role: assignedRole,
             isVerified: true,
-            ...(planId && { planId })
+            ...(planId && { planId }),
         },
         include: {
-            plan: true
-        }
+            plan: true,
+        },
     });
     if (planId) {
         await prisma.subscription.upsert({
@@ -564,19 +584,29 @@ export const adminCreateUser = catchAsync(async (req, res, next) => {
             create: {
                 userId: newUser.id,
                 planId,
-                status: "ACTIVE"
+                status: "ACTIVE",
             },
             update: {
                 planId,
-                status: "ACTIVE"
-            }
+                status: "ACTIVE",
+            },
         });
         await PlanService.getFoundingClaimedCount();
+    }
+    if (isGeneratedPassword) {
+        // Send email with credentials/reset instructions
+        await sendEmail(email, "Your STAKD Account Credentials", `<p>Hello ${firstName},</p><p>An administrator has created your account on STAKD. Your temporary password is: <strong>${plainPassword}</strong></p><p>Please log in and update your password immediately.</p>`);
     }
     res.status(201).json({
         status: "success",
         message: "User created successfully",
-        data: newUser
+        data: {
+            id: newUser.id,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            role: newUser.role,
+        },
     });
 });
 /**
@@ -596,11 +626,11 @@ export const adminUpdateUser = catchAsync(async (req, res, next) => {
             ...(displayName !== undefined && { displayName }),
             ...(role !== undefined && { role }),
             ...(isVerified !== undefined && { isVerified }),
-            ...(planId !== undefined && { planId: planId || null })
+            ...(planId !== undefined && { planId: planId || null }),
         },
         include: {
-            plan: true
-        }
+            plan: true,
+        },
     });
     if (planId !== undefined) {
         await prisma.subscription.upsert({
@@ -608,22 +638,22 @@ export const adminUpdateUser = catchAsync(async (req, res, next) => {
             create: {
                 userId: id,
                 planId: planId || null,
-                status: "ACTIVE"
+                status: "ACTIVE",
             },
             update: {
                 planId: planId || null,
-                status: "ACTIVE"
-            }
+                status: "ACTIVE",
+            },
         });
         await PlanService.getFoundingClaimedCount();
     }
     res.status(200).json({
         status: "success",
         message: "User updated successfully",
-        data: updatedUser
+        data: updatedUser,
     });
 });
-// Helper function to clean up all physical files associated with a user
+// Helper function to safely clean up all physical files associated with a user
 async function cleanUserPhysicalFiles(userId) {
     const fileUrls = [];
     try {
@@ -657,19 +687,11 @@ async function cleanUserPhysicalFiles(userId) {
             fileUrls.push(...c.media.map((m) => m.url));
             fileUrls.push(...c.documents.map((d) => d.url));
         }
-        // Physically delete files
+        // Physically delete files securely
         for (const url of fileUrls) {
             if (!url)
                 continue;
-            const absPath = getAbsoluteUploadPath(url);
-            if (fs.existsSync(absPath)) {
-                try {
-                    fs.unlinkSync(absPath);
-                }
-                catch (err) {
-                    // ignore
-                }
-            }
+            safeUnlink(url);
         }
     }
     catch (err) {
@@ -680,15 +702,24 @@ async function cleanUserPhysicalFiles(userId) {
  * DELETE /api/user/delete-account — Authenticated user permanently deletes their own account
  */
 export const deleteAccount = catchAsync(async (req, res, next) => {
-    const { userId } = req.user;
+    const userId = requireUserId(req);
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user)
         return next(new AppError("User not found", 404));
-    // 1. Physically delete all files of the user
+    // 1. Cancel Stripe subscription if active
+    if (user.stripeSubscriptionId) {
+        try {
+            await StripeService.cancelSubscriptionImmediately(user.stripeSubscriptionId);
+        }
+        catch (err) {
+            console.error("Error cancelling Stripe subscription on deleteAccount: ", err);
+        }
+    }
+    // 2. Physically delete all files of the user
     await cleanUserPhysicalFiles(userId);
-    // 2. Cascade delete database records
+    // 3. Cascade delete database records
     await prisma.user.delete({ where: { id: userId } });
-    // 3. Clear auth cookies
+    // 4. Clear auth cookies
     res.clearCookie("token");
     res.clearCookie("refreshToken");
     res.status(200).json({
@@ -705,9 +736,17 @@ export const adminDeleteUser = catchAsync(async (req, res, next) => {
     if (!user)
         return next(new AppError("User not found", 404));
     // Protect the user from deleting themselves
-    const { userId } = req.user;
+    const userId = requireUserId(req);
     if (id === userId) {
         return next(new AppError("You cannot delete your own admin account", 400));
+    }
+    if (user.stripeSubscriptionId) {
+        try {
+            await StripeService.cancelSubscriptionImmediately(user.stripeSubscriptionId);
+        }
+        catch (err) {
+            console.error("Error cancelling Stripe subscription on adminDeleteUser: ", err);
+        }
     }
     // 1. Physically delete all files of the user
     await cleanUserPhysicalFiles(id);
@@ -715,7 +754,7 @@ export const adminDeleteUser = catchAsync(async (req, res, next) => {
     await prisma.user.delete({ where: { id } });
     res.status(200).json({
         status: "success",
-        message: "User deleted successfully"
+        message: "User deleted successfully",
     });
 });
 //# sourceMappingURL=user.controller.js.map

@@ -7,7 +7,7 @@ const router = Router();
 router.post("/webhook", express.raw({ type: "application/json" }), handleWebhook);
 // All other subscription routes require the user to be logged in
 router.post("/checkout", authGuard, validateCheckoutEligibility, createCheckoutSession);
-router.post("/verify", verifySession);
+router.post("/verify", authGuard, verifySession);
 router.get("/my-plan", authGuard, getMyPlan);
 router.post("/cancel", authGuard, cancelSubscription);
 router.get("/my-payments", authGuard, getMyPayments);

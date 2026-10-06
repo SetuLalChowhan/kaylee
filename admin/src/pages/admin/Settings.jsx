@@ -381,9 +381,9 @@ const WebsiteSettingsTab = ({ axiosSecure, axiosPublic, queryClient }) => {
 
   // Fetch CMS
   const { data: cmsData, isLoading, refetch } = useQuery({
-    queryKey: ["cmsContent"],
+    queryKey: ["cmsContentAdmin"],
     queryFn: async () => {
-      const res = await axiosPublic.get("/cms");
+      const res = await axiosSecure.get("/cms/admin");
       return res.data?.data || {};
     },
   });

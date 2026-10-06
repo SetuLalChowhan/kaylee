@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Play, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     usePublicCampaign,
+    useMarkCampaignOpened,
     useUgcCampaign,
     useUpdatePublicMediaStatus,
     useRequestChangesPublicMedia,
@@ -30,6 +31,13 @@ const BrandView = () => {
 
     const campaign = isPublic ? publicQuery.data : privateQuery.data;
     const isLoading = isPublic ? publicQuery.isLoading : privateQuery.isLoading;
+    const markOpened = useMarkCampaignOpened();
+
+    useEffect(() => {
+        if (isPublic && slug && campaign && !campaign.authRequired && (campaign.status === 'Draft' || campaign.status === 'Active')) {
+            markOpened.mutate(slug);
+        }
+    }, [isPublic, slug, campaign?.status, campaign?.authRequired]);
 
     const [activeTab, setActiveTab] = useState('Content Gallery');
     const tabs = ['Content Gallery', 'Documents', 'Comments'];

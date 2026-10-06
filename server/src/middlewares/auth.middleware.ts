@@ -4,12 +4,21 @@ import { AppError } from "../utils/AppError.js";
 import prisma from "../config/db.js";
 import { catchAsync } from "../utils/catchAsync.js";
 
-interface JwtPayload {
+export interface JwtPayload {
   userId: string;
   role: string;
+  type?: string;
   iat: number;
   exp: number;
 }
+
+export const requireUserId = (req: Request): string => {
+  const user = (req as any).user;
+  if (!user || typeof user.userId !== "string" || user.userId.trim() === "" || user.type === "preview") {
+    throw new AppError("Authentication required. Invalid user session.", 401);
+  }
+  return user.userId;
+};
 
 export const authGuard = (req: Request, _res: Response, next: NextFunction): void => {
   const token = req.headers.authorization?.split(" ")[1]; // Bearer <token>
@@ -19,8 +28,8 @@ export const authGuard = (req: Request, _res: Response, next: NextFunction): voi
     return;
   }
 
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded) => {
-    if (err) {
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded: any) => {
+    if (err || !decoded || typeof decoded.userId !== "string" || decoded.userId.trim() === "" || decoded.type === "preview") {
       next(new AppError("Invalid or expired token. Please log in again.", 401));
       return;
     }
@@ -30,7 +39,7 @@ export const authGuard = (req: Request, _res: Response, next: NextFunction): voi
 };
 
 export const adminGuard = catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
-  const { userId } = (req as Request & { user: { userId: string } }).user;
+  const userId = requireUserId(req);
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -42,4 +51,4 @@ export const adminGuard = catchAsync(async (req: Request, _res: Response, next: 
   }
 
   next();
-});
+});

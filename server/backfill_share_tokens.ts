@@ -14,7 +14,7 @@ async function main() {
       where: { id: campaign.id },
       data: { shareToken: token }
     });
-    console.log(`Updated campaign ${campaign.slug} with token ${token}`);
+    console.log(`Updated campaign ${campaign.slug} with new shareToken`);
   }
 }
 

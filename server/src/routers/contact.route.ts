@@ -12,10 +12,12 @@ import {
   updateContactSchema,
 } from "../validations/contact.validation.js";
 
+import { contactLimiter } from "../middlewares/rateLimit.middleware.js";
+
 const router = express.Router();
 
 // Public route to submit a contact message
-router.post("/", validate(createContactSchema), createContact);
+router.post("/", contactLimiter, validate(createContactSchema), createContact);
 
 // Protected routes (Admin only)
 router.use(authGuard);

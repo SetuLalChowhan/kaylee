@@ -103,7 +103,8 @@ export class WebhookService {
         });
         if (!sub)
             return;
-        const status = subObj.status.toUpperCase() === "ACTIVE" ? "ACTIVE" : subObj.status.toUpperCase() === "PAST_DUE" ? "PAST_DUE" : "CANCELLED";
+        const rawStatus = (subObj.status || "").toLowerCase();
+        const status = (rawStatus === "active" || rawStatus === "trialing") ? "ACTIVE" : rawStatus === "past_due" ? "PAST_DUE" : "CANCELLED";
         const currentPeriodStart = new Date(subObj.current_period_start * 1000);
         const currentPeriodEnd = new Date(subObj.current_period_end * 1000);
         await prisma.subscription.update({

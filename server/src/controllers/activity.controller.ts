@@ -2,18 +2,20 @@ import type { Request, Response, NextFunction } from "express";
 import prisma from "../config/db.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { AppError } from "../utils/AppError.js";
-
-interface AuthRequest extends Request {
-  user: { userId: string; role: string };
-}
+import { requireUserId } from "../middlewares/auth.middleware.js";
 
 /**
  * GET /api/activities - Fetch recent activities for authenticated user with pagination
  */
 export const getUserActivities = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
-  const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 15;
+  const userId = requireUserId(req);
+
+  const parsedPage = parseInt(req.query.page as string, 10);
+  const page = !isNaN(parsedPage) && parsedPage >= 1 ? parsedPage : 1;
+
+  const parsedLimit = parseInt(req.query.limit as string, 10);
+  const limit = !isNaN(parsedLimit) && parsedLimit >= 1 ? Math.min(parsedLimit, 100) : 15;
+
   const skip = (page - 1) * limit;
 
   let activities: any[] = [];
@@ -49,11 +51,21 @@ export const getUserActivities = catchAsync(async (req: Request, res: Response, 
  * POST /api/activities - Create a custom activity
  */
 export const createActivity = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = (req as AuthRequest).user;
+  const userId = requireUserId(req);
   const { title, sub, avatarBg, avatarText, dotColor, type, campaignId } = req.body;
 
-  if (!title) {
+  if (!title || typeof title !== "string" || !title.trim()) {
     return next(new AppError("Activity title is required", 400));
+  }
+
+  // If campaignId is provided, verify caller owns the campaign
+  if (campaignId) {
+    const campaign = await prisma.ugcCampaign.findFirst({
+      where: { id: String(campaignId), userId },
+    });
+    if (!campaign) {
+      return next(new AppError("Campaign not found or access denied", 404));
+    }
   }
 
   let activity;
@@ -61,13 +73,13 @@ export const createActivity = catchAsync(async (req: Request, res: Response, nex
     activity = await (prisma as any).activity.create({
       data: {
         userId,
-        title,
-        sub: sub || "",
-        avatarBg: avatarBg || "bg-[#FCE4EC]",
-        avatarText: avatarText || "STAKD",
-        dotColor: dotColor || null,
-        type: type || "GENERAL",
-        campaignId: campaignId || null,
+        title: title.trim(),
+        sub: sub ? String(sub).trim() : "",
+        avatarBg: avatarBg ? String(avatarBg).trim() : "bg-[#FCE4EC]",
+        avatarText: avatarText ? String(avatarText).trim() : "STAKD",
+        dotColor: dotColor ? String(dotColor).trim() : null,
+        type: type ? String(type).trim() : "GENERAL",
+        campaignId: campaignId ? String(campaignId) : null,
       },
     });
   } catch (err) {

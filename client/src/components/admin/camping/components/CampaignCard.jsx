@@ -151,9 +151,9 @@ const CampaignCard = ({
   // 4. Files Released: Status Completed or releaseFiles is true
   const isFilesReleased = isCompleted || effectiveRelease;
 
-  // 5. Invoice Paid: Payment status is Paid or campaign Completed
+  // 5. Invoice Paid: Payment status is Paid
   const paymentStatusStr = (detail.paymentStatus || campaign.paymentStatus || '').toLowerCase().trim();
-  const isInvoicePaid = isCompleted || paymentStatusStr === 'paid';
+  const isInvoicePaid = paymentStatusStr === 'paid';
 
   const checklist = [
     {
@@ -166,7 +166,7 @@ const CampaignCard = ({
       key: 'content',
       label: 'Content Uploaded',
       done: isContentUploaded,
-      subText: effectiveMedia.length > 0 ? `${effectiveMedia.length} Media` : 'Pending',
+      subText: effectiveMedia.length > 0 ? `${effectiveMedia.length} Media` : (isContentUploaded ? 'Done' : 'Pending'),
     },
     {
       key: 'approved',
@@ -190,7 +190,7 @@ const CampaignCard = ({
 
   // Dynamic Progress Percentage (20%, 40%, 60%, 80%, 100%)
   const completedChecks = checklist.filter((c) => c.done).length;
-  const progressPercent = isCompleted ? 100 : completedChecks * 20;
+  const progressPercent = completedChecks * 20;
 
   const handleCardClick = () => {
     navigate(`/dashboard/campaigns/${id}`);

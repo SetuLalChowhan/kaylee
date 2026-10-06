@@ -52,6 +52,7 @@ export declare const deleteNote: (req: Request, res: Response, next: NextFunctio
  */
 export declare const createFeedback: (req: Request, res: Response, next: NextFunction) => void;
 export declare const getPublicCampaignBySlug: (req: Request, res: Response, next: NextFunction) => void;
+export declare const markPublicCampaignOpened: (req: Request, res: Response, next: NextFunction) => void;
 export declare const requestOtpPublic: (req: Request, res: Response, next: NextFunction) => void;
 export declare const verifyOtpPublic: (req: Request, res: Response, next: NextFunction) => void;
 export declare const updatePublicMediaStatus: (req: Request, res: Response, next: NextFunction) => void;

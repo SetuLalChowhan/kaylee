@@ -1,13 +1,63 @@
 import type { Request, Response, NextFunction } from "express";
+import rateLimit from "express-rate-limit";
 import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 
+// Global limiter: 300 requests per minute
+export const globalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: "fail",
+    message: "Too many requests, please try again after a minute.",
+  },
+});
+
+// Auth endpoints limiter (login, register, google-login): 10 requests per 15 minutes
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: "fail",
+    message: "Too many authentication attempts, please try again in 15 minutes.",
+  },
+});
+
+// Password reset / resend verification limiter: 5 requests per hour
+export const passwordResetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: "fail",
+    message: "Too many requests, please try again in an hour.",
+  },
+});
+
+// Contact form limiter: 5 requests per hour
+export const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: "fail",
+    message: "Too many contact messages sent. Please try again in an hour.",
+  },
+});
+
+// DB-backed rate limiter
 export const rateLimitDB = (
   prefix: string,
   limit: number,
   windowMs: number
 ) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     try {
       const ip = req.ip || req.socket.remoteAddress || "unknown";
       const key = `${prefix}:${ip}`;
@@ -41,9 +91,7 @@ export const rateLimitDB = (
       });
 
       next();
-    } catch (err) {
-      // Fail open on rate limiting error to not block production flow if DB has transient issue, 
-      // or you could choose to fail closed. Failing open is typically safer for business logic.
+    } catch {
       next();
     }
   };

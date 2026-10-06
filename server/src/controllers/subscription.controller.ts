@@ -31,13 +31,14 @@ export const createCheckoutSession = catchAsync(async (req: Request, res: Respon
  * POST /api/subscriptions/verify — Verify checkout success on client landing
  */
 export const verifySession = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = (req as AuthRequest).user;
   const { sessionId } = req.body as { sessionId: string };
 
   if (!sessionId) {
     return next(new AppError("Session ID is required", 400));
   }
 
-  const user = await SubscriptionService.verifyCheckoutSession(sessionId);
+  const user = await SubscriptionService.verifyCheckoutSession(sessionId, userId);
   res.status(200).json({
     status: "success",
     message: "Subscription verified successfully",

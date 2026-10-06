@@ -1,11 +1,32 @@
 import { z } from "zod";
+export declare const campaignStatusEnum: z.ZodEnum<{
+    "Under Review": "Under Review";
+    Completed: "Completed";
+    Pending: "Pending";
+    Draft: "Draft";
+    Approved: "Approved";
+    Active: "Active";
+}>;
+export declare const campaignPaymentStatusEnum: z.ZodEnum<{
+    Paid: "Paid";
+    Pending: "Pending";
+    Overdue: "Overdue";
+    Unpaid: "Unpaid";
+}>;
 export declare const createUgcCampaignSchema: z.ZodObject<{
     body: z.ZodObject<{
         campaignName: z.ZodString;
         brandName: z.ZodString;
         deadline: z.ZodString;
         amount: z.ZodString;
-        status: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        status: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+            "Under Review": "Under Review";
+            Completed: "Completed";
+            Pending: "Pending";
+            Draft: "Draft";
+            Approved: "Approved";
+            Active: "Active";
+        }>>>;
         notes: z.ZodOptional<z.ZodString>;
     }, z.core.$strip>;
 }, z.core.$strip>;
@@ -15,10 +36,22 @@ export declare const updateUgcCampaignSchema: z.ZodObject<{
         brandName: z.ZodOptional<z.ZodString>;
         deadline: z.ZodOptional<z.ZodString>;
         amount: z.ZodOptional<z.ZodString>;
-        status: z.ZodOptional<z.ZodString>;
+        status: z.ZodOptional<z.ZodEnum<{
+            "Under Review": "Under Review";
+            Completed: "Completed";
+            Pending: "Pending";
+            Draft: "Draft";
+            Approved: "Approved";
+            Active: "Active";
+        }>>;
         releaseFiles: z.ZodOptional<z.ZodBoolean>;
         notes: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-        paymentStatus: z.ZodOptional<z.ZodString>;
+        paymentStatus: z.ZodOptional<z.ZodEnum<{
+            Paid: "Paid";
+            Pending: "Pending";
+            Overdue: "Overdue";
+            Unpaid: "Unpaid";
+        }>>;
         shareEnabled: z.ZodOptional<z.ZodBoolean>;
         regenerateShareToken: z.ZodOptional<z.ZodBoolean>;
         rating: z.ZodOptional<z.ZodNumber>;

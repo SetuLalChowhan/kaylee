@@ -1,12 +1,28 @@
 import { z } from "zod";
 
+export const campaignStatusEnum = z.enum([
+  "Draft",
+  "Active",
+  "Under Review",
+  "Approved",
+  "Completed",
+  "Pending",
+]);
+
+export const campaignPaymentStatusEnum = z.enum([
+  "Pending",
+  "Paid",
+  "Unpaid",
+  "Overdue",
+]);
+
 export const createUgcCampaignSchema = z.object({
   body: z.object({
     campaignName: z.string().min(1, "Campaign name is required").max(100),
     brandName: z.string().min(1, "Brand name is required").max(100),
     deadline: z.string().min(1, "Deadline is required"),
     amount: z.string().min(1, "Amount is required"),
-    status: z.string().optional().default("Draft"),
+    status: campaignStatusEnum.optional().default("Draft"),
     notes: z.string().optional(),
   }),
 });
@@ -17,10 +33,10 @@ export const updateUgcCampaignSchema = z.object({
     brandName: z.string().optional(),
     deadline: z.string().optional(),
     amount: z.string().optional(),
-    status: z.string().optional(),
+    status: campaignStatusEnum.optional(),
     releaseFiles: z.boolean().optional(),
     notes: z.string().nullable().optional(),
-    paymentStatus: z.string().optional(),
+    paymentStatus: campaignPaymentStatusEnum.optional(),
     shareEnabled: z.boolean().optional(),
     regenerateShareToken: z.boolean().optional(),
     rating: z.number().optional(),

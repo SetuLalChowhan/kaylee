@@ -1,7 +1,10 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import path from "path";
 import { corsMiddleware } from "./middlewares/cors.middleware.js";
 import { jsonParserBypassWebhook, urlencodedParserBypassWebhook } from "./middlewares/parser.middleware.js";
+import { globalLimiter } from "./middlewares/rateLimit.middleware.js";
 import authRoutes from "./routers/auth.route.js";
 import userRoutes from "./routers/user.route.js";
 import invoiceRoutes from "./routers/invoice.route.js";
@@ -19,15 +22,43 @@ import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import { AppError } from "./utils/AppError.js";
 import { downloadInterceptor } from "./middlewares/download.middleware.js";
 const app = express();
+// ── Security Headers & Proxy Trust ──────────────────────────────────────────
+app.set("trust proxy", 1);
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 // ── Core Middleware ───────────────────────────────────────────────────────────
 app.use(corsMiddleware);
+app.use(globalLimiter);
 app.use(jsonParserBypassWebhook);
 app.use(urlencodedParserBypassWebhook);
 app.use(cookieParser());
 // ── Custom Static Interceptor (campaign download locking) ─────────────────────
 app.get("/uploads/campaigns/:filename", downloadInterceptor);
-// ── Static Files (uploaded avatars) ──────────────────────────────────────────
-app.use("/uploads", express.static("uploads"));
+// ── Static Files with Security Headers ─────────────────────────────────────────
+app.use("/uploads", express.static("uploads", {
+    setHeaders: (res, filePath) => {
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+        const ext = path.extname(filePath).toLowerCase();
+        const inlineExts = [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp",
+            ".gif",
+            ".avif",
+            ".mp4",
+            ".mov",
+            ".webm",
+            ".mpeg",
+            ".pdf",
+        ];
+        if (!inlineExts.includes(ext)) {
+            res.setHeader("Content-Disposition", "attachment");
+        }
+    },
+}));
 // ── Health Check ──────────────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
     res.json({ status: "ok", message: "Server is running" });

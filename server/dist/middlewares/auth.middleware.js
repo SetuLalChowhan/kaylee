@@ -2,6 +2,13 @@ import jwt from "jsonwebtoken";
 import { AppError } from "../utils/AppError.js";
 import prisma from "../config/db.js";
 import { catchAsync } from "../utils/catchAsync.js";
+export const requireUserId = (req) => {
+    const user = req.user;
+    if (!user || typeof user.userId !== "string" || user.userId.trim() === "" || user.type === "preview") {
+        throw new AppError("Authentication required. Invalid user session.", 401);
+    }
+    return user.userId;
+};
 export const authGuard = (req, _res, next) => {
     const token = req.headers.authorization?.split(" ")[1]; // Bearer <token>
     if (!token) {
@@ -9,7 +16,7 @@ export const authGuard = (req, _res, next) => {
         return;
     }
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
+        if (err || !decoded || typeof decoded.userId !== "string" || decoded.userId.trim() === "" || decoded.type === "preview") {
             next(new AppError("Invalid or expired token. Please log in again.", 401));
             return;
         }
@@ -18,7 +25,7 @@ export const authGuard = (req, _res, next) => {
     });
 };
 export const adminGuard = catchAsync(async (req, _res, next) => {
-    const { userId } = req.user;
+    const userId = requireUserId(req);
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { role: true },
