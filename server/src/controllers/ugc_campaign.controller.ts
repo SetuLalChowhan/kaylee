@@ -1161,11 +1161,25 @@ export const requestOtpPublic = catchAsync(
     });
 
     // Use email service
-    await sendEmail(
+    const sent = await sendEmail(
       email,
       `Your OTP for ${campaign.name}`,
       `<p>Your verification code is <strong>${otp}</strong>. It will expire in 10 minutes.</p>`
     );
+
+    if (!sent) {
+      // Invalidate the OTP so a failed delivery can't be reported as success.
+      await prisma.ugcOtp.updateMany({
+        where: { campaignId: campaign.id, email, used: false },
+        data: { used: true },
+      });
+      return next(
+        new AppError(
+          "Could not send the OTP email. Please try again later.",
+          502
+        )
+      );
+    }
 
     await logApprovalAudit({ campaignId: campaign.id, action: "OTP_REQUESTED", email, ipAddress: req.ip });
 
