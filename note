@@ -1,0 +1,59 @@
+TASK: Fix a download-lock bypass in server/ (Express 5.2.1). Do NOT change any business behavior, API response, DB value, or URL format. Only touch the files listed below.
+
+BACKGROUND
+Campaign files live in uploads/campaigns/ and are stored in the DB as "uploads/campaigns/<file>". When campaign.releaseFiles is false, they must NOT be downloadable without (a) the owner's/admin's access token, or (b) for media only, a preview token for that campaign.
+
+app.ts currently has:
+  app.get("/uploads/campaigns/:filename", downloadInterceptor);
+  app.use("/uploads", express.static("uploads", {...}));
+
+BUG (verified on a replica with Express 5.2.1)
+The lock only matches the exact path /uploads/campaigns/<file>. These variants skip the interceptor, fall into express.static, and return the file (HTTP 200) even when releaseFiles=false:
+  /uploads//campaigns/<file>
+  /uploads/campaigns%2F<file>
+  /uploads/%63ampaigns/<file>
+  /uploads/./campaigns/<file>
+Express static decodes and normalizes the path, but the interceptor route does not.
+
+REQUIRED FIX (files: server/src/app.ts, server/src/middlewares/download.middleware.ts)
+
+1. In app.ts, mount a guard BEFORE express.static, on "/uploads". It must:
+   - take req.path, decode it with decodeURIComponent repeatedly (max 3 passes, stop when unchanged). If decoding throws or the result contains "\0", respond 400.
+   - convert backslashes to "/", run path.posix.normalize, split on "/" and drop empty segments.
+   - if the first segment, lowercased, equals "campaigns", respond 404 JSON { status: "fail", message: "File not found." } and DO NOT call next().
+   - otherwise call next().
+   The exact route app.get("/uploads/campaigns/:filename", downloadInterceptor) must stay registered BEFORE this guard so legitimate requests still reach the interceptor.
+
+2. In download.middleware.ts, stop calling next() on success. After the existing authorization checks pass (released, owner/admin token, or valid preview token for media), serve the file directly:
+   - validate filename with /^[A-Za-z0-9._-]+$/, otherwise 404.
+   - build the absolute path as path.join(UPLOAD_ROOT, "campaigns", filename) (UPLOAD_ROOT is in utils/upload.util.ts) and confirm it starts with UPLOAD_ROOT + path.sep.
+   - set headers: X-Content-Type-Options: nosniff, Content-Security-Policy: default-src 'none'; sandbox, and Content-Disposition: attachment for every extension except .jpg .jpeg .png .webp .gif .avif .mp4 .mov .webm .mpeg .pdf (same list as app.ts).
+   - respond with res.sendFile(absPath, { dotfiles: "deny" }) so Range requests (video seeking) keep working. Handle the sendFile error callback by calling next(err) or 404 if ENOENT.
+   Keep all existing 403/404 logic and error messages unchanged. Keep the exact-URL DB lookup as it is.
+
+3. Do not move any files, do not change upload paths, do not change what is stored in the DB, do not change token creation or token scopes (a separate task covers that), and do not touch plan-limit code.
+
+TESTS (write a small script server/scripts/verify-download-lock.mjs that takes BASE_URL, FILE_NAME, OWNER_TOKEN, PREVIEW_TOKEN as env vars, and run it against a local server; use raw HTTP so paths are not normalized, e.g. node:http or curl --path-as-is)
+
+Use one campaign with releaseFiles=false. For each path below WITHOUT any token, the result must NOT be 200 (expect 403 or 404):
+  /uploads/campaigns/FILE
+  /uploads//campaigns/FILE
+  /uploads/campaigns%2FFILE
+  /uploads/%63ampaigns/FILE
+  /uploads/./campaigns/FILE
+  /UPLOADS/CAMPAIGNS/FILE
+  /uploads/campaigns%5CFILE
+  /uploads/campaigns%252FFILE
+  /uploads/campaigns/FILE/
+  /uploads/campaigns/..%2Fcampaigns/FILE
+  also run HEAD and GET with a Range header on the first path.
+With OWNER_TOKEN (Authorization: Bearer) on /uploads/campaigns/FILE: expect 200 (and 206 with Range).
+With ?token=PREVIEW_TOKEN on a MEDIA file: expect 200; on a DOCUMENT file: expect 403 (unchanged behavior).
+After setting releaseFiles=true: /uploads/campaigns/FILE returns 200 without a token.
+Regression: files under /uploads/avatars, /uploads/brand-logos, /uploads/portfolios, /uploads/cms still return 200.
+
+DEFINITION OF DONE
+- npm run build passes in server/.
+- Every "must not be 200" case above returns 403 or 404.
+- All "expect 200" cases still work, including video seeking.
+- Final report: list of files changed, the script output, and anything you could not verify.
