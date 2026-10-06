@@ -1,11 +1,71 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import path from "path";
 import prisma from "../config/db.js";
+import { UPLOAD_ROOT } from "../utils/upload.util.js";
+
+const INLINE_EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".gif",
+  ".avif",
+  ".mp4",
+  ".mov",
+  ".webm",
+  ".mpeg",
+  ".pdf",
+];
+
+function serveAuthorizedCampaignFile(res: Response, next: NextFunction, filename: string) {
+  if (!/^[A-Za-z0-9._-]+$/.test(filename)) {
+    return res.status(404).json({
+      status: "fail",
+      message: "File not found.",
+    });
+  }
+
+  const absPath = path.resolve(UPLOAD_ROOT, "campaigns", filename);
+  const allowedPrefix = path.resolve(UPLOAD_ROOT, "campaigns") + path.sep;
+
+  if (!absPath.startsWith(allowedPrefix)) {
+    return res.status(404).json({
+      status: "fail",
+      message: "File not found.",
+    });
+  }
+
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+
+  const ext = path.extname(filename).toLowerCase();
+  if (!INLINE_EXTENSIONS.includes(ext)) {
+    res.setHeader("Content-Disposition", "attachment");
+  }
+
+  return res.sendFile(absPath, { dotfiles: "deny" }, (err: any) => {
+    if (err) {
+      if (err.code === "ENOENT") {
+        if (!res.headersSent) {
+          return res.status(404).json({
+            status: "fail",
+            message: "File not found.",
+          });
+        }
+      } else {
+        if (!res.headersSent) {
+          return next(err);
+        }
+      }
+    }
+  });
+}
 
 export const downloadInterceptor = async (req: Request, res: Response, next: NextFunction) => {
   const { filename } = req.params;
 
-  if (!filename || typeof filename !== "string") {
+  if (!filename || typeof filename !== "string" || !/^[A-Za-z0-9._-]+$/.test(filename)) {
     return res.status(404).json({
       status: "fail",
       message: "File not found.",
@@ -15,7 +75,7 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
   const matchingUrls = [
     `uploads/campaigns/${filename}`,
     `/uploads/campaigns/${filename}`,
-    filename
+    filename,
   ];
 
   try {
@@ -57,11 +117,9 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
       });
     }
 
-    res.setHeader("X-Content-Type-Options", "nosniff");
-
     // 2. If campaign releaseFiles is true, serve directly
     if (campaign.releaseFiles === true) {
-      return next();
+      return serveAuthorizedCampaignFile(res, next, filename);
     }
 
     // 3. Otherwise, check authorization
@@ -83,7 +141,7 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
       const decodedAccess = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as any;
       if (decodedAccess && typeof decodedAccess.userId === "string" && decodedAccess.type !== "preview") {
         if (decodedAccess.role === "admin" || decodedAccess.userId === campaign.userId) {
-          return next();
+          return serveAuthorizedCampaignFile(res, next, filename);
         }
       }
     } catch {
@@ -93,14 +151,14 @@ export const downloadInterceptor = async (req: Request, res: Response, next: Nex
     // (b) For media only, allow valid preview token matching the campaignId
     if (campaignMedia) {
       try {
-        const previewSecret = process.env.PREVIEW_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET as string;
+        const previewSecret = process.env.PREVIEW_TOKEN_SECRET || (process.env.ACCESS_TOKEN_SECRET as string);
         const decodedPreview = jwt.verify(token, previewSecret) as any;
         if (
           decodedPreview &&
           decodedPreview.type === "preview" &&
           decodedPreview.campaignId === campaign.id
         ) {
-          return next();
+          return serveAuthorizedCampaignFile(res, next, filename);
         }
       } catch {
         // Invalid preview token

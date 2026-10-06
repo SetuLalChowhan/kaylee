@@ -1,8 +1,62 @@
 import jwt from "jsonwebtoken";
+import path from "path";
 import prisma from "../config/db.js";
+import { UPLOAD_ROOT } from "../utils/upload.util.js";
+const INLINE_EXTENSIONS = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".gif",
+    ".avif",
+    ".mp4",
+    ".mov",
+    ".webm",
+    ".mpeg",
+    ".pdf",
+];
+function serveAuthorizedCampaignFile(res, next, filename) {
+    if (!/^[A-Za-z0-9._-]+$/.test(filename)) {
+        return res.status(404).json({
+            status: "fail",
+            message: "File not found.",
+        });
+    }
+    const absPath = path.resolve(UPLOAD_ROOT, "campaigns", filename);
+    const allowedPrefix = path.resolve(UPLOAD_ROOT, "campaigns") + path.sep;
+    if (!absPath.startsWith(allowedPrefix)) {
+        return res.status(404).json({
+            status: "fail",
+            message: "File not found.",
+        });
+    }
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+    const ext = path.extname(filename).toLowerCase();
+    if (!INLINE_EXTENSIONS.includes(ext)) {
+        res.setHeader("Content-Disposition", "attachment");
+    }
+    return res.sendFile(absPath, { dotfiles: "deny" }, (err) => {
+        if (err) {
+            if (err.code === "ENOENT") {
+                if (!res.headersSent) {
+                    return res.status(404).json({
+                        status: "fail",
+                        message: "File not found.",
+                    });
+                }
+            }
+            else {
+                if (!res.headersSent) {
+                    return next(err);
+                }
+            }
+        }
+    });
+}
 export const downloadInterceptor = async (req, res, next) => {
     const { filename } = req.params;
-    if (!filename || typeof filename !== "string") {
+    if (!filename || typeof filename !== "string" || !/^[A-Za-z0-9._-]+$/.test(filename)) {
         return res.status(404).json({
             status: "fail",
             message: "File not found.",
@@ -11,7 +65,7 @@ export const downloadInterceptor = async (req, res, next) => {
     const matchingUrls = [
         `uploads/campaigns/${filename}`,
         `/uploads/campaigns/${filename}`,
-        filename
+        filename,
     ];
     try {
         // 1. Look up exact file record in ugcMedia, ugcDocument, or ugcFeedbackMessage
@@ -46,10 +100,9 @@ export const downloadInterceptor = async (req, res, next) => {
                 message: "Campaign not found.",
             });
         }
-        res.setHeader("X-Content-Type-Options", "nosniff");
         // 2. If campaign releaseFiles is true, serve directly
         if (campaign.releaseFiles === true) {
-            return next();
+            return serveAuthorizedCampaignFile(res, next, filename);
         }
         // 3. Otherwise, check authorization
         const authHeader = req.headers.authorization;
@@ -68,7 +121,7 @@ export const downloadInterceptor = async (req, res, next) => {
             const decodedAccess = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
             if (decodedAccess && typeof decodedAccess.userId === "string" && decodedAccess.type !== "preview") {
                 if (decodedAccess.role === "admin" || decodedAccess.userId === campaign.userId) {
-                    return next();
+                    return serveAuthorizedCampaignFile(res, next, filename);
                 }
             }
         }
@@ -83,7 +136,7 @@ export const downloadInterceptor = async (req, res, next) => {
                 if (decodedPreview &&
                     decodedPreview.type === "preview" &&
                     decodedPreview.campaignId === campaign.id) {
-                    return next();
+                    return serveAuthorizedCampaignFile(res, next, filename);
                 }
             }
             catch {

@@ -42,6 +42,33 @@ app.use(cookieParser());
 // ── Custom Static Interceptor (campaign download locking) ─────────────────────
 app.get("/uploads/campaigns/:filename", downloadInterceptor);
 
+// ── Strict Guard for /uploads (prevents static bypass on /uploads/campaigns/*) ─
+app.use("/uploads", (req, res, next) => {
+  let decodedPath = req.path;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const nextDecoded = decodeURIComponent(decodedPath);
+      if (nextDecoded === decodedPath) break;
+      decodedPath = nextDecoded;
+    } catch {
+      return res.status(400).json({ status: "fail", message: "Invalid path encoding." });
+    }
+  }
+
+  if (decodedPath.includes("\0")) {
+    return res.status(400).json({ status: "fail", message: "Invalid character in path." });
+  }
+
+  const normalized = path.posix.normalize(decodedPath.replace(/\\/g, "/"));
+  const segments = normalized.split("/").filter(Boolean);
+
+  if (segments.length > 0 && segments[0]?.toLowerCase() === "campaigns") {
+    return res.status(404).json({ status: "fail", message: "File not found." });
+  }
+
+  next();
+});
+
 // ── Static Files with Security Headers ─────────────────────────────────────────
 app.use(
   "/uploads",
