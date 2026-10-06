@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronLeft, LogOut, BarChart2 } from 'lucide-react';
+import { useLogout } from '@/api/apiHooks/useAuth';
 import {
   DashboardIcon,
   CampaignIcon,
@@ -11,6 +12,7 @@ import {
   SettingsIcon
 } from '@/components/icons/CustomIcon';
 import Logo from "@/assets/images/logo.png";
+import SLogo from "@/assets/images/s.png";
 import useClient from "@/hooks/useClient";
 import { getImgUrl } from "@/utils/image";
 
@@ -46,6 +48,7 @@ const SideBar = ({ open, setOpen }) => {
     { name: 'Planner', icon: PlannerIcon, path: '/dashboard/planner' },
     { name: 'Invoices', icon: InvoicesIcon, path: '/dashboard/invoices' },
     { name: 'Portfolio', icon: PortfolioIcon, path: '/dashboard/portfolio' },
+    { name: 'Analytics', icon: BarChart2, path: '/dashboard/analytics' },
   ];
 
   const bottomItems = [
@@ -57,9 +60,10 @@ const SideBar = ({ open, setOpen }) => {
     setOpen(false);
   };
 
-  const handleUpgrade = () => {
-    navigate('/dashboard/settings?tab=Subscription');
-    setOpen(false);
+  const logoutMutation = useLogout();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   const renderNavItem = (item) => {
@@ -71,24 +75,21 @@ const SideBar = ({ open, setOpen }) => {
         to={item.path}
         onClick={handleNavClick}
         title={isCollapsed ? item.name : undefined}
-        className={`flex items-center rounded-xl transition-all duration-200 group relative ${
-          isCollapsed
-            ? 'justify-center p-3 w-11 h-11 mx-auto'
-            : 'gap-3 px-4 py-3'
-        } ${
-          isActive
+        className={`flex items-center rounded-xl transition-all duration-200 group relative ${isCollapsed
+          ? 'justify-center p-3 w-11 h-11 mx-auto'
+          : 'gap-3 px-4 py-3'
+          } ${isActive
             ? 'bg-Primary text-white shadow-lg shadow-Primary/20'
             : 'text-[#3A3A3A] hover:bg-gray-50 hover:text-Primary'
-        }`}
+          }`}
       >
         <IconComponent
           className="w-5 h-5 shrink-0 transition-colors duration-200"
           color={isActive ? '#ffffff' : undefined}
         />
         <span
-          className={`font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
-            isCollapsed ? 'hidden' : 'inline'
-          }`}
+          className={`font-semibold text-sm whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'hidden' : 'inline'
+            }`}
         >
           {item.name}
         </span>
@@ -105,11 +106,9 @@ const SideBar = ({ open, setOpen }) => {
 
   return (
     <aside
-      className={`fixed lg:sticky top-0 left-0 z-50 bg-white border-r border-gray-100 transition-all duration-300 ease-in-out flex flex-col h-screen ${
-        open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      } ${
-        isCollapsed ? 'w-72 lg:w-20' : 'w-72 lg:w-64'
-      }`}
+      className={`fixed lg:sticky top-0 left-0 z-50 bg-white border-r border-gray-100 transition-all duration-300 ease-in-out flex flex-col h-screen ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${isCollapsed ? 'w-72 lg:w-20' : 'w-72 lg:w-64'
+        }`}
     >
       {/* Floating Collapse / Expand Button on right border */}
       <button
@@ -127,12 +126,10 @@ const SideBar = ({ open, setOpen }) => {
       </button>
 
       {/* Logo Section */}
-      <div className={`p-5 mb-2 flex items-center transition-all ${isCollapsed ? 'justify-center px-2' : 'px-6'}`}>
-        <Link to="/" onClick={handleNavClick} className="flex items-center gap-2">
+      <div className={`p-5 mb-2 flex items-center transition-all duration-300 ${isCollapsed ? 'justify-center px-2' : 'px-6'}`}>
+        <Link to="/" onClick={handleNavClick} className="flex items-center justify-center gap-2 w-full h-9">
           {isCollapsed ? (
-            <div className="w-10 h-10 rounded-xl bg-Primary/10 flex items-center justify-center text-Primary font-black text-lg shadow-xs hover:bg-Primary/15 transition-colors">
-              {logoText.charAt(0)}
-            </div>
+            <img src={SLogo} alt={logoText} className="h-14 w-14 object-contain" loading="lazy" />
           ) : (
             <img src={dynamicLogo} alt={logoText} className="h-9 w-auto object-contain" loading="lazy" />
           )}
@@ -150,37 +147,31 @@ const SideBar = ({ open, setOpen }) => {
         {bottomItems.map(renderNavItem)}
       </nav>
 
-      {/* Upgrade Card */}
+      {/* Logout Button */}
       <div className={`p-4 mt-auto transition-all ${isCollapsed ? 'flex justify-center p-2 pb-4' : ''}`}>
         {isCollapsed ? (
           <div className="relative group">
             <button
-              onClick={handleUpgrade}
-              title="Upgrade Plan"
-              className="w-11 h-11 bg-Primary/10 hover:bg-Primary text-Primary hover:text-white rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-xs"
+              onClick={handleLogout}
+              disabled={logoutMutation.isPending}
+              title="Log Out"
+              className="w-11 h-11 bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-xl flex items-center justify-center transition-all cursor-pointer"
             >
-              <Sparkles className="w-5 h-5" />
+              <LogOut className="w-5 h-5" />
             </button>
             <div className="hidden lg:group-hover:flex absolute left-full ml-3 px-2.5 py-1.5 bg-[#1A1A1A] text-white text-xs font-semibold rounded-lg pointer-events-none whitespace-nowrap z-50 shadow-xl items-center">
-              Upgrade Plan
+              Log Out
             </div>
           </div>
         ) : (
-          <div className="bg-[#F8FAFC] rounded-2xl p-4 relative overflow-hidden group">
-            <div className="relative z-10">
-              <h4 className="text-[#1A1A1A] font-bold text-sm mb-1">Upgrade Plan</h4>
-              <p className="text-gray-500 text-[11px] mb-3 leading-relaxed">
-                Unlock more features to grow faster
-              </p>
-              <button 
-                onClick={handleUpgrade}
-                className="w-full bg-[#1A1A1A] text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-black transition-colors cursor-pointer"
-              >
-                Upgrade Plan <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <div className="absolute -top-4 -right-4 w-16 h-16 bg-Primary/5 rounded-full blur-xl group-hover:bg-Primary/10 transition-colors" />
-          </div>
+          <button
+            onClick={handleLogout}
+            disabled={logoutMutation.isPending}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all cursor-pointer text-sm font-semibold"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>{logoutMutation.isPending ? 'Logging out...' : 'Log Out'}</span>
+          </button>
         )}
       </div>
     </aside>

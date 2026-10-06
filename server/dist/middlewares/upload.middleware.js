@@ -92,8 +92,30 @@ const campaignStorage = multer.diskStorage({
         cb(null, uniqueSuffix + path.extname(file.originalname));
     },
 });
+const campaignFileFilter = (req, file, cb) => {
+    const allowedImageMimes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    const allowedVideoMimes = ["video/mp4", "video/mpeg", "video/quicktime", "video/webm"];
+    const allowedDocMimes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"];
+    const allowedImageExts = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+    const allowedVideoExts = [".mp4", ".mpeg", ".mov", ".webm"];
+    const allowedDocExts = [".pdf", ".doc", ".docx", ".txt"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedImageMimes.includes(file.mimetype) && allowedImageExts.includes(ext)) {
+        cb(null, true);
+    }
+    else if (allowedVideoMimes.includes(file.mimetype) && allowedVideoExts.includes(ext)) {
+        cb(null, true);
+    }
+    else if (allowedDocMimes.includes(file.mimetype) && allowedDocExts.includes(ext)) {
+        cb(null, true);
+    }
+    else {
+        cb(new AppError("File type not supported for campaign uploads", 400), false);
+    }
+};
 export const uploadCampaignFile = multer({
     storage: campaignStorage,
+    fileFilter: campaignFileFilter,
     limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB limit
 });
 // CMS uploads config supporting images

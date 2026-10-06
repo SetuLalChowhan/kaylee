@@ -218,15 +218,12 @@ const CampaignCard = ({
         {/* Brand Avatar, Title, Amount & 3-dots Menu */}
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div
-              className={`w-12 h-12 rounded-2xl ${brandStyle.bg} flex items-center justify-center flex-shrink-0 shadow-xs border border-black/5`}
-            >
-              <span className={brandStyle.text}>{brandStyle.label}</span>
-            </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate mb-0.5">
-                {brand || 'Brand'}
-              </p>
+              <div className="mb-1.5">
+                <span className="text-[10px] font-extrabold text-Primary bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wider border border-blue-100/50 shadow-sm inline-block truncate max-w-full">
+                  {brand || 'Brand'}
+                </span>
+              </div>
               <h3 className="text-base font-extrabold text-[#1A1A1A] truncate tracking-tight group-hover:text-Primary transition-colors">
                 {title}
               </h3>
@@ -248,9 +245,8 @@ const CampaignCard = ({
                   e.stopPropagation();
                   setShowOptions(!showOptions);
                 }}
-                className={`p-2 rounded-xl transition-all ${
-                  showOptions ? 'bg-gray-100 text-[#1A1A1A]' : 'text-gray-400 hover:bg-gray-50 hover:text-[#1A1A1A]'
-                }`}
+                className={`p-2 rounded-xl transition-all ${showOptions ? 'bg-gray-100 text-[#1A1A1A]' : 'text-gray-400 hover:bg-gray-50 hover:text-[#1A1A1A]'
+                  }`}
                 title="Options"
               >
                 <MoreVertical className="w-4 h-4" />
@@ -374,20 +370,18 @@ const CampaignCard = ({
                   <div className="w-4 h-4 rounded-full border-2 border-[#3B82F6] flex-shrink-0" />
                 )}
                 <span
-                  className={`text-xs truncate ${
-                    item.done ? 'text-[#1A1A1A] font-semibold' : 'text-gray-500 font-medium'
-                  }`}
+                  className={`text-xs truncate ${item.done ? 'text-[#1A1A1A] font-semibold' : 'text-gray-500 font-medium'
+                    }`}
                 >
                   {item.label}
                 </span>
               </div>
 
               <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
-                  item.done
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${item.done
                     ? 'text-emerald-700 bg-emerald-50/80'
                     : 'text-gray-400 bg-gray-50'
-                }`}
+                  }`}
               >
                 {item.subText}
               </span>
@@ -413,9 +407,13 @@ const CampaignCard = ({
 
         {/* Footer: Calendar Icon + Due in X days & quick items count */}
         <div className="pt-3 border-t border-gray-50 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-bold text-orange-500">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <span>{dueLabel}</span>
+          <div className={`flex items-center gap-2 text-xs font-bold ${isCompleted ? 'text-emerald-500' : 'text-orange-500'}`}>
+            {isCompleted ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <Calendar className="w-4 h-4 text-gray-500" />
+            )}
+            <span>{isCompleted ? 'Completed' : dueLabel}</span>
           </div>
           <div className="text-[11px] font-semibold text-gray-400 flex items-center gap-1.5">
             <span>{effectiveDeliverables.length} Deliv</span>

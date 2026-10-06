@@ -51,23 +51,12 @@ export declare const deleteNote: (req: Request, res: Response, next: NextFunctio
  * Feedback Messages
  */
 export declare const createFeedback: (req: Request, res: Response, next: NextFunction) => void;
-/**
- * ── GUEST PUBLIC ENDPOINTS ──────────────────────────────────────────────────
- */
-/**
- * GET /api/ugc-campaigns/public/:slug — Retrieve public campaign
- */
 export declare const getPublicCampaignBySlug: (req: Request, res: Response, next: NextFunction) => void;
-/**
- * PATCH /api/ugc-campaigns/public/:slug/media/:mediaId/status — Approve file
- */
+export declare const requestOtpPublic: (req: Request, res: Response, next: NextFunction) => void;
+export declare const verifyOtpPublic: (req: Request, res: Response, next: NextFunction) => void;
 export declare const updatePublicMediaStatus: (req: Request, res: Response, next: NextFunction) => void;
-/**
- * POST /api/ugc-campaigns/public/:slug/media/:mediaId/request-changes — Request changes on media
- */
 export declare const requestChangesPublicMedia: (req: Request, res: Response, next: NextFunction) => void;
-/**
- * POST /api/ugc-campaigns/public/:slug/feedback — Submit feedback chat from brand
- */
 export declare const createPublicFeedback: (req: Request, res: Response, next: NextFunction) => void;
+export declare const rateCampaignPublic: (req: Request, res: Response, next: NextFunction) => void;
+export declare const getAnalytics: (req: Request, res: Response, next: NextFunction) => void;
 //# sourceMappingURL=ugc_campaign.controller.d.ts.map

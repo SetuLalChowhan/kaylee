@@ -15,7 +15,8 @@ const BrandContentGallery = ({
   sendChangeRequest,
   setRequestChangesId,
   releaseFiles,
-  pendingApproveId
+  pendingApproveId,
+  isRequestPending
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
@@ -74,7 +75,6 @@ const BrandContentGallery = ({
       {items.map((item) => (
         <div
           key={item.id}
-          onMouseLeave={() => setOpenMenuId(null)}
           className="relative bg-white border border-gray-100 rounded-2xl overflow-hidden group shadow-sm"
         >
           {/* Title & Menu */}
@@ -86,7 +86,9 @@ const BrandContentGallery = ({
               </div>
               <div className="relative shrink-0 ml-2">
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     const isPending = pendingApproveId === item.id || (pendingApproveId === 'all' && item.status !== 'approved');
                     if (!isPending) {
                       setOpenMenuId(openMenuId === item.id ? null : item.id);
@@ -98,27 +100,28 @@ const BrandContentGallery = ({
                   <MoreVertical className="w-4 h-4 text-gray-400" />
                 </button>
 
-                <AnimatePresence>
-                  {openMenuId === item.id && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                      className="absolute right-0 top-full mt-1 w-52 bg-white border border-gray-100 rounded-xl shadow-xl z-30 py-1.5 overflow-hidden"
+                {openMenuId === item.id && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-20" 
+                      onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}
+                    />
+                    <div
+                      className="absolute right-0 top-full mt-1 w-52 bg-white border border-gray-100 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-30 py-1.5 overflow-hidden"
                     >
-                      <button onClick={() => handleApprove(item.id)} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer text-left">
+                      <button onClick={(e) => { e.stopPropagation(); handleApprove(item.id); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer text-left">
                         <CheckCircle className="w-4 h-4 text-Primary" /> Approve this file
                       </button>
-                      <button onClick={() => handleRequest(item.id)} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer text-left">
+                      <button onClick={(e) => { e.stopPropagation(); handleRequest(item.id); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer text-left">
                         <FileEdit className="w-4 h-4 text-orange-500" /> Request for changes
                       </button>
-                      <button onClick={() => handleDownload(item)} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer text-left">
+                      <button onClick={(e) => { e.stopPropagation(); handleDownload(item); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer text-left">
                         {releaseFiles ? <Download className="w-4 h-4 text-Primary" /> : <Lock className="w-4 h-4 text-orange-400" />}
                         {releaseFiles ? 'Download this file' : 'Download Locked'}
                       </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -225,10 +228,14 @@ const BrandContentGallery = ({
                 rows={3}
                 className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all resize-none mb-3 text-[#1A1A1A]"
                 autoFocus
+                disabled={isRequestPending}
               />
               <div className="flex items-center justify-end gap-2">
-                <button onClick={() => { setRequestChangesId(null); setChangeText(''); }} className="text-sm text-gray-500 font-medium hover:text-[#1A1A1A] cursor-pointer">Cancel</button>
-                <button onClick={sendChangeRequest} className="bg-Primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer">Send</button>
+                <button onClick={() => { setRequestChangesId(null); setChangeText(''); }} disabled={isRequestPending} className="text-sm text-gray-500 font-medium hover:text-[#1A1A1A] cursor-pointer disabled:opacity-50">Cancel</button>
+                <button onClick={sendChangeRequest} disabled={isRequestPending || !changeText.trim()} className="bg-Primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                  {isRequestPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {isRequestPending ? 'Sending...' : 'Send'}
+                </button>
               </div>
             </div>
           )}
@@ -291,45 +298,44 @@ const BrandContentGallery = ({
       )}
 
       {/* Preview Modal */}
-      <AnimatePresence>
-        {previewItem && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPreviewItem(null)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative max-w-3xl w-full"
+      {previewItem && (
+        <div key="gallery-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div
+            onClick={() => setPreviewItem(null)}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer"
+          />
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-3xl w-full z-10 animate-in zoom-in-95 fade-in duration-200"
+          >
+            <button onClick={() => setPreviewItem(null)} className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer">
+              <X className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
+            <div 
+              className="rounded-2xl overflow-hidden bg-black relative"
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
             >
-              <button onClick={() => setPreviewItem(null)} className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer">
-                <X className="w-5 h-5 md:w-6 md:h-6" />
-              </button>
-              <div 
-                className="rounded-2xl overflow-hidden bg-black relative"
-                onContextMenu={(e) => e.preventDefault()}
-                onDragStart={(e) => e.preventDefault()}
-              >
-                {previewItem.type === 'video' ? (
-                  <video src={getImgUrl(previewItem.url)} className="w-full max-h-[80vh]" controls autoPlay controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
-                ) : (
-                  <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" loading="lazy" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
-                )}
-                {!releaseFiles && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden bg-black/10">
-                    <span className="text-white/40 text-[100px] md:text-[140px] font-black tracking-[0.25em] uppercase transform -rotate-45 drop-shadow-2xl select-none">
-                      STAKD
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="mt-3 text-center">
-                <p className="text-white font-bold text-sm">{previewItem.name} ({getNormalizedAssetType(previewItem)})</p>
-                {previewItem.description && <p className="text-white/60 text-xs mt-1">{previewItem.description}</p>}
-              </div>
-            </motion.div>
+              {previewItem.type === 'video' ? (
+                <video src={getImgUrl(previewItem.url)} className="w-full max-h-[80vh]" controls autoPlay controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+              ) : (
+                <img src={getImgUrl(previewItem.url)} alt={previewItem.name} className="w-full max-h-[80vh] object-contain" loading="lazy" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} draggable="false" />
+              )}
+              {!releaseFiles && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden bg-black/10">
+                  <span className="text-white/40 text-[100px] md:text-[140px] font-black tracking-[0.25em] uppercase transform -rotate-45 drop-shadow-2xl select-none">
+                    STAKD
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="mt-3 text-center">
+              <p className="text-white font-bold text-sm">{previewItem.name} ({getNormalizedAssetType(previewItem)})</p>
+              {previewItem.description && <p className="text-white/60 text-xs mt-1">{previewItem.description}</p>}
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };

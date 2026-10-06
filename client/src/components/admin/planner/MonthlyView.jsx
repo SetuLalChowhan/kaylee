@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, CheckCircle2, Circle,
   Plus, Trash2, X, Clock, Calendar, Pencil
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+
 
 const TASK_COLORS = [
   { bg: 'bg-blue-100',   border: 'border-blue-300',   text: 'text-blue-900',   sub: 'text-blue-700',   dot: 'bg-blue-500',   light: 'bg-blue-50' },
@@ -42,13 +42,9 @@ const formatFullDate = (task) => {
 // Compact task detail popover (Google Calendar style)
 const TaskDetailPopover = ({ task, color, position, onClose, onEdit, onDelete, onToggle }) => {
   return (
-    <AnimatePresence>
-      <motion.div
+    <>
+      <div
         key="month-task-popover"
-        initial={{ opacity: 0, scale: 0.92, y: -4 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: -4 }}
-        transition={{ duration: 0.15, ease: 'easeOut' }}
         style={{
           position: 'fixed',
           top: Math.min(position.y, window.innerHeight - 290),
@@ -56,7 +52,7 @@ const TaskDetailPopover = ({ task, color, position, onClose, onEdit, onDelete, o
           zIndex: 9999,
           width: 278,
         }}
-        className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.16)] border border-gray-100 overflow-hidden"
+        className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.16)] border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`h-1.5 w-full ${color.dot}`} />
@@ -127,8 +123,8 @@ const TaskDetailPopover = ({ task, color, position, onClose, onEdit, onDelete, o
             </button>
           </div>
         </div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </>
   );
 };
 
@@ -313,26 +309,17 @@ const MonthlyView = ({ currentDate, tasks, onAddTask, onEditTask, onToggleTask, 
       )}
 
       {/* Day Tasks Expanded Modal ("+X more") */}
-      <AnimatePresence>
-        {selectedDayPopover && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={() => setSelectedDayPopover(null)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
-            />
-            <motion.div
-              key="day-tasks-modal"
-              initial={{ opacity: 0, scale: 0.95, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden z-10 border border-gray-100"
-              onClick={(e) => e.stopPropagation()}
-            >
+      {selectedDayPopover && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div
+            onClick={() => setSelectedDayPopover(null)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-pointer animate-in fade-in duration-150"
+          />
+          <div
+            key="day-tasks-modal"
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden z-10 border border-gray-100 animate-in zoom-in-95 slide-in-from-bottom-2 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <div>
@@ -421,10 +408,9 @@ const MonthlyView = ({ currentDate, tasks, onAddTask, onEditTask, onToggleTask, 
                   Close
                 </button>
               </div>
-            </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </>
   );
 };

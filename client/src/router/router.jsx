@@ -38,6 +38,7 @@ const CampaingDetails = lazy(() => import("@/components/admin/campingDetails/Cam
 const Planner = lazy(() => import("@/components/admin/planner/Planner"));
 const Invoices = lazy(() => import("@/components/admin/invoices/Invoices"));
 const Portfolio = lazy(() => import("@/components/admin/portfolio/Portfolio"));
+const Analytics = lazy(() => import("@/pages/admin/Analytics"));
 
 const SuspenseWrapper = ({ children }) => (
   <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
@@ -143,6 +144,7 @@ const router = createBrowserRouter([
           { path: "planner", element: <SuspenseWrapper><Planner /></SuspenseWrapper> },
           { path: "invoices", element: <SuspenseWrapper><Invoices /></SuspenseWrapper> },
           { path: "portfolio", element: <SuspenseWrapper><Portfolio /></SuspenseWrapper> },
+          { path: "analytics", element: <SuspenseWrapper><Analytics /></SuspenseWrapper> },
           { path: "faq", element: <FAQPage /> },
           { path: "settings", element: <Setting /> },
         ],

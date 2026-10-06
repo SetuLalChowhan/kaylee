@@ -19,6 +19,10 @@ export declare const updateUgcCampaignSchema: z.ZodObject<{
         releaseFiles: z.ZodOptional<z.ZodBoolean>;
         notes: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         paymentStatus: z.ZodOptional<z.ZodString>;
+        shareEnabled: z.ZodOptional<z.ZodBoolean>;
+        regenerateShareToken: z.ZodOptional<z.ZodBoolean>;
+        rating: z.ZodOptional<z.ZodNumber>;
+        ratingNote: z.ZodOptional<z.ZodString>;
     }, z.core.$strip>;
 }, z.core.$strip>;
 export declare const createDeliverableSchema: z.ZodObject<{

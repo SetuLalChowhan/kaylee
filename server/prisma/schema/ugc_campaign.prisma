@@ -9,7 +9,12 @@ model UgcCampaign {
   releaseFiles  Boolean              @default(false)
   notes         String?
   slug          String               @unique
+  shareToken    String?              @unique
+  shareEnabled  Boolean              @default(true)
+  shareExpiresAt DateTime?
   paymentStatus String               @default("Pending")
+  rating        Int?
+  ratingNote    String?
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
   tasks         UgcCampaignTask[]
@@ -19,8 +24,63 @@ model UgcCampaign {
   feedback      UgcFeedbackMessage[]
   media         UgcMedia[]
   notesComments UgcNote[]
+  brandSessions UgcBrandSession[]
+  otps          UgcOtp[]
+  auditRecords  UgcApprovalAudit[]
 
   @@map("ugc_campaigns")
+}
+
+model UgcBrandSession {
+  id         String      @id @default(uuid())
+  campaignId String
+  email      String
+  tokenHash  String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime    @default(now())
+  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("ugc_brand_sessions")
+}
+
+model UgcOtp {
+  id         String      @id @default(uuid())
+  campaignId String
+  email      String
+  hash       String
+  expiresAt  DateTime
+  used       Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("ugc_otps")
+}
+
+model UgcApprovalAudit {
+  id         String      @id @default(uuid())
+  campaignId String
+  mediaId    String?
+  action     String
+  email      String?
+  ipAddress  String?
+  userAgent  String?
+  sessionId  String?
+  createdAt  DateTime    @default(now())
+  campaign   UgcCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("ugc_approval_audit")
+}
+
+model UgcRateLimit {
+  id         String   @id @default(uuid())
+  key        String   @unique
+  points     Int      @default(0)
+  expireAt   DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("ugc_rate_limits")
 }
 
 model UgcDeliverable {

@@ -6,7 +6,7 @@ import EditPortfolioModal from './modals/EditPortfolioModal';
 import UploadContentModal from './modals/UploadContentModal';
 import EditContentModal from './modals/EditContentModal';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import { useUserProfile } from '@/api/apiHooks/useUser';
@@ -224,62 +224,52 @@ const Portfolio = () => {
       />
 
       {/* Preview Modal */}
-      <AnimatePresence>
-        {previewItem && (
-          <motion.div
-            key="preview-modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            onClick={() => setPreviewItem(null)}
-            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      {previewItem && (
+        <div
+          key="preview-modal-backdrop"
+          onClick={() => setPreviewItem(null)}
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-3xl w-full animate-in zoom-in-95 duration-200"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative max-w-3xl w-full"
+            <button 
+              type="button"
+              onClick={() => setPreviewItem(null)} 
+              className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer"
             >
-              <button 
-                type="button"
-                onClick={() => setPreviewItem(null)} 
-                className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5 md:w-6 md:h-6" />
-              </button>
-              <div className="rounded-2xl overflow-hidden bg-black flex items-center justify-center min-h-[200px]">
-                {previewItem.type === 'video' ? (
-                  <video 
-                    src={previewItem.url} 
-                    className="w-full max-h-[80vh]" 
-                    controls 
-                    autoPlay 
-                    controlsList="nodownload" 
-                    disablePictureInPicture 
-                    onContextMenu={(e) => e.preventDefault()} 
-                    onDragStart={(e) => e.preventDefault()} 
-                    draggable="false" 
-                  />
-                ) : (
-                  <img 
-                    src={previewItem.url} 
-                    alt={previewItem.title || "Preview"} 
-                    className="w-full max-h-[80vh] object-contain block" 
-                    decoding="async"
-                  />
-                )}
-              </div>
-              <div className="mt-3 text-center">
-                <p className="text-white font-bold text-sm md:text-base">{previewItem.title}</p>
-                {previewItem.description && <p className="text-white/60 text-xs mt-1">{previewItem.description}</p>}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <X className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
+            <div className="rounded-2xl overflow-hidden bg-black flex items-center justify-center min-h-[200px]">
+              {previewItem.type === 'video' ? (
+                <video 
+                  src={previewItem.url} 
+                  className="w-full max-h-[80vh]" 
+                  controls 
+                  autoPlay 
+                  controlsList="nodownload" 
+                  disablePictureInPicture 
+                  onContextMenu={(e) => e.preventDefault()} 
+                  onDragStart={(e) => e.preventDefault()} 
+                  draggable="false" 
+                />
+              ) : (
+                <img 
+                  src={previewItem.url} 
+                  alt={previewItem.title || "Preview"} 
+                  className="w-full max-h-[80vh] object-contain block" 
+                  decoding="async"
+                />
+              )}
+            </div>
+            <div className="mt-3 text-center">
+              <p className="text-white font-bold text-sm md:text-base">{previewItem.title}</p>
+              {previewItem.description && <p className="text-white/60 text-xs mt-1">{previewItem.description}</p>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

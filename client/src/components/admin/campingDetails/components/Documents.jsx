@@ -128,9 +128,12 @@ const Documents = ({ campaign }) => {
         ))}
         {docs.map((doc) => (
           <div key={doc.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3.5 group">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-              <span className="text-sm text-[#1A1A1A] truncate">{doc.name}</span>
+            <div 
+              className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer group/link"
+              onClick={() => handleDownload(doc)}
+            >
+              <FileText className="w-4 h-4 text-gray-400 group-hover/link:text-Primary transition-colors shrink-0" />
+              <span className="text-sm text-[#1A1A1A] group-hover/link:text-Primary transition-colors truncate">{doc.name}</span>
             </div>
             <div className="flex items-center gap-3 shrink-0 ml-4">
               <span className="text-xs text-gray-400">{formatDate(doc.createdAt)}</span>

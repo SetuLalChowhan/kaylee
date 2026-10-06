@@ -405,8 +405,15 @@ export const usePublicCampaign = (slug) => {
     queryKey: ["publicCampaign", slug],
     queryFn: async () => {
       if (!slug) return null;
-      const res = await axiosPublic.get(`${USER.UGC_CAMPAIGN}/public/${slug}`);
-      return res.data?.data || null;
+      try {
+        const res = await axiosPublic.get(`${USER.UGC_CAMPAIGN}/public/${slug}`);
+        return res.data?.data || null;
+      } catch (err) {
+        if (err.response?.status === 401) {
+          return { authRequired: true, campaignId: err.response.data.campaignId, brandName: err.response.data.brandName };
+        }
+        throw err;
+      }
     },
     staleTime: 30 * 1000, // short stale time for live feedback updates
     enabled: !!slug,
@@ -473,6 +480,61 @@ export const useCreatePublicFeedback = () => {
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to send comment";
+      toast.error(msg);
+    },
+  });
+};
+
+export const useRequestOtpPublic = () => {
+  const axiosPublic = useAxiosPublic();
+  return useMutation({
+    mutationFn: async ({ slug, email }) => {
+      const res = await axiosPublic.post(`${USER.UGC_CAMPAIGN}/public/${slug}/auth/otp-request`, { email });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("OTP sent to your email.");
+    },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to send OTP";
+      toast.error(msg);
+    },
+  });
+};
+
+export const useVerifyOtpPublic = () => {
+  const queryClient = useQueryClient();
+  const axiosPublic = useAxiosPublic();
+  return useMutation({
+    mutationFn: async ({ slug, email, otp }) => {
+      const res = await axiosPublic.post(`${USER.UGC_CAMPAIGN}/public/${slug}/auth/otp-verify`, { email, otp });
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
+      toast.success("Authentication successful.");
+      queryClient.invalidateQueries({ queryKey: ["publicCampaign", variables.slug] });
+    },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to verify OTP";
+      toast.error(msg);
+    },
+  });
+};
+
+export const useRatePublicCampaign = () => {
+  const queryClient = useQueryClient();
+  const axiosPublic = useAxiosPublic();
+  return useMutation({
+    mutationFn: async ({ slug, rating, ratingNote }) => {
+      const res = await axiosPublic.post(`${USER.UGC_CAMPAIGN}/public/${slug}/rate`, { rating, ratingNote });
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
+      toast.success("Thank you! Your rating has been submitted.");
+      queryClient.invalidateQueries({ queryKey: ["publicCampaign", variables.slug] });
+    },
+    onError: (error) => {
+      const msg = error?.response?.data?.message || error.message || "Failed to submit rating";
       toast.error(msg);
     },
   });

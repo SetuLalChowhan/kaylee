@@ -9,6 +9,11 @@ import {
   getAbsoluteUploadPath,
 } from "../utils/upload.util.js";
 import { logActivity } from "../utils/activity.util.js";
+import { generateSecureToken, generateSecureOTP, hashToken } from "../utils/otp.util.js";
+import { logApprovalAudit } from "../utils/audit.util.js";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
+import { sendEmail } from "../services/email.service.js";
 
 interface AuthRequest extends Request {
   user: { userId: string; role: string };
@@ -132,6 +137,7 @@ export const getUgcCampaignById = catchAsync(
           orderBy: { createdAt: "asc" },
           include: { media: true },
         },
+        auditRecords: { orderBy: { createdAt: "desc" } },
       },
     });
 
@@ -190,6 +196,7 @@ export const createUgcCampaign = catchAsync(
           status: status || "Pending",
           notes: notes ?? null,
           slug,
+          shareToken: generateSecureToken(32),
         },
       });
 
@@ -308,6 +315,10 @@ export const updateUgcCampaign = catchAsync(
       releaseFiles?: boolean;
       notes?: string;
       paymentStatus?: string;
+      shareEnabled?: boolean;
+      regenerateShareToken?: boolean;
+      rating?: number;
+      ratingNote?: string;
     };
 
     const existing = await prisma.ugcCampaign.findFirst({
@@ -328,6 +339,10 @@ export const updateUgcCampaign = catchAsync(
           ...(releaseFiles !== undefined && { releaseFiles }),
           ...(notes !== undefined && { notes: notes ?? null }),
           ...(paymentStatus !== undefined && { paymentStatus }),
+          ...(req.body.shareEnabled !== undefined && { shareEnabled: req.body.shareEnabled }),
+          ...(req.body.regenerateShareToken && { shareToken: generateSecureToken(32) }),
+          ...(req.body.rating !== undefined && { rating: req.body.rating }),
+          ...(req.body.ratingNote !== undefined && { ratingNote: req.body.ratingNote }),
         },
       });
 
@@ -1042,38 +1057,54 @@ export const createFeedback = catchAsync(
  * ── GUEST PUBLIC ENDPOINTS ──────────────────────────────────────────────────
  */
 
-/**
- * GET /api/ugc-campaigns/public/:slug — Retrieve public campaign
- */
+const getBrandSession = async (req: Request, campaignId: string) => {
+  const sessionCookie = req.cookies[`campaign_session_${campaignId}`];
+  if (!sessionCookie) return null;
+  const hashedSession = hashToken(sessionCookie);
+  const session = await prisma.ugcBrandSession.findFirst({
+    where: {
+      campaignId,
+      tokenHash: hashedSession,
+      expiresAt: { gt: new Date() },
+      revokedAt: null,
+    },
+  });
+  return session;
+};
+
 export const getPublicCampaignBySlug = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    // The route parameter is :slug, but we treat it as shareToken for security
     const { slug } = req.params as { slug: string };
 
     const campaign = await prisma.ugcCampaign.findUnique({
-      where: { slug },
+      where: { shareToken: slug },
       include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            avatar: true,
-            slug: true,
-          },
-        },
+        user: { select: { firstName: true, lastName: true, avatar: true, slug: true, email: true } },
         deliverables: { orderBy: { createdAt: "asc" } },
         tasks: { orderBy: { createdAt: "asc" } },
         media: { orderBy: { createdAt: "asc" } },
         documents: { orderBy: { createdAt: "asc" } },
         notesComments: { orderBy: { createdAt: "desc" } },
-        feedback: {
-          orderBy: { createdAt: "asc" },
-          include: { media: true },
-        },
+        feedback: { orderBy: { createdAt: "asc" }, include: { media: true } },
       },
     });
 
     if (!campaign) {
       return next(new AppError("Campaign not found", 404));
+    }
+
+    if (!campaign.shareEnabled) {
+      return next(new AppError("Campaign link is disabled", 403));
+    }
+
+    if (campaign.shareExpiresAt && new Date(campaign.shareExpiresAt) < new Date()) {
+      return next(new AppError("Campaign link has expired", 403));
+    }
+
+    const session = await getBrandSession(req, campaign.id);
+    if (!session) {
+      return res.status(401).json({ status: "auth_required", message: "Authentication required", campaignId: campaign.id, brandName: campaign.brandName });
     }
 
     if (campaign.status === "Draft" || campaign.status === "Active") {
@@ -1084,32 +1115,136 @@ export const getPublicCampaignBySlug = catchAsync(
       campaign.status = "Under Review";
     }
 
+    // Filter response to avoid exposing unnecessary sensitive info
+    const safeCampaign = {
+      ...campaign,
+      userId: undefined,
+      tasks: undefined, // internal tasks usually not needed by brand, but if needed keep it
+    };
+
+    await logApprovalAudit({ campaignId: campaign.id, action: "PAGE_VIEW", email: session.email, ipAddress: req.ip, sessionId: session.id });
     res.status(200).json({
       status: "success",
-      data: appendPreviewToken(campaign),
+      data: appendPreviewToken(safeCampaign),
     });
   },
 );
 
-/**
- * PATCH /api/ugc-campaigns/public/:slug/media/:mediaId/status — Approve file
- */
+export const requestOtpPublic = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params as { slug: string };
+    const { email } = req.body as { email: string };
+
+    if (!email) return next(new AppError("Email is required", 400));
+
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { shareToken: slug } });
+    if (!campaign || !campaign.shareEnabled || (campaign.shareExpiresAt && new Date(campaign.shareExpiresAt) < new Date())) {
+      return next(new AppError("Invalid or expired campaign link", 403));
+    }
+
+    const otp = generateSecureOTP();
+    const hash = hashToken(otp);
+    
+    // Invalidate previous OTPs for this email and campaign
+    await prisma.ugcOtp.updateMany({
+      where: { campaignId: campaign.id, email, used: false },
+      data: { used: true },
+    });
+
+    await prisma.ugcOtp.create({
+      data: {
+        campaignId: campaign.id,
+        email,
+        hash,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 mins
+      }
+    });
+
+    // Use email service
+    await sendEmail(
+      email,
+      `Your OTP for ${campaign.name}`,
+      `<p>Your verification code is <strong>${otp}</strong>. It will expire in 10 minutes.</p>`
+    );
+
+    await logApprovalAudit({ campaignId: campaign.id, action: "OTP_REQUESTED", email, ipAddress: req.ip });
+
+    res.status(200).json({ status: "success", message: "OTP sent" });
+  }
+);
+
+export const verifyOtpPublic = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params as { slug: string };
+    const { email, otp } = req.body as { email: string; otp: string };
+
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { shareToken: slug } });
+    if (!campaign || !campaign.shareEnabled || (campaign.shareExpiresAt && new Date(campaign.shareExpiresAt) < new Date())) {
+      return next(new AppError("Invalid or expired campaign link", 403));
+    }
+
+    const hash = hashToken(otp);
+    const otpRecord = await prisma.ugcOtp.findFirst({
+      where: { campaignId: campaign.id, email, hash, used: false, expiresAt: { gt: new Date() } }
+    });
+
+    if (!otpRecord) {
+      return next(new AppError("Invalid or expired OTP", 400));
+    }
+
+    await prisma.ugcOtp.update({ where: { id: otpRecord.id }, data: { used: true } });
+
+    const sessionToken = generateSecureToken(32);
+    const sessionHash = hashToken(sessionToken);
+
+    const session = await prisma.ugcBrandSession.create({
+      data: {
+        campaignId: campaign.id,
+        email,
+        tokenHash: sessionHash,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      }
+    });
+
+    await logApprovalAudit({ campaignId: campaign.id, action: "OTP_VERIFIED", email, ipAddress: req.ip });
+    await logApprovalAudit({ campaignId: campaign.id, action: "SESSION_CREATED", email, ipAddress: req.ip, sessionId: session.id });
+
+    // Set HttpOnly cookie
+    res.cookie(`campaign_session_${campaign.id}`, sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({ status: "success", message: "Verified successfully" });
+  }
+);
+
 export const updatePublicMediaStatus = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { slug, mediaId } = req.params as { slug: string; mediaId: string };
 
-    const campaign = await prisma.ugcCampaign.findUnique({ where: { slug } });
-    if (!campaign) return next(new AppError("Campaign not found", 404));
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { shareToken: slug } });
+    if (!campaign || !campaign.shareEnabled || (campaign.shareExpiresAt && new Date(campaign.shareExpiresAt) < new Date())) {
+      return next(new AppError("Campaign not found or invalid link", 404));
+    }
+
+    const session = await getBrandSession(req, campaign.id);
+    if (!session) return next(new AppError("Unauthorized", 401));
 
     if (mediaId === "all") {
+      const pendingMedia = await prisma.ugcMedia.findMany({ where: { campaignId: campaign.id, status: { not: "approved" } } });
+      
       await prisma.ugcMedia.updateMany({
-        where: { campaignId: campaign.id },
+        where: { campaignId: campaign.id, status: { not: "approved" } },
         data: { status: "approved" },
       });
       await prisma.ugcCampaign.update({
         where: { id: campaign.id },
         data: { status: "Approved", updatedAt: new Date() },
       });
+
       logActivity({
         userId: campaign.userId,
         title: `${campaign.brandName} approved all media`,
@@ -1120,9 +1255,16 @@ export const updatePublicMediaStatus = catchAsync(
         type: "APPROVAL",
         campaignId: campaign.id,
       });
-      return res
-        .status(200)
-        .json({ status: "success", message: "All media items approved" });
+      await logApprovalAudit({ campaignId: campaign.id, action: "APPROVED_ALL", email: session.email, ipAddress: req.ip, sessionId: session.id });
+
+      return res.status(200).json({ status: "success", message: "All media items approved" });
+    }
+
+    const media = await prisma.ugcMedia.findFirst({ where: { id: mediaId, campaignId: campaign.id } });
+    if (!media) return next(new AppError("Media not found or unauthorized", 404));
+
+    if (media.status === "approved") {
+      return next(new AppError("Media is already approved and cannot be changed", 400));
     }
 
     const updatedMedia = await prisma.ugcMedia.update({
@@ -1130,7 +1272,6 @@ export const updatePublicMediaStatus = catchAsync(
       data: { status: "approved" },
     });
 
-    // Check if all media are now approved
     const remainingUnapproved = await prisma.ugcMedia.count({
       where: { campaignId: campaign.id, status: { not: "approved" } },
     });
@@ -1138,11 +1279,6 @@ export const updatePublicMediaStatus = catchAsync(
       await prisma.ugcCampaign.update({
         where: { id: campaign.id },
         data: { status: "Approved", updatedAt: new Date() },
-      });
-    } else {
-      await prisma.ugcCampaign.update({
-        where: { id: campaign.id },
-        data: { updatedAt: new Date() },
       });
     }
 
@@ -1156,21 +1292,31 @@ export const updatePublicMediaStatus = catchAsync(
       type: "APPROVAL",
       campaignId: campaign.id,
     });
+    await logApprovalAudit({ campaignId: campaign.id, mediaId, action: "APPROVED", email: session.email, ipAddress: req.ip, sessionId: session.id });
 
     res.status(200).json({ status: "success", data: updatedMedia });
   },
 );
 
-/**
- * POST /api/ugc-campaigns/public/:slug/media/:mediaId/request-changes — Request changes on media
- */
 export const requestChangesPublicMedia = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { slug, mediaId } = req.params as { slug: string; mediaId: string };
     const { text } = req.body as { text: string };
 
-    const campaign = await prisma.ugcCampaign.findUnique({ where: { slug } });
-    if (!campaign) return next(new AppError("Campaign not found", 404));
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { shareToken: slug } });
+    if (!campaign || !campaign.shareEnabled || (campaign.shareExpiresAt && new Date(campaign.shareExpiresAt) < new Date())) {
+      return next(new AppError("Campaign not found or invalid link", 404));
+    }
+
+    const session = await getBrandSession(req, campaign.id);
+    if (!session) return next(new AppError("Unauthorized", 401));
+
+    const media = await prisma.ugcMedia.findFirst({ where: { id: mediaId, campaignId: campaign.id } });
+    if (!media) return next(new AppError("Media not found or unauthorized", 404));
+
+    if (media.status === "approved") {
+      return next(new AppError("Cannot request changes on already approved media", 400));
+    }
 
     await prisma.ugcMedia.update({
       where: { id: mediaId },
@@ -1197,21 +1343,29 @@ export const requestChangesPublicMedia = catchAsync(
       type: "FEEDBACK",
       campaignId: campaign.id,
     });
+    await logApprovalAudit({ campaignId: campaign.id, mediaId, action: "CHANGE_REQUESTED", email: session.email, ipAddress: req.ip, sessionId: session.id });
 
     res.status(200).json({ status: "success", data: message });
   },
 );
 
-/**
- * POST /api/ugc-campaigns/public/:slug/feedback — Submit feedback chat from brand
- */
 export const createPublicFeedback = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { slug } = req.params as { slug: string };
     const { text, mediaId } = req.body as { text: string; mediaId?: string };
 
-    const campaign = await prisma.ugcCampaign.findUnique({ where: { slug } });
-    if (!campaign) return next(new AppError("Campaign not found", 404));
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { shareToken: slug } });
+    if (!campaign || !campaign.shareEnabled || (campaign.shareExpiresAt && new Date(campaign.shareExpiresAt) < new Date())) {
+      return next(new AppError("Campaign not found or invalid link", 404));
+    }
+
+    const session = await getBrandSession(req, campaign.id);
+    if (!session) return next(new AppError("Unauthorized", 401));
+    
+    if (mediaId) {
+       const media = await prisma.ugcMedia.findFirst({ where: { id: mediaId, campaignId: campaign.id } });
+       if (!media) return next(new AppError("Media not found or unauthorized", 404));
+    }
 
     const message = await prisma.ugcFeedbackMessage.create({
       data: {
@@ -1234,6 +1388,158 @@ export const createPublicFeedback = catchAsync(
       campaignId: campaign.id,
     });
 
-    res.status(201).json({ status: "success", data: message });
+    await logApprovalAudit({ campaignId: campaign.id, mediaId: mediaId || null, action: "FEEDBACK_SUBMITTED", email: session.email, ipAddress: req.ip, sessionId: session.id }); res.status(201).json({ status: "success", data: message });
   },
+);
+
+export const rateCampaignPublic = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params as { slug: string };
+    const { rating, ratingNote } = req.body as { rating: number; ratingNote?: string };
+
+    const campaign = await prisma.ugcCampaign.findUnique({ where: { shareToken: slug } });
+    if (!campaign || !campaign.shareEnabled || (campaign.shareExpiresAt && new Date(campaign.shareExpiresAt) < new Date())) {
+      return next(new AppError("Campaign not found or invalid link", 404));
+    }
+
+    const session = await getBrandSession(req, campaign.id);
+    if (!session) return next(new AppError("Unauthorized", 401));
+
+    const updated = await prisma.ugcCampaign.update({
+      where: { id: campaign.id },
+      data: { rating, ratingNote: ratingNote ?? null },
+    });
+
+    logActivity({
+      userId: campaign.userId,
+      title: `${campaign.brandName} rated the campaign`,
+      sub: `${rating} Stars${ratingNote ? ` - ${ratingNote.substring(0, 40)}` : ""}`,
+      avatarBg: "bg-yellow-100",
+      avatarText: campaign.brandName.substring(0, 5).toUpperCase(),
+      dotColor: "bg-yellow-500",
+      type: "CAMPAIGN",
+      campaignId: campaign.id,
+    });
+
+    await logApprovalAudit({
+      campaignId: campaign.id,
+      action: "RATING_SUBMITTED",
+      email: session.email,
+      ipAddress: req.ip,
+      sessionId: session.id
+    });
+    res.status(200).json({ status: "success", data: updated });
+  }
+);
+
+export const getAnalytics = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = (req as AuthRequest).user;
+    
+    const monthsParam = parseInt(req.query.months as string) || 6;
+    const monthsToFetch = isNaN(monthsParam) || monthsParam < 1 ? 6 : monthsParam;
+
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - monthsToFetch + 1); // +1 because current month is month 1
+    startDate.setDate(1); // Start from the 1st of that month
+    startDate.setHours(0, 0, 0, 0);
+
+    const campaigns = await prisma.ugcCampaign.findMany({
+      where: { 
+        userId,
+        createdAt: {
+          gte: startDate
+        }
+      },
+      select: {
+        id: true,
+        amount: true,
+        status: true,
+        paymentStatus: true,
+        rating: true,
+        name: true,
+        brandName: true,
+        createdAt: true,
+      }
+    });
+
+    const paidIncome = campaigns
+      .filter((c) => c.paymentStatus === "Paid")
+      .reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+
+    const completedCampaigns = campaigns.filter((c) => c.status === "Approved" || c.status === "Completed" || c.status === "Delivered").length;
+
+    const ratedCampaigns = campaigns.filter(c => c.rating);
+    const avgRating = ratedCampaigns.length ? (ratedCampaigns.reduce((sum, c) => sum + (c.rating || 0), 0) / ratedCampaigns.length).toFixed(1) : 0;
+
+    const graphData = [];
+    const earningsOverview = [];
+    const deliverablesCompletedGraph = [];
+    
+    // Generate last N months data
+    for (let i = monthsToFetch - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthStr = d.toLocaleString('default', { month: 'short' });
+      const year = d.getFullYear();
+      
+      const monthCampaigns = campaigns.filter(c => {
+        const cDate = new Date(c.createdAt);
+        return cDate.getMonth() === d.getMonth() && cDate.getFullYear() === year;
+      });
+
+      const income = monthCampaigns
+        .filter(c => c.paymentStatus === "Paid")
+        .reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+
+      const completedCount = monthCampaigns.filter(c => c.status === "Approved" || c.status === "Completed" || c.status === "Delivered").length;
+
+      earningsOverview.push({ name: monthStr, totalEarnings: income });
+      deliverablesCompletedGraph.push({ name: monthStr, totalDeliverables: completedCount });
+    }
+
+    // Campaign Status Breakdown for Donut Chart
+    const statusCounts = campaigns.reduce((acc: any, c) => {
+      acc[c.status] = (acc[c.status] || 0) + 1;
+      return acc;
+    }, {});
+    
+    const colors = ['#0084FF', '#A855F7', '#EC4899', '#EAB308'];
+    const campaignStatusData = Object.keys(statusCounts).map((key, i) => ({
+      name: key,
+      value: statusCounts[key],
+      color: colors[i % colors.length]
+    }));
+
+    // Top Campaigns
+    const maxAmount = campaigns.reduce((max, c) => Math.max(max, parseFloat(c.amount) || 0), 0);
+    const topCampaigns = [...campaigns]
+      .sort((a, b) => (parseFloat(b.amount) || 0) - (parseFloat(a.amount) || 0))
+      .slice(0, 4) // As per design, 4 is usually good
+      .map(c => {
+        const amountNum = parseFloat(c.amount) || 0;
+        return {
+          id: c.id,
+          name: c.name,
+          brandName: c.brandName,
+          amount: c.amount,
+          status: c.status,
+          rating: c.rating,
+          percentage: maxAmount > 0 ? (amountNum / maxAmount) * 100 : 0
+        };
+      });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        totalIncome: paidIncome,
+        completedCampaigns,
+        avgRating,
+        earningsOverview,
+        deliverablesCompletedGraph,
+        campaignStatusData,
+        topCampaigns,
+      }
+    });
+  }
 );

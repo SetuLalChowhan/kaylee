@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Download, Check, Lock, Loader2 } from 'lucide-react';
+import { Download, Check, Lock, Loader2, Star } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { downloadCampaignZip } from '@/utils/download';
 
-const BrandHeader = ({ campaign, onApproveAll, isApprovePending }) => {
+const BrandHeader = ({ campaign, onApproveAll, isApprovePending, onRateCreator }) => {
   const [isZipping, setIsZipping] = useState(false);
 
   const handleDownloadAll = async () => {
@@ -36,6 +36,8 @@ const BrandHeader = ({ campaign, onApproveAll, isApprovePending }) => {
   };
 
   const daysLeft = getDaysLeft();
+
+  const allApproved = campaign.media?.length > 0 && campaign.media.every(item => item.status === 'approved');
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-6 mb-6">
@@ -75,17 +77,30 @@ const BrandHeader = ({ campaign, onApproveAll, isApprovePending }) => {
             )}
             {isZipping ? 'Packaging...' : campaign.releaseFiles ? 'Download All Media' : 'Downloads Locked'}
           </button>
+          {!campaign.rating && (
+            <button
+              onClick={onRateCreator}
+              className="flex items-center gap-2 bg-yellow-50 text-yellow-600 text-sm font-bold px-4 py-2.5 rounded-xl hover:bg-yellow-100 transition-colors cursor-pointer border border-yellow-100"
+            >
+              <Star className="w-4 h-4 fill-yellow-600" />
+              Rate Creator
+            </button>
+          )}
           <button
             onClick={onApproveAll}
-            disabled={isApprovePending}
-            className="flex items-center gap-2 bg-Primary text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-Primary/90 transition-all shadow-lg shadow-Primary/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={isApprovePending || allApproved}
+            className={`flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg cursor-pointer ${
+              allApproved 
+                ? 'bg-green-500 text-white shadow-green-500/20 cursor-not-allowed'
+                : 'bg-Primary text-white shadow-Primary/20 hover:bg-Primary/90 disabled:opacity-60 disabled:cursor-not-allowed'
+            }`}
           >
             {isApprovePending ? (
               <Loader2 className="w-4 h-4 animate-spin text-white" />
             ) : (
               <Check className="w-4 h-4" />
             )}
-            {isApprovePending ? 'Approving...' : 'Approve All Media'}
+            {isApprovePending ? 'Approving...' : allApproved ? 'All Media Approved' : 'Approve All Media'}
           </button>
         </div>
       </div>

@@ -7,7 +7,10 @@ import {
     useUgcCampaign,
     useUpdatePublicMediaStatus,
     useRequestChangesPublicMedia,
-    useCreatePublicFeedback
+    useCreatePublicFeedback,
+    useRequestOtpPublic,
+    useVerifyOtpPublic,
+    useRatePublicCampaign
 } from '@/api/apiHooks/useUgcCampaign';
 import { getImgUrl } from '@/utils/image';
 import BrandHeader from './components/BrandHeader';
@@ -15,6 +18,7 @@ import BrandContentGallery from './components/BrandContentGallery';
 import BrandDocuments from './components/BrandDocuments';
 import BrandComments from './components/BrandComments';
 import ApproveModal from './components/ApproveModal';
+import RatingModal from './components/RatingModal';
 import Deliverables from '../campingDetails/components/Deliverables';
 
 const BrandView = () => {
@@ -35,11 +39,20 @@ const BrandView = () => {
     const [approveModal, setApproveModal] = useState({ open: false, id: null });
     const [previewItem, setPreviewItem] = useState(null);
     const [newComment, setNewComment] = useState('');
+    const [ratingModalOpen, setRatingModalOpen] = useState(false);
 
     // Mutations
     const approveMutation = useUpdatePublicMediaStatus();
+    const rateMutation = useRatePublicCampaign();
     const requestMutation = useRequestChangesPublicMedia();
     const feedbackMutation = useCreatePublicFeedback();
+
+    // OTP Flow State
+    const [authEmail, setAuthEmail] = useState('');
+    const [authOtp, setAuthOtp] = useState('');
+    const [otpStep, setOtpStep] = useState(1);
+    const requestOtp = useRequestOtpPublic();
+    const verifyOtp = useVerifyOtpPublic();
 
     if (isLoading) {
         return (
@@ -62,6 +75,74 @@ const BrandView = () => {
     const comments = campaign.feedback || [];
     const unreadComments = comments.length;
 
+    if (campaign?.authRequired) {
+        return (
+            <div className="flex items-center justify-center min-h-[600px] bg-gray-50/50">
+                <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <h2 className="text-2xl font-bold mb-2">Access Campaign</h2>
+                    <p className="text-gray-500 mb-6 text-sm">Please verify your identity to access {campaign.brandName || "this campaign"}.</p>
+                    
+                    {otpStep === 1 ? (
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <input
+                                    type="email"
+                                    value={authEmail}
+                                    onChange={(e) => setAuthEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-Primary/20"
+                                />
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (!authEmail) return;
+                                    requestOtp.mutate({ slug, email: authEmail }, {
+                                        onSuccess: () => setOtpStep(2)
+                                    });
+                                }}
+                                disabled={requestOtp.isPending || !authEmail}
+                                className="w-full bg-Primary text-white font-bold py-2.5 rounded-xl disabled:opacity-50"
+                            >
+                                {requestOtp.isPending ? 'Sending...' : 'Send Verification Code'}
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
+                                <input
+                                    type="text"
+                                    value={authOtp}
+                                    onChange={(e) => setAuthOtp(e.target.value)}
+                                    placeholder="Enter 6-digit code"
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-Primary/20"
+                                    maxLength={6}
+                                />
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (!authOtp) return;
+                                    verifyOtp.mutate({ slug, email: authEmail, otp: authOtp });
+                                }}
+                                disabled={verifyOtp.isPending || !authOtp}
+                                className="w-full bg-Primary text-white font-bold py-2.5 rounded-xl disabled:opacity-50"
+                            >
+                                {verifyOtp.isPending ? 'Verifying...' : 'Verify & Access'}
+                            </button>
+                            <button
+                                onClick={() => setOtpStep(1)}
+                                className="w-full text-gray-500 text-sm font-medium hover:text-gray-700 mt-2"
+                            >
+                                Back to Email
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     // Handlers
     const handleApproveFile = (mediaId) => {
         setApproveModal({ open: true, id: mediaId });
@@ -72,12 +153,23 @@ const BrandView = () => {
     };
 
     const confirmApprove = () => {
-        approveMutation.mutate({ slug: campaign.slug, mediaId: approveModal.id }, {
+        approveMutation.mutate({ slug: slug, mediaId: approveModal.id }, {
             onSuccess: () => {
                 setApproveModal({ open: false, id: null });
+                if (!campaign.rating) {
+                    setRatingModalOpen(true);
+                }
             },
             onError: () => {
                 setApproveModal({ open: false, id: null });
+            }
+        });
+    };
+
+    const handleRatingSubmit = ({ rating, ratingNote }) => {
+        rateMutation.mutate({ slug, rating, ratingNote }, {
+            onSuccess: () => {
+                setRatingModalOpen(false);
             }
         });
     };
@@ -89,7 +181,7 @@ const BrandView = () => {
     const sendChangeRequest = () => {
         if (!changeText.trim()) return;
         requestMutation.mutate({
-            slug: campaign.slug,
+            slug: slug,
             mediaId: requestChangesId,
             text: changeText
         }, {
@@ -106,7 +198,7 @@ const BrandView = () => {
     const handleSendComment = () => {
         if (!newComment.trim()) return;
         feedbackMutation.mutate({
-            slug: campaign.slug,
+            slug: slug,
             text: newComment
         }, {
             onSuccess: () => {
@@ -118,7 +210,7 @@ const BrandView = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <BrandHeader campaign={campaign} onApproveAll={handleApproveAll} isApprovePending={approveMutation.isPending} />
+            <BrandHeader campaign={campaign} onApproveAll={handleApproveAll} isApprovePending={approveMutation.isPending} onRateCreator={() => setRatingModalOpen(true)} />
 
             {/* Deliverables — read-only for brand */}
             {campaign.deliverables && campaign.deliverables.length > 0 && (
@@ -160,6 +252,7 @@ const BrandView = () => {
                     setRequestChangesId={setRequestChangesId}
                     releaseFiles={campaign.releaseFiles}
                     pendingApproveId={approveMutation.isPending ? approveMutation.variables?.mediaId : null}
+                    isRequestPending={requestMutation.isPending}
                 />
             )}
 
@@ -194,20 +287,23 @@ const BrandView = () => {
             {/* Shared Media Preview Modal */}
             <AnimatePresence>
                 {previewItem && (
-                    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setPreviewItem(null)}
-                            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="relative max-w-3xl w-full z-[1001]"
-                        >
+          <div key="preview-modal" className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => setPreviewItem(null)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-3xl w-full z-[1001]"
+            >
                             <button
                                 onClick={() => setPreviewItem(null)}
                                 className="absolute -top-10 md:-top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer border border-white/20 rounded-full bg-black/20"
@@ -237,9 +333,18 @@ const BrandView = () => {
                                 {previewItem.description && <p className="text-white/60 text-xs mt-1">{previewItem.description}</p>}
                             </div>
                         </motion.div>
-                    </div>
+          </div>
                 )}
             </AnimatePresence>
+
+            {/* Rating Modal */}
+            <RatingModal
+                isOpen={ratingModalOpen}
+                onClose={() => setRatingModalOpen(false)}
+                onSubmit={handleRatingSubmit}
+                isPending={rateMutation.isPending}
+                creatorName={campaign?.user?.firstName || "the creator"}
+            />
         </div>
     );
 };

@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { MoreVertical, Edit3, Trash2, Play } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+
 import natureVideo from '@/assets/videos/nature.mp4';
 
 const MediaItem = React.memo(({ item, onEdit, onDelete, onPreview }) => {
   const [showOptions, setShowOptions] = useState(false);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+    <div 
       onMouseLeave={() => setShowOptions(false)}
-      className="relative rounded-2xl md:rounded-[32px] overflow-hidden group aspect-square bg-gray-50 border border-gray-100 cursor-pointer"
+      className="relative rounded-2xl md:rounded-[32px] overflow-hidden group aspect-square bg-gray-50 border border-gray-100 cursor-pointer animate-in fade-in zoom-in-95 duration-200"
       onClick={() => onPreview(item)}
     >
       {item.type === 'video' ? (
@@ -55,13 +53,9 @@ const MediaItem = React.memo(({ item, onEdit, onDelete, onPreview }) => {
             <MoreVertical className="w-4 h-4 md:w-5 md:h-5" />
           </button>
 
-          <AnimatePresence>
             {showOptions && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                className="absolute right-0 mt-2 w-32 md:w-40 bg-white rounded-xl md:rounded-2xl shadow-xl z-20 py-1 md:py-2 overflow-hidden border border-gray-50"
+              <div
+                className="absolute right-0 mt-2 w-32 md:w-40 bg-white rounded-xl md:rounded-2xl shadow-xl z-20 py-1 md:py-2 overflow-hidden border border-gray-50 animate-in fade-in zoom-in-95 duration-150"
               >
                 <button 
                   onClick={() => {
@@ -73,12 +67,11 @@ const MediaItem = React.memo(({ item, onEdit, onDelete, onPreview }) => {
                   <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   <span>Delete</span>
                 </button>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 });
 

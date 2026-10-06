@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { format, isSameDay, startOfWeek, addDays, parseISO } from 'date-fns';
 import { Plus, CheckCircle2, Circle, Clock, X, Pencil, Trash2, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+
 
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => ({
   hour: i,
@@ -80,16 +80,12 @@ const TaskDetailPopover = ({ task, color, position, onClose, onEdit, onDelete, o
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
+    <>
+      <div
         ref={popoverRef}
         key="task-detail-popover"
-        initial={{ opacity: 0, scale: 0.92, y: -4 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: -4 }}
-        transition={{ duration: 0.15, ease: 'easeOut' }}
         style={style}
-        className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-gray-100 overflow-hidden"
+        className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
         <div className={`h-1.5 w-full ${color.dot}`} />
         <div className="p-4">
@@ -153,8 +149,8 @@ const TaskDetailPopover = ({ task, color, position, onClose, onEdit, onDelete, o
             </button>
           </div>
         </div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </>
   );
 };
 
@@ -302,12 +298,10 @@ const WeeklyCalendar = ({
                       const topOffset = (getTaskMinute(task) / 60) * 52;
 
                       return (
-                        <motion.div
+                        <div
                           key={task.id}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
                           onClick={(e) => handleEventClick(e, task, color)}
-                          className={`absolute left-0.5 right-0.5 rounded-lg px-1.5 py-1 cursor-pointer ${color.bg} border-l-[3px] ${color.border} transition-all hover:brightness-95`}
+                          className={`absolute left-0.5 right-0.5 rounded-lg px-1.5 py-1 cursor-pointer ${color.bg} border-l-[3px] ${color.border} transition-all hover:brightness-95 animate-in fade-in duration-150`}
                           style={{ top: topOffset + 2, minHeight: 36, zIndex: 5 }}
                         >
                           <p className={`text-[11px] font-bold leading-tight truncate ${color.text} ${task.completed ? 'line-through opacity-50' : ''}`}>
@@ -323,7 +317,7 @@ const WeeklyCalendar = ({
                               {formatTaskTime(task)}
                             </p>
                           )}
-                        </motion.div>
+                        </div>
                       );
                     })}
 

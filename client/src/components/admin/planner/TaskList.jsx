@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MoreVertical, CheckCircle2, Circle, Edit3, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'motion/react';
+
 
 const TaskListItem = ({ task, onEdit, onDelete, onToggle }) => {
   const [showOptions, setShowOptions] = useState(false);
@@ -40,74 +40,74 @@ const TaskListItem = ({ task, onEdit, onDelete, onToggle }) => {
             <MoreVertical className="w-5 h-5" />
           </button>
 
-          <AnimatePresence>
-            {showOptions && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowOptions(false)}
-                />
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                  className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 py-2 overflow-hidden"
+          {showOptions && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowOptions(false)}
+              />
+              <div
+                className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+              >
+                <button
+                  onClick={() => {
+                    onEdit(task);
+                    setShowOptions(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 hover:text-Primary transition-colors"
                 >
-                  <button
-                    onClick={() => {
-                      onEdit(task);
-                      setShowOptions(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 hover:text-Primary transition-colors"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    <span className="font-semibold">Edit Task</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      onDelete(task);
-                      setShowOptions(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50/50 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="font-semibold">Delete Task</span>
-                  </button>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
+                  <Edit3 className="w-4 h-4" />
+                  <span className="font-semibold">Edit Task</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onDelete(task);
+                    setShowOptions(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50/50 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="font-semibold">Delete Task</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-const TaskList = ({ tasks, onEdit, onDelete, onToggle }) => {
+const TaskList = ({ tasks, date, onEdit, onDelete, onToggle }) => {
+  const dateStr = format(date || new Date(), 'EEEE, MMMM do');
   return (
-    <div className="bg-white rounded-[32px] border border-gray-50 shadow-sm mb-10 relative">
-      <div className="lg:p-8 p-4 border-b border-gray-50 rounded-t-[32px]">
-        <h2 className="xlg:text-xl text-lg font-bold text-[#1A1A1A]">All task this week</h2>
+    <div className="bg-white rounded-[32px] border border-gray-50 shadow-sm mb-10 mt-6 relative overflow-hidden flex flex-col">
+      <div className="lg:p-6 p-4 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-[#1A1A1A]">Agenda</h2>
+        <span className="text-xs font-semibold text-Primary bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+          {dateStr}
+        </span>
       </div>
 
-      <div className="flex flex-col">
+      <div className="flex flex-col max-h-[400px] overflow-y-auto custom-scrollbar">
         {tasks.length > 0 ? (
-          tasks.map((task, index) => (
-            <div
+          tasks.map((task) => (
+            <TaskListItem
               key={task.id}
-              className={`${index === tasks.length - 1 ? 'rounded-b-[32px]' : ''}`}
-            >
-              <TaskListItem
-                task={task}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onToggle={onToggle}
-              />
-            </div>
+              task={task}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onToggle={onToggle}
+            />
           ))
         ) : (
-          <div className="xl:p-20 lg:p-10 p-6 text-center text-gray-400 font-medium rounded-b-[32px]">
-            No tasks scheduled for this week
+          <div className="xl:p-16 lg:p-10 p-6 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+              <CheckCircle2 className="w-6 h-6 text-gray-300" />
+            </div>
+            <p className="text-gray-400 font-medium text-sm">
+              No tasks scheduled for this day
+            </p>
           </div>
         )}
       </div>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, addMonths, subMonths, isSameDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, addMonths, subMonths, isSameDay, parseISO } from 'date-fns';
 import PlannerHeader from './PlannerHeader';
 import WeeklyCalendar from './WeeklyCalendar';
 import MonthlyView from './MonthlyView';
+import TaskList from './TaskList';
 import TaskModal from './modals/TaskModal';
 import DeleteTaskModal from './modals/DeleteTaskModal';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/api/apiHooks/usePlanner';
@@ -181,6 +182,19 @@ const Planner = () => {
           }}
         />
       )}
+
+      <TaskList 
+        tasks={tasks.filter(t => {
+          try { return isSameDay(parseISO(t.date), currentDate); } catch { return false; }
+        })}
+        date={currentDate}
+        onEdit={handleEditTask}
+        onDelete={(task) => {
+          setSelectedTask(task);
+          setIsDeleteModalOpen(true);
+        }}
+        onToggle={handleToggleTask}
+      />
 
       <TaskModal 
         isOpen={isTaskModalOpen}

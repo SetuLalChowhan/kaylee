@@ -23,8 +23,13 @@ import {
   updatePublicMediaStatus,
   requestChangesPublicMedia,
   createPublicFeedback,
+  requestOtpPublic,
+  verifyOtpPublic,
+  rateCampaignPublic,
+  getAnalytics,
 } from "../controllers/ugc_campaign.controller.js";
 import { authGuard } from "../middlewares/auth.middleware.js";
+import { rateLimitDB } from "../middlewares/rateLimit.middleware.js";
 import { uploadCampaignFile } from "../middlewares/upload.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import {
@@ -40,10 +45,17 @@ import {
 const router = express.Router();
 
 // ── Public Guest Brand Routes (Auth not required) ────────────────────────────
-router.get("/public/:slug", getPublicCampaignBySlug);
-router.patch("/public/:slug/media/:mediaId/status", updatePublicMediaStatus);
-router.post("/public/:slug/media/:mediaId/request-changes", requestChangesPublicMedia);
-router.post("/public/:slug/feedback", createPublicFeedback);
+const publicRateLimit = rateLimitDB("public_api", 50, 15 * 60 * 1000); // 50 requests per 15 min
+const otpRateLimit = rateLimitDB("otp_api", 5, 10 * 60 * 1000); // 5 requests per 10 min
+
+router.get("/public/:slug", publicRateLimit, getPublicCampaignBySlug);
+router.post("/public/:slug/auth/otp-request", otpRateLimit, requestOtpPublic);
+router.post("/public/:slug/auth/otp-verify", publicRateLimit, verifyOtpPublic);
+
+router.patch("/public/:slug/media/:mediaId/status", publicRateLimit, updatePublicMediaStatus);
+router.post("/public/:slug/media/:mediaId/request-changes", publicRateLimit, requestChangesPublicMedia);
+router.post("/public/:slug/feedback", publicRateLimit, createPublicFeedback);
+router.post("/public/:slug/rate", publicRateLimit, rateCampaignPublic);
 
 import { requireCampaignLimit } from "../middlewares/subscription.middleware.js";
 
@@ -51,6 +63,7 @@ import { requireCampaignLimit } from "../middlewares/subscription.middleware.js"
 router.use(authGuard);
 
 router.get("/", getUgcCampaigns);
+router.get("/analytics", getAnalytics);
 router.get("/:id", getUgcCampaignById);
 router.post("/", validate(createUgcCampaignSchema), createUgcCampaign);
 router.patch("/:id", validate(updateUgcCampaignSchema), updateUgcCampaign);

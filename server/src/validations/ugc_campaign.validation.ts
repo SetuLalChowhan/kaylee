@@ -21,6 +21,10 @@ export const updateUgcCampaignSchema = z.object({
     releaseFiles: z.boolean().optional(),
     notes: z.string().nullable().optional(),
     paymentStatus: z.string().optional(),
+    shareEnabled: z.boolean().optional(),
+    regenerateShareToken: z.boolean().optional(),
+    rating: z.number().optional(),
+    ratingNote: z.string().optional(),
   }),
 });
 
