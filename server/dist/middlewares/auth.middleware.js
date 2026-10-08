@@ -4,10 +4,14 @@ import prisma from "../config/db.js";
 import { catchAsync } from "../utils/catchAsync.js";
 export const requireUserId = (req) => {
     const user = req.user;
-    if (!user || typeof user.userId !== "string" || user.userId.trim() === "" || user.type === "preview") {
+    if (!user || user.type === "preview") {
         throw new AppError("Authentication required. Invalid user session.", 401);
     }
-    return user.userId;
+    const id = user.userId || user.id || user._id;
+    if (typeof id !== "string" || id.trim() === "") {
+        throw new AppError("Authentication required. Invalid user session.", 401);
+    }
+    return id;
 };
 export const authGuard = (req, _res, next) => {
     const token = req.headers.authorization?.split(" ")[1]; // Bearer <token>

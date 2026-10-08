@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import StatsSection from "./dashboard/StatsSection";
 import CampaignGrid from "./dashboard/CampaignGrid";
 import DeadlinesSidebar from "./dashboard/DeadlinesSidebar";
+import MonthlyPerformanceSection from "./dashboard/MonthlyPerformanceSection";
 import CommonButton from "@/components/ui/CommonButton";
 import CreateCampaignModal from "./camping/components/CreateCampaignModal";
 import { useUserProfile, useDashboardStats } from "@/api/apiHooks/useUser";
@@ -46,9 +47,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="py-2">
+    <div className="py-2 space-y-6">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 ">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-1.5 md:mb-2">
             Dashboard
@@ -59,20 +60,20 @@ const Dashboard = () => {
         </div>
         <CommonButton
           onClick={handleCreateClick}
-          className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full md:w-auto"
+          className="bg-Primary text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-Primary/20 hover:bg-Primary/90 transition-all text-xs md:text-sm w-full md:w-auto cursor-pointer"
         >
           <Plus className="w-4 h-4 md:w-5 md:h-5" />
           Create Campaigns
         </CommonButton>
       </div>
 
-      {/* Stats Section */}
-
-      {/* Main Content Layout */}
+      {/* Main Top Content Layout */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 xl:gap-6 items-start w-full">
         <div className="flex flex-col gap-5 xl:gap-6 flex-1 w-full min-w-0">
-          {/* Left Column: Campaigns */}
+          {/* Top 4 Stats Cards (with Client Satisfaction replacing Awaiting Review) */}
           <StatsSection stats={dashboardData?.stats} />
+
+          {/* Recent 10 Campaigns in Universal Swiper Slider */}
           <CampaignGrid
             campaigns={dashboardData?.recentCampaigns}
             onEdit={handleEdit}
@@ -82,9 +83,19 @@ const Dashboard = () => {
           {/* Right Column: Deadlines & Tasks */}
           <DeadlinesSidebar
             deadlines={dashboardData?.deadlines}
+            upcomingDeadlines={dashboardData?.upcomingDeadlines}
+            overdueDeadlines={dashboardData?.overdueDeadlines}
             tasks={dashboardData?.tasks}
           />
         </div>
+      </div>
+
+      {/* Bottom Performance & Monthly Growth Graph Section */}
+      <div className="w-full">
+        <MonthlyPerformanceSection
+          monthlyTrends={dashboardData?.monthlyTrends}
+          stats={dashboardData?.stats}
+        />
       </div>
 
       <CreateCampaignModal

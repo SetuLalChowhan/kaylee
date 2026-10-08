@@ -134,28 +134,33 @@ export const adminCreateUser = catchAsync(async (req: Request, res: Response, ne
  */
 export const adminUpdateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params as { id: string };
-  const { firstName, lastName, displayName, role, isVerified, planId } = req.body as {
+  const { firstName, lastName, displayName, role, isVerified, planId, password } = req.body as {
     firstName?: string;
     lastName?: string;
     displayName?: string;
     role?: string;
     isVerified?: boolean;
     planId?: string | null;
+    password?: string;
   };
 
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) return next(new AppError("User not found", 404));
 
+  const updateData: Record<string, any> = {};
+  if (firstName !== undefined) updateData.firstName = firstName;
+  if (lastName !== undefined) updateData.lastName = lastName;
+  if (displayName !== undefined) updateData.displayName = displayName;
+  if (role !== undefined) updateData.role = role;
+  if (isVerified !== undefined) updateData.isVerified = isVerified;
+  if (planId !== undefined) updateData.planId = planId || null;
+  if (password && password.trim()) {
+    updateData.password = await hashPassword(password.trim());
+  }
+
   const updatedUser = await prisma.user.update({
     where: { id },
-    data: {
-      ...(firstName !== undefined && { firstName }),
-      ...(lastName !== undefined && { lastName }),
-      ...(displayName !== undefined && { displayName }),
-      ...(role !== undefined && { role }),
-      ...(isVerified !== undefined && { isVerified }),
-      ...(planId !== undefined && { planId: planId || null }),
-    },
+    data: updateData,
     include: {
       plan: true,
     },

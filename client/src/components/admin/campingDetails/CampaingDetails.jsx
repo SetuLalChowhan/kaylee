@@ -108,7 +108,12 @@ const CampaingDetails = () => {
       </div>
 
       <div className="flex items-center gap-3 mb-8">
-        <p className="text-gray-500 text-xs md:text-sm">Due {campaign.deadline}</p>
+        <p className="text-gray-500 text-xs md:text-sm">
+          Due {campaign.deadline ? (() => {
+            const d = new Date(campaign.deadline);
+            return isNaN(d.getTime()) ? campaign.deadline : d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+          })() : 'No date set'}
+        </p>
       </div>
 
       {/* Tabs */}

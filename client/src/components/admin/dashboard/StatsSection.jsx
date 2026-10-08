@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, CheckCircle, DollarSign } from 'lucide-react';
+import { Star, CheckCircle, DollarSign } from 'lucide-react';
 import { CampaignIcon } from '@/components/icons/CustomIcon';
 import { motion } from 'motion/react';
 
@@ -24,7 +24,9 @@ const StatsCard = ({ title, value, label, icon: Icon, iconBg, iconColor, index }
 
 const StatsSection = ({ stats }) => {
   const activeCampaignsVal = String(stats?.activeCampaigns ?? 0).padStart(2, '0');
-  const awaitingReviewVal = String(stats?.awaitingReview ?? 0).padStart(2, '0');
+  const clientSatisfactionVal = stats?.clientSatisfaction && Number(stats?.clientSatisfaction) > 0
+    ? `${stats.clientSatisfaction} / 5`
+    : '0 / 5';
   const completedVal = String(stats?.completedCampaigns ?? 0).padStart(2, '0');
 
   const totalEarnedVal = '$' + parseFloat(stats?.totalEarned ?? 0).toLocaleString('en-US', {
@@ -34,7 +36,7 @@ const StatsSection = ({ stats }) => {
 
   const statsList = [
     { title: "Active Campaigns", value: activeCampaignsVal, label: "Active Campaigns", icon: CampaignIcon, iconBg: "bg-blue-50", iconColor: "text-blue-600" },
-    { title: "Awaiting Review", value: awaitingReviewVal, label: "Awaiting Review", icon: Clock, iconBg: "bg-amber-50", iconColor: "text-amber-600" },
+    { title: "Client Satisfaction", value: clientSatisfactionVal, label: "Client Satisfaction", icon: Star, iconBg: "bg-amber-50", iconColor: "text-amber-500" },
     { title: "Completed Campaigns", value: completedVal, label: "Completed Campaigns", icon: CheckCircle, iconBg: "bg-emerald-50", iconColor: "text-emerald-600" },
     { title: "Total Earned", value: totalEarnedVal, label: "Total Earned", icon: DollarSign, iconBg: "bg-purple-50", iconColor: "text-purple-600" },
   ];

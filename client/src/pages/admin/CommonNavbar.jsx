@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Bell, ChevronDown, Menu, User as UserIcon, Settings, LogOut, CheckCircle, Clock, MessageSquare, DollarSign, X, Trash2 } from 'lucide-react';
+import { Bell, ChevronDown, Menu, User as UserIcon, Settings, LogOut, CheckCircle, Clock, MessageSquare, DollarSign, X, Trash2, CheckSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -52,6 +52,7 @@ const CommonNavbar = ({ setOpen }) => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'CAMPAIGN':
+      case 'APPROVAL':
         return { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50' };
       case 'FEEDBACK':
         return { icon: MessageSquare, color: 'text-blue-500', bg: 'bg-blue-50' };
@@ -59,6 +60,8 @@ const CommonNavbar = ({ setOpen }) => {
         return { icon: DollarSign, color: 'text-Primary', bg: 'bg-Primary/10' };
       case 'DEADLINE':
         return { icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50' };
+      case 'TASK':
+        return { icon: CheckSquare, color: 'text-purple-500', bg: 'bg-purple-50' };
       default:
         return { icon: Bell, color: 'text-gray-500', bg: 'bg-gray-50' };
     }
@@ -271,12 +274,12 @@ const CommonNavbar = ({ setOpen }) => {
                 </div>
               </div>
 
-              {/* Scrollable List */}
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4 custom-scrollbar">
+              {/* Minimal Scrollable List */}
+              <div className="flex-1 overflow-y-auto divide-y divide-gray-100 p-3 md:p-5 custom-scrollbar">
                 {notifications.length === 0 ? (
-                  <div className="text-center py-12 flex flex-col items-center justify-center">
-                    <Bell className="w-12 h-12 text-gray-200 mb-3" />
-                    <p className="text-gray-400 text-sm font-bold">All caught up! No notifications.</p>
+                  <div className="text-center py-16 flex flex-col items-center justify-center">
+                    <Bell className="w-10 h-10 text-gray-200 mb-2.5 stroke-1" />
+                    <p className="text-gray-400 text-xs font-semibold">No notifications</p>
                   </div>
                 ) : (
                   notifications.map((notif) => {
@@ -285,38 +288,45 @@ const CommonNavbar = ({ setOpen }) => {
                     return (
                       <div
                         key={notif.id}
-                        className={`p-4 rounded-2xl border transition-all flex items-start gap-4 ${notif.isSeen ? 'bg-white border-gray-50' : 'bg-Primary/[0.02] border-Primary/10 shadow-sm'}`}
+                        onClick={() => {
+                          if (!notif.isSeen) markAsSeenMutation.mutate(notif.id);
+                        }}
+                        className={`p-3 md:p-3.5 hover:bg-gray-50/80 transition-colors flex items-start gap-3 group rounded-xl cursor-pointer ${
+                          !notif.isSeen ? 'bg-Primary/[0.02]' : ''
+                        }`}
                       >
-                        <div className={`p-2.5 rounded-xl ${style.bg} ${style.color} flex-shrink-0`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
+                        {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className={`text-sm font-bold text-[#1A1A1A] leading-tight ${notif.isSeen ? 'font-semibold text-gray-700' : 'font-extrabold'}`}>
+                          <div className="flex items-baseline justify-between gap-2">
+                            <h4 className={`text-xs md:text-sm leading-tight truncate ${
+                              !notif.isSeen ? 'font-bold text-[#1A1A1A]' : 'font-medium text-gray-700'
+                            }`}>
                               {notif.title}
                             </h4>
-                            <span className="text-[10px] font-bold text-gray-300 uppercase whitespace-nowrap">{formatTime(notif.createdAt)}</span>
+                            <span className="text-[10px] text-gray-400 font-medium shrink-0">
+                              {formatTime(notif.createdAt)}
+                            </span>
                           </div>
-                          <p className="text-xs text-gray-400 font-medium leading-relaxed mt-1 mb-2">
+                          <p className="text-xs text-gray-500 font-normal leading-relaxed mt-0.5">
                             {notif.description}
                           </p>
-                          <div className="flex items-center gap-3">
-                            {!notif.isSeen && (
-                              <button
-                                onClick={() => markAsSeenMutation.mutate(notif.id)}
-                                className="text-[11px] font-bold text-Primary hover:underline"
-                              >
-                                Mark as read
-                              </button>
-                            )}
-                            <button
-                              onClick={() => deleteNotifMutation.mutate(notif.id)}
-                              className="text-[11px] font-bold text-red-400 hover:text-red-500 transition-colors ml-auto flex items-center gap-1"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              Delete
-                            </button>
-                          </div>
+                        </div>
+
+                        {/* Actions: Unread dot + Minimal Delete Icon */}
+                        <div className="flex items-center gap-1.5 shrink-0 self-center">
+                          {!notif.isSeen && (
+                            <span className="w-2 h-2 rounded-full bg-Primary" title="Unread" />
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotifMutation.mutate(notif.id);
+                            }}
+                            title="Delete notification"
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer opacity-70 group-hover:opacity-100"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     );

@@ -3,6 +3,7 @@ import prisma from "../../config/db.js";
 import { AppError } from "../../utils/AppError.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import { checkCampaignAccess } from "./ugc_helper.js";
+import { createNotification } from "../../utils/notification.util.js";
 
 /**
  * POST /api/ugc-campaigns/:campaignId/tasks — Create a campaign task
@@ -40,6 +41,14 @@ export const createCampaignTask = catchAsync(
           plannerTaskId: plannerTask.id,
         },
       });
+    });
+
+    createNotification({
+      userId: campaign.userId,
+      title: `Task Added: ${name}`,
+      description: `Task for "${campaign.name}" scheduled for ${date}.`,
+      type: "TASK",
+      preferenceKey: "notifyTaskReminders",
     });
 
     res.status(201).json({ status: "success", data: task });

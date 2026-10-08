@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MoreVertical, CheckCircle, FileEdit, Play, X, Download, Lock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'react-toastify';
@@ -22,6 +22,28 @@ const BrandContentGallery = ({
   const [previewItem, setPreviewItem] = useState(null);
   const [activeTab, setActiveTab] = useState('All');
   const videoRefs = useRef({});
+  const changeInputRef = useRef(null);
+
+  // Auto-scroll to the change request input box area when opened
+  useEffect(() => {
+    if (requestChangesId) {
+      const timer = setTimeout(() => {
+        const targetEl = changeInputRef.current || document.getElementById(`change-request-box-${requestChangesId}`);
+        if (targetEl) {
+          targetEl.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+          const textarea = targetEl.querySelector('textarea');
+          if (textarea) {
+            textarea.focus();
+          }
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [requestChangesId]);
 
   const assetTypes = ['All', 'Video', 'Raw Footage', 'B-Roll', 'Photo', 'Graphic', 'Other'];
 
@@ -220,19 +242,33 @@ const BrandContentGallery = ({
 
           {/* Request Changes inline */}
           {requestChangesId === item.id && (
-            <div className="px-4 pb-4">
+            <div
+              ref={changeInputRef}
+              id={`change-request-box-${item.id}`}
+              className="px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-200"
+            >
               <textarea
                 placeholder="Write your changes..."
                 value={changeText}
                 onChange={(e) => setChangeText(e.target.value)}
                 rows={3}
-                className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 text-sm focus:border-Primary focus:outline-none transition-all resize-none mb-3 text-[#1A1A1A]"
+                className="w-full bg-white border border-gray-200 focus:border-Primary rounded-xl py-3 px-4 text-sm focus:outline-none transition-all resize-none mb-3 text-[#1A1A1A] shadow-xs"
                 autoFocus
                 disabled={isRequestPending}
               />
               <div className="flex items-center justify-end gap-2">
-                <button onClick={() => { setRequestChangesId(null); setChangeText(''); }} disabled={isRequestPending} className="text-sm text-gray-500 font-medium hover:text-[#1A1A1A] cursor-pointer disabled:opacity-50">Cancel</button>
-                <button onClick={sendChangeRequest} disabled={isRequestPending || !changeText.trim()} className="bg-Primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                <button
+                  onClick={() => { setRequestChangesId(null); setChangeText(''); }}
+                  disabled={isRequestPending}
+                  className="text-sm text-gray-500 font-medium hover:text-[#1A1A1A] cursor-pointer disabled:opacity-50 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={sendChangeRequest}
+                  disabled={isRequestPending || !changeText.trim()}
+                  className="bg-Primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-Primary/90 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm shadow-Primary/20"
+                >
                   {isRequestPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {isRequestPending ? 'Sending...' : 'Send'}
                 </button>

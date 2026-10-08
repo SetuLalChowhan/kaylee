@@ -27,7 +27,8 @@ const InvoiceList = () => {
     queryKey: ["adminInvoices"],
     queryFn: async () => {
       const res = await axiosSecure.get("/invoice");
-      return res.data?.data || res.data || [];
+      const payload = res.data?.data || res.data || [];
+      return Array.isArray(payload) ? payload : (payload.invoices || []);
     }
   });
 

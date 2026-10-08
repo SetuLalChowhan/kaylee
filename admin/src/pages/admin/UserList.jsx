@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { getErrorMessage } from "@/utils/error";
 
 const UserList = () => {
   const axiosSecure = useAxiosSecure();
@@ -141,7 +142,8 @@ const UserList = () => {
     queryKey: ["adminInvoicesForDetails"],
     queryFn: async () => {
       const res = await axiosSecure.get("/invoice");
-      return res.data?.data || [];
+      const payload = res.data?.data || res.data || [];
+      return Array.isArray(payload) ? payload : (payload.invoices || []);
     }
   });
 
@@ -168,7 +170,7 @@ const UserList = () => {
       closeModal();
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || "Failed to create user");
+      toast.error(getErrorMessage(err, "Failed to create user"));
     }
   });
 
@@ -184,7 +186,7 @@ const UserList = () => {
       closeModal();
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || "Failed to update user");
+      toast.error(getErrorMessage(err, "Failed to update user"));
     }
   });
 
@@ -199,7 +201,7 @@ const UserList = () => {
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || "Failed to delete user");
+      toast.error(getErrorMessage(err, "Failed to delete user"));
     }
   });
 
@@ -237,9 +239,19 @@ const UserList = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedUser) {
+      const updatePayload = {
+        firstName,
+        lastName,
+        role,
+        isVerified,
+        planId: planId || null,
+      };
+      if (password && password.trim()) {
+        updatePayload.password = password.trim();
+      }
       updateMutation.mutate({
         id: selectedUser.id,
-        userData: { firstName, lastName, role, isVerified, planId: planId || null }
+        userData: updatePayload,
       });
     } else {
       createMutation.mutate({
@@ -248,7 +260,7 @@ const UserList = () => {
         email,
         password,
         role,
-        planId: planId || null
+        planId: planId || null,
       });
     }
   };
@@ -279,9 +291,10 @@ const UserList = () => {
   };
 
   // Filter items for viewed user
-  const userCampaigns = (campaignsData || []).filter(c => c.userId === viewedUser?.id);
-  const userTasks = (tasksData || []).filter(t => t.userId === viewedUser?.id);
-  const userInvoices = (invoicesData || []).filter(i => i.userId === viewedUser?.id);
+  const userCampaigns = (Array.isArray(campaignsData) ? campaignsData : []).filter(c => c.userId === viewedUser?.id);
+  const userTasks = (Array.isArray(tasksData) ? tasksData : []).filter(t => t.userId === viewedUser?.id);
+  const safeInvoices = Array.isArray(invoicesData) ? invoicesData : (invoicesData?.invoices || []);
+  const userInvoices = safeInvoices.filter(i => i.userId === viewedUser?.id);
 
   return (
     <div className="font-outfit p-1 text-slate-800">
@@ -474,18 +487,18 @@ const UserList = () => {
                 />
               </div>
 
-              {!selectedUser && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Defaults to 'user123'"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  {selectedUser ? "Reset Password (Leave blank to keep current)" : "Password"}
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={selectedUser ? "Enter new password to reset" : "Defaults to 'user123'"}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+                />
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

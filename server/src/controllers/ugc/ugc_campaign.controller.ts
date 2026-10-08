@@ -4,6 +4,7 @@ import { AppError } from "../../utils/AppError.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import { safeUnlink } from "../../utils/upload.util.js";
 import { logActivity } from "../../utils/activity.util.js";
+import { createNotification } from "../../utils/notification.util.js";
 import { generateSecureToken } from "../../utils/otp.util.js";
 import { requireUserId } from "../../middlewares/auth.middleware.js";
 import { appendPreviewToken, type AuthRequest } from "./ugc_helper.js";
@@ -374,6 +375,16 @@ export const updateUgcCampaign = catchAsync(
         type: "CAMPAIGN",
         campaignId: updated.id,
       });
+
+      if (status === "Approved") {
+        createNotification({
+          userId: ownerUserId,
+          title: `${updated.brandName} campaign approved!`,
+          description: `Campaign "${updated.name}" is now marked as Approved.`,
+          type: "CAMPAIGN",
+          preferenceKey: "notifyContentApprovals",
+        });
+      }
     } else if (paymentStatus !== undefined && paymentStatus !== existing.paymentStatus) {
       logActivity({
         userId: ownerUserId,
@@ -384,6 +395,14 @@ export const updateUgcCampaign = catchAsync(
         dotColor: "bg-emerald-500",
         type: "PAYMENT",
         campaignId: updated.id,
+      });
+
+      createNotification({
+        userId: ownerUserId,
+        title: `Payment Updated: ${updated.brandName}`,
+        description: `Campaign "${updated.name}" payment status changed to ${paymentStatus}.`,
+        type: "PAYMENT",
+        preferenceKey: "notifyInvoiceUpdates",
       });
     } else if (campaignName !== undefined || brandName !== undefined || deadline !== undefined || amount !== undefined) {
       logActivity({

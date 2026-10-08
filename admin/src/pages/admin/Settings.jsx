@@ -7,6 +7,7 @@ import useAxiosPublic from "@/hooks/useAxiosPublic";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { setUser } from "@/redux/slices/uiSlice";
+import { getErrorMessage } from "@/utils/error";
 
 const Settings = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -241,16 +242,29 @@ const SecurityTab = ({ axiosSecure }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const passwordRules = [
+    { label: "At least 8 characters", valid: newPassword.length >= 8 },
+    { label: "At least one uppercase letter (A-Z)", valid: /[A-Z]/.test(newPassword) },
+    { label: "At least one lowercase letter (a-z)", valid: /[a-z]/.test(newPassword) },
+    { label: "At least one number (0-9)", valid: /[0-9]/.test(newPassword) },
+    { label: "At least one special character (!@#$%^&*)", valid: /[^A-Za-z0-9]/.test(newPassword) },
+  ];
+
   const handlePasswordChange = async (e) => {
     e.preventDefault();
+    setFieldErrors({});
+
     if (newPassword !== confirmPassword) {
+      setFieldErrors({ confirmPassword: "New password and confirm password do not match" });
       return toast.error("New password and confirm password do not match");
     }
+
     setLoading(true);
     try {
       const res = await axiosSecure.patch("/user/change-password", {
@@ -265,9 +279,20 @@ const SecurityTab = ({ axiosSecure }) => {
         setShowOldPassword(false);
         setShowNewPassword(false);
         setShowConfirmPassword(false);
+        setFieldErrors({});
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to change password");
+      const rawErrors = err.response?.data?.errors;
+      if (Array.isArray(rawErrors) && rawErrors.length > 0) {
+        const errorMap = {};
+        rawErrors.forEach((er) => {
+          if (er.field) {
+            errorMap[er.field] = (errorMap[er.field] ? errorMap[er.field] + ". " : "") + er.message;
+          }
+        });
+        setFieldErrors(errorMap);
+      }
+      toast.error(getErrorMessage(err, "Failed to change password"));
     } finally {
       setLoading(false);
     }
@@ -284,8 +309,13 @@ const SecurityTab = ({ axiosSecure }) => {
               type={showOldPassword ? "text" : "password"}
               required
               value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+              onChange={(e) => {
+                setOldPassword(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, oldPassword: null }));
+              }}
+              className={`w-full bg-slate-50 border rounded-xl py-3 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all ${
+                fieldErrors.oldPassword ? "border-rose-300 bg-rose-50/20" : "border-slate-100"
+              }`}
               placeholder="••••••••"
             />
             <button
@@ -296,7 +326,11 @@ const SecurityTab = ({ axiosSecure }) => {
               {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          {fieldErrors.oldPassword && (
+            <p className="text-xs text-rose-500 font-semibold mt-1.5">{fieldErrors.oldPassword}</p>
+          )}
         </div>
+
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
           <div className="relative flex items-center">
@@ -304,8 +338,13 @@ const SecurityTab = ({ axiosSecure }) => {
               type={showNewPassword ? "text" : "password"}
               required
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, newPassword: null }));
+              }}
+              className={`w-full bg-slate-50 border rounded-xl py-3 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all ${
+                fieldErrors.newPassword ? "border-rose-300 bg-rose-50/20" : "border-slate-100"
+              }`}
               placeholder="••••••••"
             />
             <button
@@ -316,7 +355,34 @@ const SecurityTab = ({ axiosSecure }) => {
               {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          {fieldErrors.newPassword && (
+            <p className="text-xs text-rose-500 font-semibold mt-1.5">{fieldErrors.newPassword}</p>
+          )}
+
+          {/* Real-time Password Rules Guidance */}
+          {newPassword.length > 0 && (
+            <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5 animate-in fade-in">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                Password Requirements
+              </span>
+              {passwordRules.map((rule, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs">
+                  <div
+                    className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                      rule.valid ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-400"
+                    }`}
+                  >
+                    {rule.valid ? "✓" : "•"}
+                  </div>
+                  <span className={rule.valid ? "text-emerald-700 font-medium" : "text-slate-500 font-normal"}>
+                    {rule.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm New Password</label>
           <div className="relative flex items-center">
@@ -324,8 +390,13 @@ const SecurityTab = ({ axiosSecure }) => {
               type={showConfirmPassword ? "text" : "password"}
               required
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all"
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, confirmPassword: null }));
+              }}
+              className={`w-full bg-slate-50 border rounded-xl py-3 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-Primary/20 focus:border-Primary text-sm transition-all ${
+                fieldErrors.confirmPassword ? "border-rose-300 bg-rose-50/20" : "border-slate-100"
+              }`}
               placeholder="••••••••"
             />
             <button
@@ -336,7 +407,11 @@ const SecurityTab = ({ axiosSecure }) => {
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          {fieldErrors.confirmPassword && (
+            <p className="text-xs text-rose-500 font-semibold mt-1.5">{fieldErrors.confirmPassword}</p>
+          )}
         </div>
+
         <div className="flex justify-end pt-2">
           <button
             type="submit"

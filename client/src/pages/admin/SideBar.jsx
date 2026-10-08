@@ -74,7 +74,7 @@ const SideBar = ({ open, setOpen }) => {
         key={item.name}
         to={item.path}
         onClick={handleNavClick}
-        title={isCollapsed ? item.name : undefined}
+        title={item.name}
         className={`flex items-center rounded-xl transition-all duration-200 group relative ${isCollapsed
           ? 'justify-center p-3 w-11 h-11 mx-auto'
           : 'gap-3 px-4 py-3'
@@ -93,13 +93,6 @@ const SideBar = ({ open, setOpen }) => {
         >
           {item.name}
         </span>
-
-        {/* Desktop Tooltip in collapsed mode */}
-        {isCollapsed && (
-          <div className="hidden lg:group-hover:flex absolute left-full ml-3 px-2.5 py-1.5 bg-[#1A1A1A] text-white text-xs font-semibold rounded-lg pointer-events-none whitespace-nowrap z-50 shadow-xl items-center">
-            {item.name}
-          </div>
-        )}
       </NavLink>
     );
   };
@@ -137,7 +130,7 @@ const SideBar = ({ open, setOpen }) => {
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto custom-scrollbar py-2">
+      <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto overflow-x-hidden custom-scrollbar py-2">
         {menuItems.map(renderNavItem)}
 
         <div className="pt-6 pb-3">
@@ -148,9 +141,9 @@ const SideBar = ({ open, setOpen }) => {
       </nav>
 
       {/* Logout Button */}
-      <div className={`p-4 mt-auto transition-all ${isCollapsed ? 'flex justify-center p-2 pb-4' : ''}`}>
+      <div className={`p-4 mt-auto transition-all overflow-x-hidden ${isCollapsed ? 'flex justify-center p-2 pb-4' : ''}`}>
         {isCollapsed ? (
-          <div className="relative group">
+          <div className="relative">
             <button
               onClick={handleLogout}
               disabled={logoutMutation.isPending}
@@ -159,9 +152,6 @@ const SideBar = ({ open, setOpen }) => {
             >
               <LogOut className="w-5 h-5" />
             </button>
-            <div className="hidden lg:group-hover:flex absolute left-full ml-3 px-2.5 py-1.5 bg-[#1A1A1A] text-white text-xs font-semibold rounded-lg pointer-events-none whitespace-nowrap z-50 shadow-xl items-center">
-              Log Out
-            </div>
           </div>
         ) : (
           <button

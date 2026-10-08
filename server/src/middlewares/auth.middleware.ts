@@ -14,10 +14,14 @@ export interface JwtPayload {
 
 export const requireUserId = (req: Request): string => {
   const user = (req as any).user;
-  if (!user || typeof user.userId !== "string" || user.userId.trim() === "" || user.type === "preview") {
+  if (!user || user.type === "preview") {
     throw new AppError("Authentication required. Invalid user session.", 401);
   }
-  return user.userId;
+  const id = user.userId || user.id || user._id;
+  if (typeof id !== "string" || id.trim() === "") {
+    throw new AppError("Authentication required. Invalid user session.", 401);
+  }
+  return id;
 };
 
 export const authGuard = (req: Request, _res: Response, next: NextFunction): void => {

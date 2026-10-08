@@ -2,6 +2,7 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { logActivity } from "../utils/activity.util.js";
+import { createNotification } from "../utils/notification.util.js";
 /**
  * POST /api/invoice — Create a new invoice
  */
@@ -67,6 +68,13 @@ export const createInvoice = catchAsync(async (req, res, next) => {
         dotColor: "bg-blue-500",
         type: "INVOICE",
     });
+    createNotification({
+        userId: invoice.userId,
+        title: `Invoice #${invoiceNo} created`,
+        description: `Invoice for ${campaign || 'client'} ($${amount}) has been generated.`,
+        type: "PAYMENT",
+        preferenceKey: "notifyInvoiceUpdates",
+    });
     // Sync UgcCampaign amount and payment status with invoice (exact content ID first, fallback to user + name)
     const targetUgcCampaign = matchingUgc || (campaign ? await prisma.ugcCampaign.findFirst({
         where: {
@@ -95,65 +103,97 @@ export const createInvoice = catchAsync(async (req, res, next) => {
 export const getInvoices = catchAsync(async (req, res, next) => {
     const { userId, role } = req.user;
     const isAdmin = role === "admin";
-    const { status, includeStats } = req.query;
+    const { status, includeStats, page, limit, search } = req.query;
     const where = {
         ...(isAdmin ? {} : { userId }),
         ...(status && status !== "All" && (status === "Outstanding"
             ? { status: { in: ["Pending", "Overdue"] } }
             : { status })),
+        ...(search && search.trim() !== "" ? {
+            OR: [
+                { invoiceNo: { contains: search.trim(), mode: "insensitive" } },
+                { campaignName: { contains: search.trim(), mode: "insensitive" } },
+            ]
+        } : {}),
     };
-    const invoices = await prisma.invoice.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
+    const pageNum = Math.max(1, parseInt(page || "1", 10) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit || "10", 10) || 10));
+    const skip = (pageNum - 1) * limitNum;
+    const [totalCount, invoices] = await Promise.all([
+        prisma.invoice.count({ where }),
+        prisma.invoice.findMany({
+            where,
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: limitNum,
+        }),
+    ]);
+    const totalPages = Math.ceil(totalCount / limitNum) || 1;
+    // Always compute stats across user's all invoices
+    const allInvoices = await prisma.invoice.findMany({
+        where: isAdmin ? {} : { userId },
+        select: { amount: true, status: true, issueDate: true },
     });
-    if (includeStats === "true") {
-        // Get all invoices to compute stats
-        const allInvoices = await prisma.invoice.findMany({
-            where: isAdmin ? {} : { userId },
-        });
-        let totalAmount = 0;
-        const totalCount = allInvoices.length;
-        let paidAmount = 0;
-        let paidCount = 0;
-        let outstandingAmount = 0;
-        let outstandingCount = 0;
-        let earnedPast30Days = 0;
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        for (const inv of allInvoices) {
-            const amt = parseFloat(inv.amount.replace(/[^0-9.]/g, "")) || 0;
-            totalAmount += amt;
-            if (inv.status === "Paid") {
-                paidCount++;
-                paidAmount += amt;
-                if (new Date(inv.issueDate) >= thirtyDaysAgo) {
-                    earnedPast30Days += amt;
-                }
-            }
-            else if (inv.status === "Pending" || inv.status === "Overdue") {
-                outstandingCount++;
-                outstandingAmount += amt;
+    let totalAmount = 0;
+    const statsTotalCount = allInvoices.length;
+    let paidAmount = 0;
+    let paidCount = 0;
+    let pendingAmount = 0;
+    let pendingCount = 0;
+    let overdueAmount = 0;
+    let overdueCount = 0;
+    let outstandingAmount = 0;
+    let outstandingCount = 0;
+    let earnedPast30Days = 0;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    for (const inv of allInvoices) {
+        const amt = parseFloat(inv.amount.replace(/[^0-9.]/g, "")) || 0;
+        totalAmount += amt;
+        if (inv.status === "Paid") {
+            paidCount++;
+            paidAmount += amt;
+            if (new Date(inv.issueDate) >= thirtyDaysAgo) {
+                earnedPast30Days += amt;
             }
         }
-        return res.status(200).json({
-            status: "success",
-            data: {
-                invoices,
-                stats: {
-                    totalCount,
-                    totalAmount,
-                    paidCount,
-                    paidAmount,
-                    outstandingCount,
-                    outstandingAmount,
-                    earnedPast30Days,
-                }
-            },
-        });
+        else if (inv.status === "Pending") {
+            pendingCount++;
+            pendingAmount += amt;
+            outstandingCount++;
+            outstandingAmount += amt;
+        }
+        else if (inv.status === "Overdue") {
+            overdueCount++;
+            overdueAmount += amt;
+            outstandingCount++;
+            outstandingAmount += amt;
+        }
     }
     res.status(200).json({
         status: "success",
-        data: invoices,
+        data: {
+            invoices,
+            pagination: {
+                total: totalCount,
+                page: pageNum,
+                limit: limitNum,
+                totalPages,
+            },
+            stats: {
+                totalCount: statsTotalCount,
+                totalAmount,
+                paidCount,
+                paidAmount,
+                pendingCount,
+                pendingAmount,
+                overdueCount,
+                overdueAmount,
+                outstandingCount,
+                outstandingAmount,
+                earnedPast30Days,
+            },
+        },
     });
 });
 /**
@@ -239,6 +279,15 @@ export const updateInvoice = catchAsync(async (req, res, next) => {
             avatarText: "INV",
             dotColor: isPayment ? "bg-emerald-500" : "bg-orange-500",
             type: "PAYMENT",
+        });
+        createNotification({
+            userId: existingInvoice.userId,
+            title: isPayment
+                ? `Payment Received - Invoice #${updatedInvoice.invoiceNo}`
+                : `Invoice #${updatedInvoice.invoiceNo} is now ${status}`,
+            description: `Invoice for ${updatedInvoice.campaignName || 'client'} ($${finalAmount}) was marked as ${status}.`,
+            type: "PAYMENT",
+            preferenceKey: "notifyInvoiceUpdates",
         });
     }
     else if (amount !== undefined || campaign !== undefined) {

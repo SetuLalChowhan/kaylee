@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
+import { setUser } from "@/redux/slices/authSlice";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 export const useNotifications = () => {
@@ -74,14 +75,20 @@ export const useDeleteNotification = () => {
 export const useUpdateNotificationSettings = () => {
   const queryClient = useQueryClient();
   const axiosSecure = useAxiosSecure();
+  const dispatch = useDispatch();
 
   return useMutation({
     mutationFn: async (settings) => {
       const res = await axiosSecure.patch("/user/notification-settings", settings);
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       toast.success("Notification preferences updated!");
+      if (data?.data) {
+        dispatch(setUser(data.data));
+      } else {
+        dispatch(setUser(variables));
+      }
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: (error) => {

@@ -1,19 +1,43 @@
 import React, { useState, useMemo } from 'react';
-import { CheckCircle2, Circle, Calendar, CalendarDays } from 'lucide-react';
+import { CheckCircle2, Circle, Calendar, CalendarDays, AlertCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateTask } from '@/api/apiHooks/usePlanner';
 import { useActivities } from '@/api/apiHooks/useActivity';
 
-const DeadlineItem = ({ day, month, title, sub }) => (
-  <div className="flex items-center gap-3 mb-4 last:mb-0 group cursor-pointer">
+const DeadlineItem = ({ day, month, title, sub, onClick }) => (
+  <div onClick={onClick} className="flex items-center gap-3 mb-4 last:mb-0 group cursor-pointer">
     <div className="flex flex-col items-center justify-center min-w-[32px] py-1 border-r border-gray-100 pr-3 mr-1">
-      <span className="text-xs font-bold text-red-500 uppercase leading-none mb-0.5">{day}</span>
+      <span className="text-xs font-bold text-Primary uppercase leading-none mb-0.5">{day}</span>
       <span className="text-[10px] font-semibold text-gray-400 uppercase leading-none">{month}</span>
     </div>
-    <div>
-      <h4 className="text-[13px] font-semibold text-[#1A1A1A] group-hover:text-Primary transition-colors leading-tight">{title}</h4>
-      <p className="text-[11px] text-gray-400 font-medium">{sub}</p>
+    <div className="flex-1 min-w-0">
+      <h4 className="text-[13px] font-semibold text-[#1A1A1A] group-hover:text-Primary transition-colors leading-tight truncate">{title}</h4>
+      <p className="text-[11px] text-gray-400 font-medium truncate">{sub}</p>
+    </div>
+  </div>
+);
+
+const OverdueDeadlineItem = ({ day, month, title, sub, overdueDays, onClick }) => (
+  <div
+    onClick={onClick}
+    className="flex items-center gap-3 p-2.5 rounded-xl bg-red-50/50 hover:bg-red-50 border border-red-100/80 transition-all cursor-pointer group mb-2.5 last:mb-0"
+  >
+    <div className="flex flex-col items-center justify-center min-w-[34px] py-1 px-1.5 bg-red-100/80 rounded-lg text-red-600 shrink-0">
+      <span className="text-xs font-bold uppercase leading-none mb-0.5">{day}</span>
+      <span className="text-[9px] font-bold uppercase leading-none">{month}</span>
+    </div>
+    <div className="flex-1 min-w-0">
+      <h4 className="text-[12px] font-bold text-gray-900 group-hover:text-red-600 transition-colors leading-tight truncate">
+        {title}
+      </h4>
+      <p className="text-[11px] text-gray-500 font-medium truncate">{sub}</p>
+    </div>
+    <div className="shrink-0">
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-white border border-red-200 px-2 py-0.5 rounded-md shadow-2xs whitespace-nowrap">
+        <AlertCircle className="w-2.5 h-2.5 text-red-500" />
+        {overdueDays ? `${overdueDays}d late` : 'Overdue'}
+      </span>
     </div>
   </div>
 );
@@ -27,13 +51,13 @@ const TaskItem = ({ title, sub, date, completed, onToggle }) => (
         <Circle className="w-4 h-4 text-gray-200 group-hover:text-Primary transition-colors" />
       )}
     </div>
-    <div className="flex-1">
-      <h4 className={`text-[13px] font-semibold ${completed ? 'text-gray-400 line-through' : 'text-[#1A1A1A]'} leading-tight`}>
+    <div className="flex-1 min-w-0">
+      <h4 className={`text-[13px] font-semibold ${completed ? 'text-gray-400 line-through' : 'text-[#1A1A1A]'} leading-tight truncate`}>
         {title}
       </h4>
-      <p className="text-[10px] text-Primary font-medium">{sub}</p>
+      <p className="text-[10px] text-Primary font-medium truncate">{sub}</p>
     </div>
-    <span className="text-[13px] font-medium text-[#6F6F6F] whitespace-nowrap">{date}</span>
+    <span className="text-[13px] font-medium text-[#6F6F6F] whitespace-nowrap shrink-0">{date}</span>
   </div>
 );
 
@@ -51,12 +75,9 @@ const formatTimeAgo = (dateString) => {
 
 const ActivityItem = ({ title, sub, time, avatarBg, avatarContent, avatarText, dotColor }) => (
   <div className="flex items-center gap-3 mb-4 last:mb-0 group cursor-pointer">
-    {/* <div className={`w-10 h-10 rounded-full ${avatarBg || 'bg-gray-100'} flex items-center justify-center shrink-0 overflow-hidden shadow-xs`}>
-      {avatarContent || <span className="text-[9px] font-bold text-gray-700 tracking-tighter uppercase px-1 text-center">{avatarText || 'STAKD'}</span>}
-    </div> */}
     <div className="flex-1 min-w-0">
       <h4 className="text-[13px] font-semibold text-[#1A1A1A] leading-tight truncate">{title}</h4>
-      {sub && <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">{sub}</p>}
+      {sub && <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5 truncate">{sub}</p>}
     </div>
     <div className="flex items-center gap-1.5 shrink-0">
       <span className="text-[12px] text-gray-400 font-normal">{time}</span>
@@ -65,9 +86,10 @@ const ActivityItem = ({ title, sub, time, avatarBg, avatarContent, avatarText, d
   </div>
 );
 
-const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
+const DeadlinesSidebar = ({ deadlines = [], upcomingDeadlines, overdueDeadlines, tasks = [] }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const updateTaskMutation = useUpdateTask();
   const { data: activityRes } = useActivities(1, 5);
   const dynamicActivities = activityRes?.activities || (Array.isArray(activityRes) ? activityRes : []);
   const [showAllTasks, setShowAllTasks] = useState(false);
@@ -84,8 +106,37 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
     dotColor: act.dotColor
   }));
 
+  // Resolve upcoming deadlines (exclude overdue)
+  const resolvedUpcoming = useMemo(() => {
+    if (Array.isArray(upcomingDeadlines)) return upcomingDeadlines;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    return deadlines.filter(d => {
+      if (d.isOverdue === true) return false;
+      if (d.rawDate) {
+        const dt = new Date(d.rawDate);
+        if (!isNaN(dt.getTime()) && dt.getTime() < todayStart.getTime()) return false;
+      }
+      return true;
+    });
+  }, [upcomingDeadlines, deadlines]);
+
+  // Resolve overdue deadlines
+  const resolvedOverdue = useMemo(() => {
+    if (Array.isArray(overdueDeadlines)) return overdueDeadlines;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    return deadlines.filter(d => {
+      if (d.isOverdue === true) return true;
+      if (d.rawDate) {
+        const dt = new Date(d.rawDate);
+        if (!isNaN(dt.getTime()) && dt.getTime() < todayStart.getTime()) return true;
+      }
+      return false;
+    });
+  }, [overdueDeadlines, deadlines]);
+
   // Filter tasks: today only unless showAllTasks is true
-  // Use local date (NOT toISOString which is UTC and can be yesterday for UTC+ timezones)
   const todayStr = useMemo(() => {
     const now = new Date();
     const y = now.getFullYear();
@@ -115,12 +166,10 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
     })
     , [mergedTasks, todayStr]);
   const displayTasks = showAllTasks ? mergedTasks : todayTasks;
-  const todayCount = todayTasks.filter(t => !t.completed).length;
 
   const handleToggleTask = (taskId, currentCompleted) => {
     if (!taskId) return;
     const newCompleted = !currentCompleted;
-    // Optimistically update UI immediately
     setOptimisticCompleted(prev => ({ ...prev, [taskId]: newCompleted }));
     updateTaskMutation.mutate({
       id: taskId,
@@ -128,7 +177,6 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
-        // Clear optimistic override once server confirms — let real data take over
         setOptimisticCompleted(prev => {
           const next = { ...prev };
           delete next[taskId];
@@ -136,7 +184,6 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
         });
       },
       onError: () => {
-        // Revert optimistic update on failure
         setOptimisticCompleted(prev => {
           const next = { ...prev };
           delete next[taskId];
@@ -147,9 +194,9 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
   };
 
   return (
-    <div className="w-full lg:w-[275px] xl:w-[295px] space-y-4">
+    <div className="w-full lg:w-[275px] xl:w-[295px] space-y-4 font-urbanist">
 
-      {/* Pending Tasks */}
+      {/* 1. Today's Priorities */}
       <div className="bg-[#FFFFFF] border border-gray-100 p-4 lg:p-4.5 rounded-2xl w-full shadow-sm">
         <div className="flex items-center justify-between mb-3.5">
           <div className="flex items-center gap-2">
@@ -158,7 +205,7 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/dashboard/planner')}
-              className="text-Primary text-xs font-bold hover:underline flex items-center gap-1"
+              className="text-Primary text-xs font-bold hover:underline flex items-center gap-1 cursor-pointer"
             >
               See all <span className="text-xs">→</span>
             </button>
@@ -186,21 +233,26 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
           )}
         </div>
       </div>
-      {/* Upcoming Deadlines */}
+
+      {/* 2. Upcoming Deadlines (Only strictly active / future or today deadlines) */}
       <div className="bg-white border border-gray-100 p-4 lg:p-4.5 rounded-2xl w-full shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-[#1A1A1A]">Upcoming Deadlines</h2>
           <button
             onClick={() => navigate('/dashboard/campaigns')}
-            className="text-Primary text-xs font-bold hover:underline flex items-center gap-1"
+            className="text-Primary text-xs font-bold hover:underline flex items-center gap-1 cursor-pointer"
           >
             See all <span className="text-xs">→</span>
           </button>
         </div>
         <div className="space-y-1">
-          {deadlines.length > 0 ? (
-            deadlines.map((item, index) => (
-              <DeadlineItem key={item.id || index} {...item} />
+          {resolvedUpcoming.length > 0 ? (
+            resolvedUpcoming.map((item, index) => (
+              <DeadlineItem
+                key={item.id || index}
+                {...item}
+                onClick={() => navigate('/dashboard/campaigns')}
+              />
             ))
           ) : (
             <p className="text-gray-400 text-xs text-center py-4 font-medium">No upcoming deadlines.</p>
@@ -208,13 +260,43 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* 3. Overdue Deadlines Section (Separated into its own dedicated section below Upcoming Deadlines) */}
+      {resolvedOverdue.length > 0 && (
+        <div className="bg-white border border-red-100 p-4 lg:p-4.5 rounded-2xl w-full shadow-sm">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <h2 className="text-base font-bold text-[#1A1A1A]">Overdue Deadlines</h2>
+              <span className="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {resolvedOverdue.length}
+              </span>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/campaigns')}
+              className="text-red-500 text-xs font-bold hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              Action <span className="text-xs">→</span>
+            </button>
+          </div>
+          <div>
+            {resolvedOverdue.map((item, index) => (
+              <OverdueDeadlineItem
+                key={item.id || index}
+                {...item}
+                onClick={() => navigate('/dashboard/campaigns')}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Recent Activity */}
       <div className="bg-white border border-gray-100 p-4 lg:p-4.5 rounded-2xl w-full shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-[#1A1A1A]">Recent Activity</h2>
           <button
             onClick={() => navigate('/dashboard/settings?tab=Activity')}
-            className="text-Primary text-xs font-bold hover:underline flex items-center gap-1"
+            className="text-Primary text-xs font-bold hover:underline flex items-center gap-1 cursor-pointer"
           >
             View all
           </button>
@@ -229,7 +311,6 @@ const DeadlinesSidebar = ({ deadlines = [], tasks = [] }) => {
           )}
         </div>
       </div>
-
 
     </div>
   );

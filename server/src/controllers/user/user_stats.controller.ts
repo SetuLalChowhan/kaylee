@@ -76,7 +76,19 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response) 
   });
   const stripeIncomeValue = stripeIncomeSum._sum.amount ?? 0;
 
-  // 2. Recent Active/Draft campaigns (up to 6)
+  const ratedCampaigns = await prisma.ugcCampaign.findMany({
+    where: {
+      ...(isAdmin ? {} : { userId }),
+      rating: { not: null },
+    },
+    select: { rating: true },
+  });
+  const totalRatings = ratedCampaigns.length;
+  const avgRatingValue = totalRatings > 0
+    ? (ratedCampaigns.reduce((sum: number, c: any) => sum + (c.rating || 0), 0) / totalRatings).toFixed(1)
+    : "0";
+
+  // 2. Recent Active/Draft campaigns (up to 10)
   const recentCampaigns = await prisma.ugcCampaign.findMany({
     where: isAdmin ? {} : { userId },
     include: {
@@ -86,14 +98,17 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response) 
       feedback: { select: { id: true } },
     },
     orderBy: { updatedAt: "desc" },
-    take: 6,
+    take: 10,
   });
 
-  // 3. Upcoming Deadlines (up to 5)
+  // 3. Upcoming Deadlines and Overdue Deadlines
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
   const activeCampaignsForDeadlines = await prisma.ugcCampaign.findMany({
     where: {
       ...(isAdmin ? {} : { userId }),
-      status: { not: "Completed" },
+      status: { notIn: ["Completed", "Approved"] },
       deadline: { not: "" },
     },
     select: {
@@ -101,26 +116,52 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response) 
       name: true,
       brandName: true,
       deadline: true,
+      status: true,
     },
   });
 
-  const parsedDeadlines = activeCampaignsForDeadlines
+  const parsedAllDeadlines = activeCampaignsForDeadlines
     .map((c: any) => {
-      const date = new Date(c.deadline);
+      if (!c.deadline) return null;
+      let date = new Date(c.deadline);
+      if (isNaN(date.getTime())) return null;
+
+      let compareDate = date;
+      if (typeof c.deadline === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.deadline.trim())) {
+        const [y, m, d] = c.deadline.trim().split("-").map(Number);
+        compareDate = new Date(y, m - 1, d, 23, 59, 59, 999);
+      }
+
+      const isOverdue = compareDate.getTime() < todayStart.getTime();
+      const overdueDays = isOverdue
+        ? Math.max(1, Math.floor((todayStart.getTime() - compareDate.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+        : 0;
+
       return {
         id: c.id,
-        title: c.brandName,
-        sub: c.name,
+        title: c.brandName || "Campaign",
+        sub: c.name || "Untitled",
         date,
         rawDate: c.deadline,
-        day: isNaN(date.getTime()) ? "" : date.getDate().toString().padStart(2, "0"),
-        month: isNaN(date.getTime()) ? "" : date.toLocaleString("en-US", { month: "short" }),
+        isOverdue,
+        overdueDays,
+        day: date.getDate().toString().padStart(2, "0"),
+        month: date.toLocaleString("en-US", { month: "short" }),
       };
     })
-    .filter((d: any) => d.day !== "")
+    .filter((d: any) => d !== null);
+
+  const upcomingDeadlines = parsedAllDeadlines
+    .filter((d: any) => !d.isOverdue)
     .sort((a: any, b: any) => a.date.getTime() - b.date.getTime())
     .slice(0, 5)
-    .map(({ id, title, sub, day, month, rawDate }: any) => ({ id, title, sub, day, month, rawDate }));
+    .map(({ id, title, sub, day, month, rawDate, isOverdue }: any) => ({ id, title, sub, day, month, rawDate, isOverdue }));
+
+  const overdueDeadlines = parsedAllDeadlines
+    .filter((d: any) => d.isOverdue)
+    .sort((a: any, b: any) => b.date.getTime() - a.date.getTime())
+    .slice(0, 5)
+    .map(({ id, title, sub, day, month, rawDate, isOverdue, overdueDays }: any) => ({ id, title, sub, day, month, rawDate, isOverdue, overdueDays }));
 
   // 4. Pending & Upcoming Tasks from Planner (up to 5)
   const tasks = await prisma.task.findMany({
@@ -219,13 +260,17 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response) 
         activeCampaigns: activeCampaignsCount,
         awaitingReview: awaitingReviewCount,
         completedCampaigns: completedCampaignsCount,
+        clientSatisfaction: avgRatingValue,
+        ratingCount: totalRatings,
         totalEarned: totalEarnedValue,
         totalInvoices: totalInvoicesCount,
         stripeIncome: stripeIncomeValue,
         totalUsers: totalUsersCount,
       },
       recentCampaigns,
-      deadlines: parsedDeadlines,
+      deadlines: upcomingDeadlines,
+      upcomingDeadlines,
+      overdueDeadlines,
       tasks: parsedTasks,
       monthlyTrends,
     },

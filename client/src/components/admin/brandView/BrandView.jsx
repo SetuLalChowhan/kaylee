@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Play, X } from 'lucide-react';
+import { Play, X, LayoutGrid, FileText, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     usePublicCampaign,
@@ -39,6 +39,63 @@ const BrandView = () => {
         }
     }, [isPublic, slug, campaign?.status, campaign?.authRequired]);
 
+    // ── Anti-Inspect & Right-Click Protection ────────────────────────────────────
+    useEffect(() => {
+        const disableContextMenu = (e) => {
+            e.preventDefault();
+            return false;
+        };
+
+        const disableDevShortcuts = (e) => {
+            // F12
+            if (e.keyCode === 123) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+I / Cmd+Option+I (Inspect)
+            // Ctrl+Shift+J / Cmd+Option+J (Console)
+            // Ctrl+Shift+C / Cmd+Option+C (Inspect Element)
+            if (
+                (e.ctrlKey || e.metaKey) &&
+                e.shiftKey &&
+                (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67 || e.key === 'I' || e.key === 'J' || e.key === 'C')
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+U / Cmd+U (View Source)
+            // Ctrl+S / Cmd+S (Save Page)
+            if (
+                (e.ctrlKey || e.metaKey) &&
+                (e.keyCode === 85 || e.keyCode === 83 || e.key === 'u' || e.key === 's')
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        };
+
+        // Anti-DevTools debugger loop: locks execution if DevTools is opened via browser menu
+        const devToolsInterval = setInterval(() => {
+            const start = performance.now();
+            debugger;
+            if (performance.now() - start > 100) {
+                // DevTools was opened
+            }
+        }, 500);
+
+        window.addEventListener('contextmenu', disableContextMenu);
+        window.addEventListener('keydown', disableDevShortcuts);
+
+        return () => {
+            window.removeEventListener('contextmenu', disableContextMenu);
+            window.removeEventListener('keydown', disableDevShortcuts);
+            clearInterval(devToolsInterval);
+        };
+    }, []);
+
     const [activeTab, setActiveTab] = useState('Content Gallery');
     const tabs = ['Content Gallery', 'Documents', 'Comments'];
 
@@ -48,6 +105,7 @@ const BrandView = () => {
     const [previewItem, setPreviewItem] = useState(null);
     const [newComment, setNewComment] = useState('');
     const [ratingModalOpen, setRatingModalOpen] = useState(false);
+    const [hasShownRatingForIndividual, setHasShownRatingForIndividual] = useState(false);
 
     // Mutations
     const approveMutation = useUpdatePublicMediaStatus();
@@ -161,11 +219,35 @@ const BrandView = () => {
     };
 
     const confirmApprove = () => {
-        approveMutation.mutate({ slug: slug, mediaId: approveModal.id }, {
+        const targetMediaId = approveModal.id;
+        const isApprovingAll = targetMediaId === 'all';
+
+        approveMutation.mutate({ slug: slug, mediaId: targetMediaId }, {
             onSuccess: () => {
                 setApproveModal({ open: false, id: null });
-                if (!campaign.rating) {
+
+                // If campaign is already rated, do not auto-open
+                if (campaign?.rating) return;
+
+                if (isApprovingAll) {
+                    // 1. "Approve All" clicked -> trigger rating modal
                     setRatingModalOpen(true);
+                } else {
+                    // Check if approving this item makes all media items approved
+                    const currentMediaList = campaign?.media || [];
+                    const remainingUnapproved = currentMediaList.filter(
+                        (m) => m.id !== targetMediaId && m.status !== 'approved'
+                    );
+
+                    if (remainingUnapproved.length === 0) {
+                        // 2. All files are now approved -> trigger rating modal
+                        setRatingModalOpen(true);
+                    } else if (!hasShownRatingForIndividual) {
+                        // 3. First time individual item is approved -> trigger rating modal once
+                        setRatingModalOpen(true);
+                        setHasShownRatingForIndividual(true);
+                    }
+                    // 4. Subsequent individual approvals -> do NOT show rating modal
                 }
             },
             onError: () => {
@@ -217,7 +299,7 @@ const BrandView = () => {
 
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 select-none">
             <BrandHeader campaign={campaign} onApproveAll={handleApproveAll} isApprovePending={approveMutation.isPending} onRateCreator={() => setRatingModalOpen(true)} />
 
             {/* Deliverables — read-only for brand */}
@@ -225,26 +307,46 @@ const BrandView = () => {
                 <Deliverables campaign={campaign} readOnly />
             )}
 
-            {/* Tabs */}
-            <div className="flex items-center gap-6 mb-8 border-b border-gray-100 pb-0 mt-8">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`relative pb-3 text-sm font-bold transition-all cursor-pointer ${activeTab === tab ? 'text-Primary' : 'text-gray-400 hover:text-gray-600'
+            {/* Modern Segmented Navigation Tabs */}
+            <div className="flex items-center gap-1.5 p-1.5 bg-[#F4F6FA] border border-gray-200/70 rounded-2xl w-fit mb-8 shadow-2xs mt-8">
+                {tabs.map((tab) => {
+                    const isActive = activeTab === tab;
+                    let Icon = LayoutGrid;
+                    let count = mediaItems.length;
+                    if (tab === 'Documents') {
+                        Icon = FileText;
+                        count = documents.length;
+                    } else if (tab === 'Comments') {
+                        Icon = MessageSquare;
+                        count = comments.length;
+                    }
+
+                    return (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`relative flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all cursor-pointer select-none ${
+                                isActive
+                                    ? 'bg-white text-Primary shadow-sm ring-1 ring-black/5'
+                                    : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'
                             }`}
-                    >
-                        <span className="flex items-center gap-1.5">
-                            {tab}
-                            {tab === 'Comments' && unreadComments > 0 && (
-                                <span className="px-2 py-0.5 bg-Primary text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[20px]">
-                                    {unreadComments}
+                        >
+                            <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-Primary' : 'text-gray-400'}`} />
+                            <span>{tab}</span>
+                            {count > 0 && (
+                                <span
+                                    className={`px-2 py-0.5 text-[10px] md:text-[11px] font-bold rounded-full transition-all ${
+                                        isActive
+                                            ? 'bg-Primary/10 text-Primary'
+                                            : 'bg-gray-200/80 text-gray-600'
+                                    }`}
+                                >
+                                    {count}
                                 </span>
                             )}
-                        </span>
-                        {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-Primary rounded-full" />}
-                    </button>
-                ))}
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Tab Content */}

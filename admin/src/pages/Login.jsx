@@ -1,7 +1,7 @@
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { setToken } from "@/redux/slices/authSlice";
 import { setUser } from "@/redux/slices/uiSlice";
 import useMutationClient from "@/hooks/useMutationClient";
@@ -77,7 +77,15 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Password</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-bold text-slate-700">Password</label>
+              <Link
+                to="/forgot-password"
+                className="text-xs font-bold text-[#005BD6] hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <input
                 {...register("password", { required: "Password is required" })}

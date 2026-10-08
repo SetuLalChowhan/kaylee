@@ -2,6 +2,7 @@ import prisma from "../config/db.js";
 import { AppError } from "../utils/AppError.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { logActivity } from "../utils/activity.util.js";
+import { createNotification } from "../utils/notification.util.js";
 /**
  * GET /api/planner — Retrieve user's planner tasks
  */
@@ -54,6 +55,13 @@ export const createTask = catchAsync(async (req, res, next) => {
         avatarText: "TASK",
         dotColor: "bg-amber-500",
         type: "TASK",
+    });
+    createNotification({
+        userId: (role === "admin" && targetUserId) ? targetUserId : userId,
+        title: `New Task: ${name}`,
+        description: campaign ? `Scheduled for "${campaign}" on ${date}.` : `Scheduled for ${date}.`,
+        type: "TASK",
+        preferenceKey: "notifyTaskReminders",
     });
     res.status(201).json({
         status: "success",

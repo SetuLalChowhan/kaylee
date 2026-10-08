@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useAxiosPublic from "./useAxiosPublic";
 import useAxiosSecure from "./useAxiosSecure";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "@/utils/error";
 
 const useMutationClient = ({
   url,
@@ -35,7 +36,7 @@ const useMutationClient = ({
     },
 
     onError: (error) => {
-      const msg = error?.response?.data?.message || error.message || "Something went wrong";
+      const msg = getErrorMessage(error, "Something went wrong");
       toast.error(msg);
     },
   });

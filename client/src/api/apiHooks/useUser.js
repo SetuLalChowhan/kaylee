@@ -122,6 +122,8 @@ export const useDeleteBrandLogo = () => {
 /**
  * useChangePassword — Change user password
  */
+import { getErrorMessage } from "@/utils/error";
+
 export const useChangePassword = () => {
   const axiosSecure = useAxiosSecure();
 
@@ -134,7 +136,7 @@ export const useChangePassword = () => {
       toast.success(data?.message || "Password changed successfully!");
     },
     onError: (error) => {
-      const msg = error?.response?.data?.message || error.message || "Failed to change password";
+      const msg = getErrorMessage(error, "Failed to change password");
       toast.error(msg);
     },
   });

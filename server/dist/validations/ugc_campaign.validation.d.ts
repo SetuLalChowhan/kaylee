@@ -2,9 +2,9 @@ import { z } from "zod";
 export declare const campaignStatusEnum: z.ZodEnum<{
     "Under Review": "Under Review";
     Completed: "Completed";
-    Pending: "Pending";
-    Draft: "Draft";
     Approved: "Approved";
+    Draft: "Draft";
+    Pending: "Pending";
     Active: "Active";
 }>;
 export declare const campaignPaymentStatusEnum: z.ZodEnum<{
@@ -22,9 +22,9 @@ export declare const createUgcCampaignSchema: z.ZodObject<{
         status: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
             "Under Review": "Under Review";
             Completed: "Completed";
-            Pending: "Pending";
-            Draft: "Draft";
             Approved: "Approved";
+            Draft: "Draft";
+            Pending: "Pending";
             Active: "Active";
         }>>>;
         notes: z.ZodOptional<z.ZodString>;
@@ -39,9 +39,9 @@ export declare const updateUgcCampaignSchema: z.ZodObject<{
         status: z.ZodOptional<z.ZodEnum<{
             "Under Review": "Under Review";
             Completed: "Completed";
-            Pending: "Pending";
-            Draft: "Draft";
             Approved: "Approved";
+            Draft: "Draft";
+            Pending: "Pending";
             Active: "Active";
         }>>;
         releaseFiles: z.ZodOptional<z.ZodBoolean>;

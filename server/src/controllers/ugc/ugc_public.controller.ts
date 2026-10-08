@@ -3,6 +3,7 @@ import prisma from "../../config/db.js";
 import { AppError } from "../../utils/AppError.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import { logActivity } from "../../utils/activity.util.js";
+import { createNotification } from "../../utils/notification.util.js";
 import { generateSecureToken, generateSecureOTP, hashToken } from "../../utils/otp.util.js";
 import { logApprovalAudit } from "../../utils/audit.util.js";
 import { sendEmail } from "../../services/email.service.js";
@@ -314,6 +315,15 @@ export const updatePublicMediaStatus = catchAsync(
         type: "APPROVAL",
         campaignId: campaign.id,
       });
+
+      createNotification({
+        userId: campaign.userId,
+        title: `${campaign.brandName} approved all deliverables`,
+        description: `All content for "${campaign.name}" has been fully approved by ${campaign.brandName}.`,
+        type: "CAMPAIGN",
+        preferenceKey: "notifyContentApprovals",
+      });
+
       await logApprovalAudit({ campaignId: campaign.id, action: "APPROVED_ALL", email: session.email, ipAddress: req.ip, sessionId: session.id });
 
       return res.status(200).json({ status: "success", message: "All media items approved" });
@@ -351,6 +361,15 @@ export const updatePublicMediaStatus = catchAsync(
       type: "APPROVAL",
       campaignId: campaign.id,
     });
+
+    createNotification({
+      userId: campaign.userId,
+      title: `${campaign.brandName} approved content`,
+      description: `Deliverable "${media.name || 'Media'}" for "${campaign.name}" was approved by ${campaign.brandName}.`,
+      type: "CAMPAIGN",
+      preferenceKey: "notifyContentApprovals",
+    });
+
     await logApprovalAudit({ campaignId: campaign.id, mediaId, action: "APPROVED", email: session.email, ipAddress: req.ip, sessionId: session.id });
 
     res.status(200).json({ status: "success", data: updatedMedia });
@@ -405,6 +424,15 @@ export const requestChangesPublicMedia = catchAsync(
       type: "FEEDBACK",
       campaignId: campaign.id,
     });
+
+    createNotification({
+      userId: campaign.userId,
+      title: `${campaign.brandName} requested changes`,
+      description: `Feedback on "${campaign.name}": "${text.substring(0, 100)}"`,
+      type: "FEEDBACK",
+      preferenceKey: "notifyContentApprovals",
+    });
+
     await logApprovalAudit({ campaignId: campaign.id, mediaId, action: "CHANGE_REQUESTED", email: session.email, ipAddress: req.ip, sessionId: session.id });
 
     res.status(200).json({ status: "success", data: message });
@@ -453,6 +481,14 @@ export const createPublicFeedback = catchAsync(
       campaignId: campaign.id,
     });
 
+    createNotification({
+      userId: campaign.userId,
+      title: `Feedback from ${campaign.brandName}`,
+      description: `New feedback on "${campaign.name}": "${text.substring(0, 100)}"`,
+      type: "FEEDBACK",
+      preferenceKey: "notifyContentApprovals",
+    });
+
     await logApprovalAudit({ campaignId: campaign.id, mediaId: mediaId || null, action: "FEEDBACK_SUBMITTED", email: session.email, ipAddress: req.ip, sessionId: session.id });
 
     res.status(201).json({ status: "success", data: message });
@@ -489,6 +525,14 @@ export const rateCampaignPublic = catchAsync(
       dotColor: "bg-yellow-500",
       type: "CAMPAIGN",
       campaignId: campaign.id,
+    });
+
+    createNotification({
+      userId: campaign.userId,
+      title: `${campaign.brandName} rated ${rating}★`,
+      description: ratingNote ? `Review for "${campaign.name}": "${ratingNote}"` : `${campaign.brandName} left a ${rating}-star rating for "${campaign.name}".`,
+      type: "CAMPAIGN",
+      preferenceKey: "notifyContentApprovals",
     });
 
     await logApprovalAudit({
