@@ -168,29 +168,90 @@ export const getPublicPortfolio = catchAsync(async (req: Request, res: Response,
 
   if (!slug) return next(new AppError("User slug/displayName is required", 400));
 
-  const user = await prisma.user.findFirst({
-    where: {
-      slug: {
-        equals: slug,
-        mode: "insensitive",
+  let user: any;
+  try {
+    user = await prisma.user.findFirst({
+      where: {
+        slug: {
+          equals: slug,
+          mode: "insensitive",
+        },
       },
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      displayName: true,
-      shortBio: true,
-      socialLinks: true,
-      servicesOffered: true,
-      brandLogos: true,
-      avatar: true,
-      createdAt: true,
-    },
-  });
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        displayName: true,
+        slug: true,
+        shortBio: true,
+        socialLinks: true,
+        servicesOffered: true,
+        brandLogos: true,
+        avatar: true,
+        createdAt: true,
+        showClientRating: true,
+      },
+    });
+  } catch {
+    user = await prisma.user.findFirst({
+      where: {
+        slug: {
+          equals: slug,
+          mode: "insensitive",
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        displayName: true,
+        slug: true,
+        shortBio: true,
+        socialLinks: true,
+        servicesOffered: true,
+        brandLogos: true,
+        avatar: true,
+        createdAt: true,
+      },
+    });
+  }
 
   if (!user) {
     return next(new AppError("Portfolio not found for this user", 404));
+  }
+
+  let userSocial: Record<string, any> = {};
+  if (typeof user.socialLinks === "string") {
+    try {
+      userSocial = JSON.parse(user.socialLinks);
+    } catch {
+      userSocial = {};
+    }
+  } else if (user.socialLinks && typeof user.socialLinks === "object") {
+    userSocial = user.socialLinks as Record<string, any>;
+  }
+
+  const isRatingVisible = (user as any).showClientRating !== undefined && (user as any).showClientRating !== null
+    ? Boolean((user as any).showClientRating)
+    : userSocial?.showClientRating !== undefined
+      ? Boolean(userSocial.showClientRating)
+      : true;
+
+  let avgRatingValue: string | null = null;
+  let totalRatings = 0;
+
+  if (isRatingVisible) {
+    const ratedCampaigns = await prisma.ugcCampaign.findMany({
+      where: {
+        userId: user.id,
+        rating: { not: null },
+      },
+      select: { rating: true },
+    });
+    totalRatings = ratedCampaigns.length;
+    avgRatingValue = totalRatings > 0
+      ? (ratedCampaigns.reduce((sum: number, c: any) => sum + (c.rating || 0), 0) / totalRatings).toFixed(1)
+      : "0";
   }
 
   const items = await prisma.portfolioItem.findMany({
@@ -201,7 +262,12 @@ export const getPublicPortfolio = catchAsync(async (req: Request, res: Response,
   res.status(200).json({
     status: "success",
     data: {
-      profile: user,
+      profile: {
+        ...user,
+        showClientRating: isRatingVisible,
+        clientSatisfaction: isRatingVisible ? avgRatingValue : null,
+        ratingCount: isRatingVisible ? totalRatings : 0,
+      },
       portfolioItems: items,
     },
   });

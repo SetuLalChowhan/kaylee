@@ -43,6 +43,7 @@ export const useUserProfile = (options = {}) => {
  */
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   const axiosSecure = useAxiosSecure();
 
   return useMutation({
@@ -56,8 +57,13 @@ export const useUpdateProfile = () => {
       return res.data;
     },
     onSuccess: (data) => {
-      toast.success(data?.message || "Profile updated successfully!");
+      const updatedUser = data?.data;
+      if (updatedUser) {
+        dispatch(setReduxUser(updatedUser));
+        queryClient.setQueryData(["userProfile"], (old) => (old ? { ...old, ...updatedUser } : updatedUser));
+      }
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["publicPortfolio"] });
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error.message || "Failed to update profile";
