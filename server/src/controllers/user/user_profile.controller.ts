@@ -15,32 +15,97 @@ import { BRAND_LOGO_REGEX, cleanUserPhysicalFiles, generateUniqueSlug } from "./
 export const getMe = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const userId = requireUserId(req);
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      displayName: true,
-      slug: true,
-      shortBio: true,
-      servicesOffered: true,
-      brandLogos: true,
-      socialLinks: true,
-      email: true,
-      avatar: true,
-      isVerified: true,
-      role: true,
-      notifyDeadlineReminders: true,
-      notifyInvoiceUpdates: true,
-      notifyContentApprovals: true,
-      notifyTaskReminders: true,
-    },
-  });
+  let user: any;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        displayName: true,
+        slug: true,
+        shortBio: true,
+        servicesOffered: true,
+        brandLogos: true,
+        socialLinks: true,
+        email: true,
+        avatar: true,
+        isVerified: true,
+        role: true,
+        notifyDeadlineReminders: true,
+        notifyInvoiceUpdates: true,
+        notifyContentApprovals: true,
+        notifyTaskReminders: true,
+        showClientRating: true,
+      },
+    });
+  } catch {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        displayName: true,
+        slug: true,
+        shortBio: true,
+        servicesOffered: true,
+        brandLogos: true,
+        socialLinks: true,
+        email: true,
+        avatar: true,
+        isVerified: true,
+        role: true,
+        notifyDeadlineReminders: true,
+        notifyInvoiceUpdates: true,
+        notifyContentApprovals: true,
+        notifyTaskReminders: true,
+      },
+    });
+  }
 
   if (!user) return next(new AppError("User not found", 404));
 
-  res.status(200).json({ status: "success", data: user });
+  // Compute rating for the user from completed UGC campaigns
+  const ratedCampaigns = await prisma.ugcCampaign.findMany({
+    where: {
+      userId,
+      rating: { not: null },
+    },
+    select: { rating: true },
+  });
+  const totalRatings = ratedCampaigns.length;
+  const avgRatingValue = totalRatings > 0
+    ? (ratedCampaigns.reduce((sum: number, c: any) => sum + (c.rating || 0), 0) / totalRatings).toFixed(1)
+    : "0";
+
+  let userSocial: Record<string, any> = {};
+  if (typeof user.socialLinks === "string") {
+    try {
+      userSocial = JSON.parse(user.socialLinks);
+    } catch {
+      userSocial = {};
+    }
+  } else if (user.socialLinks && typeof user.socialLinks === "object") {
+    userSocial = user.socialLinks as Record<string, any>;
+  }
+
+  const isRatingVisible = (user as any).showClientRating !== undefined && (user as any).showClientRating !== null
+    ? Boolean((user as any).showClientRating)
+    : userSocial?.showClientRating !== undefined
+      ? Boolean(userSocial.showClientRating)
+      : true;
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      ...user,
+      showClientRating: isRatingVisible,
+      clientSatisfaction: avgRatingValue,
+      ratingCount: totalRatings,
+    },
+  });
 });
 
 /**
@@ -48,13 +113,14 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
  */
 export const updateProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const userId = requireUserId(req);
-  const { firstName, lastName, servicesOffered, displayName, shortBio, socialLinks } = req.body as {
+  const { firstName, lastName, servicesOffered, displayName, shortBio, socialLinks, showClientRating } = req.body as {
     firstName?: string;
     lastName?: string;
     servicesOffered?: string;
     displayName?: string;
     shortBio?: string;
-    socialLinks?: { instagram?: string; website?: string; youtube?: string; other?: string };
+    socialLinks?: { instagram?: string; website?: string; youtube?: string; other?: string; showClientRating?: boolean };
+    showClientRating?: boolean | string;
   };
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -119,39 +185,139 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
 
   const finalBrandLogos = [...existingBrandLogos, ...newLogoPaths];
 
-  const updatedUser = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      ...(firstName && { firstName }),
-      ...(lastName && { lastName }),
-      ...(displayName && { displayName }),
-      ...(finalSlug !== undefined && { slug: finalSlug || null }),
-      ...(servicesOffered !== undefined && { servicesOffered }),
-      ...(finalBrandLogos !== undefined && { brandLogos: finalBrandLogos }),
-      ...(shortBio !== undefined && { shortBio }),
-      ...(socialLinks && { socialLinks }),
-      avatar: avatarUrl,
+  // Parse showClientRating boolean if supplied
+  const parsedShowClientRating = showClientRating !== undefined
+    ? (typeof showClientRating === "string" ? showClientRating === "true" || showClientRating === "1" : Boolean(showClientRating))
+    : undefined;
+
+  let existingSocialLinks: Record<string, any> = {};
+  if (typeof user.socialLinks === "string") {
+    try {
+      existingSocialLinks = JSON.parse(user.socialLinks);
+    } catch {
+      existingSocialLinks = {};
+    }
+  } else if (user.socialLinks && typeof user.socialLinks === "object") {
+    existingSocialLinks = { ...(user.socialLinks as Record<string, any>) };
+  }
+
+  let incomingSocialLinks: Record<string, any> = {};
+  if (typeof socialLinks === "string") {
+    try {
+      incomingSocialLinks = JSON.parse(socialLinks);
+    } catch {
+      incomingSocialLinks = {};
+    }
+  } else if (socialLinks && typeof socialLinks === "object") {
+    incomingSocialLinks = { ...socialLinks };
+  }
+
+  const finalSocialLinks = {
+    ...existingSocialLinks,
+    ...incomingSocialLinks,
+    ...(parsedShowClientRating !== undefined ? { showClientRating: parsedShowClientRating } : {}),
+  };
+
+  let updatedUser: any;
+  try {
+    updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(displayName && { displayName }),
+        ...(finalSlug !== undefined && { slug: finalSlug || null }),
+        ...(servicesOffered !== undefined && { servicesOffered }),
+        ...(finalBrandLogos !== undefined && { brandLogos: finalBrandLogos }),
+        ...(shortBio !== undefined && { shortBio }),
+        socialLinks: finalSocialLinks,
+        ...(parsedShowClientRating !== undefined && { showClientRating: parsedShowClientRating }),
+        avatar: avatarUrl,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        displayName: true,
+        slug: true,
+        shortBio: true,
+        socialLinks: true,
+        servicesOffered: true,
+        brandLogos: true,
+        email: true,
+        avatar: true,
+        role: true,
+        showClientRating: true,
+      },
+    });
+  } catch {
+    updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(displayName && { displayName }),
+        ...(finalSlug !== undefined && { slug: finalSlug || null }),
+        ...(servicesOffered !== undefined && { servicesOffered }),
+        ...(finalBrandLogos !== undefined && { brandLogos: finalBrandLogos }),
+        ...(shortBio !== undefined && { shortBio }),
+        socialLinks: finalSocialLinks,
+        avatar: avatarUrl,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        displayName: true,
+        slug: true,
+        shortBio: true,
+        socialLinks: true,
+        servicesOffered: true,
+        brandLogos: true,
+        email: true,
+        avatar: true,
+        role: true,
+      },
+    });
+  }
+
+  let updatedSocial: Record<string, any> = {};
+  if (typeof updatedUser.socialLinks === "string") {
+    try {
+      updatedSocial = JSON.parse(updatedUser.socialLinks);
+    } catch {}
+  } else if (updatedUser.socialLinks && typeof updatedUser.socialLinks === "object") {
+    updatedSocial = updatedUser.socialLinks as Record<string, any>;
+  }
+
+  const isRatingVisible = updatedUser.showClientRating !== undefined && updatedUser.showClientRating !== null
+    ? Boolean(updatedUser.showClientRating)
+    : updatedSocial?.showClientRating !== undefined
+      ? Boolean(updatedSocial.showClientRating)
+      : (parsedShowClientRating !== undefined ? parsedShowClientRating : true);
+
+  // Compute dynamic satisfaction rating
+  const ratedCampaigns = await prisma.ugcCampaign.findMany({
+    where: {
+      userId,
+      rating: { not: null },
     },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      displayName: true,
-      slug: true,
-      shortBio: true,
-      socialLinks: true,
-      servicesOffered: true,
-      brandLogos: true,
-      email: true,
-      avatar: true,
-      role: true,
-    },
+    select: { rating: true },
   });
+  const totalRatings = ratedCampaigns.length;
+  const avgRatingValue = totalRatings > 0
+    ? (ratedCampaigns.reduce((sum: number, c: any) => sum + (c.rating || 0), 0) / totalRatings).toFixed(1)
+    : "0";
 
   res.status(200).json({
     status: "success",
     message: "Profile updated successfully",
-    data: updatedUser,
+    data: {
+      ...updatedUser,
+      showClientRating: isRatingVisible,
+      clientSatisfaction: avgRatingValue,
+      ratingCount: totalRatings,
+    },
   });
 
   logActivity({
