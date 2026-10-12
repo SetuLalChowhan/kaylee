@@ -116,35 +116,13 @@ export const updateProfileSchema = z.object({
       },
       z
         .object({
-          instagram: z.preprocess(
-            urlPreprocess,
-            z
-              .string()
-              .url("Invalid Instagram URL")
-              .optional()
-              .or(z.literal("")),
-          ),
-          website: z.preprocess(
-            urlPreprocess,
-            z
-              .string()
-              .url("Invalid website URL")
-              .optional()
-              .or(z.literal("")),
-          ),
-          youtube: z.preprocess(
-            urlPreprocess,
-            z
-              .string()
-              .url("Invalid YouTube URL")
-              .optional()
-              .or(z.literal("")),
-          ),
-          other: z.preprocess(
-            urlPreprocess,
-            z.string().url("Invalid URL").optional().or(z.literal("")),
-          ),
+          instagram: z.string().max(255).optional().or(z.literal("")),
+          website: z.string().max(255).optional().or(z.literal("")),
+          youtube: z.string().max(255).optional().or(z.literal("")),
+          other: z.string().max(255).optional().or(z.literal("")),
+          showClientRating: z.boolean().optional(),
         })
+        .passthrough()
         .optional(),
     ),
     servicesOffered: z
@@ -152,6 +130,11 @@ export const updateProfileSchema = z.object({
       .max(1000, "Services offered cannot exceed 1000 characters")
       .optional(),
     brandLogos: jsonArrayParser,
+    showClientRating: z
+      .preprocess((val) => {
+        if (typeof val === "string") return val === "true" || val === "1";
+        return val;
+      }, z.boolean().optional()),
   }),
 });
 

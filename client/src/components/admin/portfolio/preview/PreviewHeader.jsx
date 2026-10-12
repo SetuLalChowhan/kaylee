@@ -1,6 +1,9 @@
 import React from 'react';
+import { Star } from 'lucide-react';
 
 const PreviewHeader = ({ profile, onAvatarClick }) => {
+  const showRating = Boolean(profile?.showClientRating && profile?.clientSatisfaction !== undefined && profile?.clientSatisfaction !== null);
+
   return (
     <div className="relative w-full mb-10">
       {/* Banner */}
@@ -15,16 +18,25 @@ const PreviewHeader = ({ profile, onAvatarClick }) => {
           >
             <img src={profile.image} alt="Profile" className="w-full h-full object-cover" loading="lazy" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-1">{profile.name}</h1>
-          {/* <p className="text-sm font-bold text-Primary mb-2">@{profile.slug}</p>
-          <a 
-            href={profile.portfolioLink} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-[11px] font-bold text-gray-400 hover:text-Primary transition-colors"
-          >
-            {profile.portfolioLink}
-          </a> */}
+          
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A]">{profile.name}</h1>
+            
+            {showRating && (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50/90 border border-amber-200/80 shadow-xs">
+                <div className="flex items-center text-amber-500">
+                  <Star className={`w-4 h-4 ${Number(profile.clientSatisfaction) > 0 ? "fill-amber-400 text-amber-400" : "text-amber-500"}`} />
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xs font-black text-gray-900">{profile.clientSatisfaction}</span>
+                  <span className="text-[10px] font-bold text-gray-400">/ 5</span>
+                </div>
+                <span className="hidden sm:inline text-[11px] font-semibold text-amber-800 pl-1.5 border-l border-amber-200">
+                  Client Satisfaction
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
