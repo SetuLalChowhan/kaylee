@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
-import { useUserProfile } from '@/api/apiHooks/useUser';
+import { useUserProfile, useUpdateProfile, useDashboardStats } from '@/api/apiHooks/useUser';
 import {
   usePortfolioItems,
   useCreatePortfolioItem,
@@ -17,12 +17,16 @@ import {
   useDeletePortfolioItem,
 } from '@/api/apiHooks/usePortfolio';
 import { getImgUrl, getBrandLogos } from '@/utils/image';
+import { toast } from 'react-toastify';
 import natureVideo from '@/assets/videos/nature.mp4';
 
 const Portfolio = () => {
   const navigate = useNavigate();
   const reduxUser = useSelector(selectCurrentUser);
-  const { refetch } = useUserProfile();
+  const { user: userProfile, refetch } = useUserProfile();
+  const { data: dashData } = useDashboardStats();
+  const updateProfileMutation = useUpdateProfile();
+  const isUpdatingRatingRef = React.useRef(false);
 
   const [profile, setProfile] = useState({
     name: '',
@@ -34,30 +38,91 @@ const Portfolio = () => {
     image: '',
     otherLink: '',
     socials: { instagram: '', tiktok: '', youtube: '' },
+    clientSatisfaction: '0',
+    ratingCount: 0,
+    showClientRating: true,
   });
 
   useEffect(() => {
-    if (reduxUser) {
-      const slug = reduxUser.slug || (reduxUser.displayName || '').toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/(^-|-$)/g, "");
-      setProfile({
+    const currentUser = userProfile || reduxUser;
+    if (currentUser) {
+      const slug = currentUser.slug || (currentUser.displayName || '').toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/(^-|-$)/g, "");
+      
+      const rawRating = currentUser.clientSatisfaction !== undefined && currentUser.clientSatisfaction !== null
+        ? currentUser.clientSatisfaction
+        : dashData?.stats?.clientSatisfaction;
+      const clientSatisfaction = rawRating !== undefined && rawRating !== null ? String(rawRating) : "0";
+      const ratingCount = currentUser.ratingCount ?? dashData?.stats?.ratingCount ?? 0;
+      
+      let parsedSocial = currentUser.socialLinks;
+      if (typeof parsedSocial === 'string') {
+        try { parsedSocial = JSON.parse(parsedSocial); } catch {}
+      }
+
+      const serverRatingVisible = currentUser.showClientRating !== undefined && currentUser.showClientRating !== null
+        ? Boolean(currentUser.showClientRating)
+        : parsedSocial?.showClientRating !== undefined
+          ? Boolean(parsedSocial.showClientRating)
+          : true;
+
+      setProfile(prev => ({
         name:
-          reduxUser.displayName ||
-          `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim(),
+          currentUser.displayName ||
+          `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim(),
         slug,
-        bio: reduxUser.shortBio || '',
+        bio: currentUser.shortBio || '',
         portfolioLink: `${window.location.origin}/preview/${slug || 'user'}`,
-        services: reduxUser.servicesOffered || '',
-        brands: getBrandLogos(reduxUser),
-        image: getImgUrl(reduxUser.avatar) || '',
-        otherLink: reduxUser.socialLinks?.other || '',
+        services: currentUser.servicesOffered || '',
+        brands: getBrandLogos(currentUser),
+        image: getImgUrl(currentUser.avatar) || '',
+        otherLink: parsedSocial?.other || '',
         socials: {
-          instagram: reduxUser.socialLinks?.instagram || '',
-          tiktok: reduxUser.socialLinks?.website || '',
-          youtube: reduxUser.socialLinks?.youtube || '',
+          instagram: parsedSocial?.instagram || '',
+          tiktok: parsedSocial?.website || '',
+          youtube: parsedSocial?.youtube || '',
         },
-      });
+        clientSatisfaction,
+        ratingCount,
+        // Guard against overwriting during active toggle mutation
+        showClientRating: isUpdatingRatingRef.current ? prev.showClientRating : serverRatingVisible,
+      }));
     }
-  }, [reduxUser]);
+  }, [reduxUser, userProfile, dashData]);
+
+  const handleToggleRatingVisibility = () => {
+    if (updateProfileMutation.isPending || isUpdatingRatingRef.current) return;
+
+    const nextVal = !profile.showClientRating;
+    isUpdatingRatingRef.current = true;
+
+    // Immediate optimistic update to local state
+    setProfile(prev => ({ ...prev, showClientRating: nextVal }));
+
+    updateProfileMutation.mutate(
+      { showClientRating: nextVal },
+      {
+        onSuccess: (res) => {
+          isUpdatingRatingRef.current = false;
+          const returnedUser = res?.data || res;
+          const finalVal = returnedUser?.showClientRating !== undefined
+            ? Boolean(returnedUser.showClientRating)
+            : nextVal;
+
+          setProfile(prev => ({ ...prev, showClientRating: finalVal }));
+          toast.success(
+            finalVal
+              ? "Client satisfaction rating is now visible on your public portfolio!"
+              : "Client satisfaction rating is now hidden from your public portfolio."
+          );
+        },
+        onError: () => {
+          isUpdatingRatingRef.current = false;
+          // Revert optimistic update
+          setProfile(prev => ({ ...prev, showClientRating: !nextVal }));
+        },
+      }
+    );
+  };
 
   const { data: items } = usePortfolioItems();
   const createMutation = useCreatePortfolioItem();
@@ -181,7 +246,11 @@ const Portfolio = () => {
         {/* Content Container (Overlapping) */}
         <div className="flex flex-col lg:flex-row gap-8 md:gap-10 px-4 md:px-10 -mt-24 md:-mt-48 relative z-10">
           {/* Profile Card Sidebar */}
-          <ProfileCard profile={profile} />
+          <ProfileCard
+            profile={profile}
+            onToggleRatingVisibility={handleToggleRatingVisibility}
+            isUpdatingRating={updateProfileMutation.isPending}
+          />
 
           {/* Media Grid Section */}
           <div className="flex-1 w-full pt-16 md:pt-32">
