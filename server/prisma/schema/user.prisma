@@ -22,6 +22,7 @@ model User {
   notifyInvoiceUpdates    Boolean         @default(true)
   notifyContentApprovals  Boolean         @default(false)
   notifyTaskReminders     Boolean         @default(false)
+  showClientRating        Boolean         @default(true)
   planId                  String?
   stripeCustomerId        String?
   stripeSubscriptionId    String?

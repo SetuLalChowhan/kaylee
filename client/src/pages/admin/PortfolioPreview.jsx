@@ -27,6 +27,12 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
 
   const profile = useMemo(() => {
     if (!profileData) return null;
+    const isRatingVisible = profileData.showClientRating !== undefined
+      ? Boolean(profileData.showClientRating)
+      : profileData.socialLinks?.showClientRating !== undefined
+        ? Boolean(profileData.socialLinks.showClientRating)
+        : true;
+
     return {
       name: profileData.displayName || `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim(),
       slug: profileData.slug || '',
@@ -42,6 +48,11 @@ const PortfolioPreview = ({ isPublic = false, onClose }) => {
         tiktok: profileData.socialLinks?.website || '', // website field maps tiktok
         youtube: profileData.socialLinks?.youtube || '',
       },
+      showClientRating: isRatingVisible,
+      clientSatisfaction: isRatingVisible
+        ? (profileData.clientSatisfaction !== undefined && profileData.clientSatisfaction !== null ? String(profileData.clientSatisfaction) : "0")
+        : null,
+      ratingCount: profileData.ratingCount || 0,
     };
   }, [profileData]);
 

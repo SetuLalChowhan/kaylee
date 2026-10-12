@@ -23,6 +23,13 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
   // newBrandUploads = newly selected local files (blob URLs)
   const [newBrandUploads, setNewBrandUploads] = React.useState([]);
   const [loadingDelete, setLoadingDelete] = React.useState(null);
+  const [showClientRating, setShowClientRating] = React.useState(
+    profile?.showClientRating !== undefined
+      ? profile.showClientRating
+      : user?.showClientRating !== undefined
+        ? user.showClientRating
+        : ((user?.socialLinks)?.showClientRating !== undefined ? (user.socialLinks).showClientRating : true)
+  );
 
   const { register, handleSubmit, setError, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -59,6 +66,13 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
       // Load existing brand logos from user data
       setExistingBrandLogos(getBrandLogos(user));
       setNewBrandUploads([]);
+      setShowClientRating(
+        profile?.showClientRating !== undefined
+          ? profile.showClientRating
+          : user?.showClientRating !== undefined
+            ? user.showClientRating
+            : ((user?.socialLinks)?.showClientRating !== undefined ? (user.socialLinks).showClientRating : true)
+      );
     }
   }, [profile, user, reset]);
 
@@ -176,9 +190,9 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
     if (data.socials?.tiktok) socialLinks.website = formatSocialUrl('tiktok', data.socials.tiktok); // map tiktok to website
     if (data.socials?.youtube) socialLinks.youtube = formatSocialUrl('youtube', data.socials.youtube);
     if (data.otherLink) socialLinks.other = formatSocialUrl('other', data.otherLink);
-    if (Object.keys(socialLinks).length > 0) {
-      formPayload.append('socialLinks', JSON.stringify(socialLinks));
-    }
+    socialLinks.showClientRating = showClientRating;
+    formPayload.append('socialLinks', JSON.stringify(socialLinks));
+    formPayload.append('showClientRating', String(showClientRating));
 
     const customMap = {
       displayName: 'name',
@@ -200,6 +214,7 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
             avatar: updatedData?.avatar,
             servicesOffered: updatedData?.servicesOffered,
             brandLogos: updatedData?.brandLogos,
+            showClientRating: updatedData?.showClientRating ?? showClientRating,
           });
         }
         onClose();
@@ -432,6 +447,35 @@ const EditPortfolioModal = ({ isOpen, onClose, profile, onSave }) => {
                 E.g., https://example.com or example.com (prefix is added automatically)
               </p>
               {errors.otherLink && <p className="mt-1 text-xs text-red-500">{errors.otherLink.message}</p>}
+            </div>
+
+            {/* Client Satisfaction Rating Public Visibility Toggle */}
+            <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <span className="block text-xs md:text-sm font-bold text-[#1A1A1A]">
+                  Show Client Rating on Public Portfolio
+                </span>
+                <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+                  {showClientRating
+                    ? 'Brands visiting your public portfolio can view your client satisfaction rating.'
+                    : 'Rating is hidden from public link visitors.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={showClientRating}
+                onClick={() => setShowClientRating(!showClientRating)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-Primary focus:ring-offset-1 ${
+                  showClientRating ? 'bg-Primary' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                    showClientRating ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
             </div>
 
             {/* Submit Button */}
